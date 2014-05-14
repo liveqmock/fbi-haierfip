@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE  html  PUBLIC  "-//W3C//DTD  XHTML  1.0  Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui">
+
+<f:view contentType="text/html">
+    <head>
+        <title></title>
+    </head>
+    <body>
+    <ui:composition>
+        <p:column style="display:none;" headerText="pkid">
+            <h:outputText value="#{record.pkid}"/>
+        </p:column>
+
+        <p:column headerText="流水号" rendered="#{backBean.bizType.code=='FD'}">
+            <h:outputText value="#{record.batchSn}#{record.batchDetlSn}"/>
+        </p:column>
+
+        <p:column headerText="姓 名" style="text-align: center"
+                  filterBy="#{record.clientname}" filterMatchMode="contains">
+            <h:outputText value="#{record.clientname}"/>
+        </p:column>
+        <p:column headerText="借据号" style="text-align: center">
+            <h:outputText value="#{record.iouno}"/>
+        </p:column>
+        <p:column headerText="期次号" style="text-align: center">
+            <h:outputText value="#{record.poano}"/>
+        </p:column>
+        <p:column headerText="金额">
+            <h:outputText value="#{record.payamt}" style="float: right">
+                <f:convertNumber type="number" pattern="#,###,###,###,##0.00"/>
+            </h:outputText>
+        </p:column>
+        <p:column headerText="城市" rendered="#{backBean.bizType.code=='FD'}"
+                  filterBy="#{record.biCity}" filterMatchMode="contains" style="text-align: center">
+            <h:outputText value="#{record.biCity}"/>
+        </p:column>
+        <p:column headerText="帐单状态" style="text-align: center">
+            <h:outputText value="#{backBean.refundStatus.valueOfAlias(record.billstatus).title}"/>
+        </p:column>
+
+        <p:column headerText="回写状态"  rendered="#{backBean.bizType.code != 'FD'}" style="text-align: center">
+            <h:outputText value="#{record.writebackflag == '1' ? '已回写' : '未回写'}"/>
+        </p:column>
+
+        <p:column headerText="操作" style="width:50px;text-align:center">
+            <p:commandLink style="color:blue;" value="详细"
+                           onclick="doPopupWindow_refund(this)">
+            </p:commandLink>
+        </p:column>
+
+    </ui:composition>
+    </body>
+</f:view>
+</html>

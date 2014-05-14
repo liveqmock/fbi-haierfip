@@ -1,0 +1,105 @@
+/*
+Design by Free CSS Templates
+http://www.freecsstemplates.org
+Released for free under a Creative Commons Attribution 2.5 License
+*/
+
+body {
+	margin: 0px;
+	padding: 0;
+	text-align: justify;
+	font-family: Georgia, "Times New Roman", Times, serif;
+	font-size: 62.5%;
+	color: #616161;
+}
+
+h1, h2, h3 {
+	margin-top: 0;
+	color: #A66100;
+}
+
+h1 {
+	font-size: 1.6em;
+	font-weight: normal;
+}
+
+h2 {
+	font-size: 1.6em;
+}
+
+h3 {
+	font-size: 1em;
+	margin-top:20px;
+}
+
+ul {
+}
+
+a {
+	text-decoration: none;
+	color: #A66100;
+}
+
+a:hover {
+	border-bottom: none;
+	color: #FFCC00;
+}
+
+a img {
+	border: none;
+}
+
+img.left {
+	float: left;
+	margin: 0 20px 0 0;
+}
+
+img.right {
+	float: right;
+	margin: 0 0 0 20px;
+}
+
+
+/* Wrapper */
+
+#wrapper {
+}
+
+/* Page */
+
+#page {
+	/*width: 960px;*/
+	margin: 0 auto;
+	padding: 5px 5px 0px 5px;
+	background: #FFFFFF;
+    /*font-size:11px*/
+}
+
+#page-bg {
+}
+
+
+/* Content */
+
+#content {
+	/*float: left;*/
+	/*width: 1220px;*/
+}
+
+.post {
+	padding-bottom: 2px;
+}
+
+.post h1 {
+	font-weight: normal;
+}
+
+
+.entry {
+	padding: 0 20px;
+}
+
+.entry p {
+	line-height: 200%;
+}
+

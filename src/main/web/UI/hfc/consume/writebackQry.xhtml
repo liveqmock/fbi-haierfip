@@ -1,0 +1,230 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:p="http://primefaces.org/ui"
+                template="/templates/ui.xhtml">
+
+<ui:define name="head">
+    <style type="text/css">
+        .datalist-noborder .ui-widget-content {
+            border: none;
+            color: #999999;
+        }
+    </style>
+    <script type="text/javascript">
+        document.onkeydown = function TabReplace() {
+            if (event.keyCode == 13) {
+                if (event.srcElement.tagName != 'BUTTON')
+                    event.keyCode = 9;
+                else
+                    event.srcElement.click();
+            }
+        }
+        function showAppInfo(source) {
+            var oAppno = source.parentNode.parentNode.childNodes[0].innerHTML;
+            window.open("application_start.jsp?sendflag=1&amp;appno=" + oAppno);
+        }
+    </script>
+</ui:define>
+
+<ui:define name="content">
+    <h:form id="inputform">
+        <p:focus for="appno"/>
+        <p:messages id="msgs" showDetail="true"/>
+
+        <p:panel header="【消费分期申请单】查询条件">
+            <h:panelGrid columns="2" cellspacing="7" columnClasses="col-95,col-5">
+                <h:panelGrid columns="4" cellspacing="7">
+
+                    <h:outputLabel value="申请单号:" for="appno"/>
+                    <h:inputText autocomplete="off" id="appno" style="width:162px;"
+                                 value="#{writeBackQryAction.appQryParam.appno}" onfocus="this.select()">
+                    </h:inputText>
+
+                    <h:outputLabel value="客户姓名:" for="clientName"/>
+                    <p:inputText autocomplete="off" id="clientName" style="width:162px;"
+                                 value="#{writeBackQryAction.appQryParam.clientName}">
+                    </p:inputText>
+
+                    <h:outputLabel value="证件类型:" for="idType"/>
+                    <h:selectOneMenu id="idType" value="#{writeBackQryAction.appQryParam.idType}">
+                        <f:selectItems value="#{writeBackQryAction.idTypeList}"/>
+                    </h:selectOneMenu>
+
+
+                    <h:outputLabel value="证件号码:"/>
+                    <p:inputText id="id" value="#{writeBackQryAction.appQryParam.id}" style="width:162px;"/>
+
+                    <h:outputLabel value="起始日期:"/>
+                    <p:inputText id="fromDate" style="width:162px;"
+                                 value="#{writeBackQryAction.appQryParam.fromDate}"
+                                 onclick="WdatePicker()"/>
+                    <h:outputLabel value="终止日期:"/>
+                    <p:inputText id="toDate" style="width:162px;" value="#{writeBackQryAction.appQryParam.toDate}"
+                                 onclick="WdatePicker()"/>
+
+                    <h:outputLabel value="申请单状态:" for="appStatus"/>
+                    <h:selectOneMenu id="appStatus" style="width:170px;"
+                                     value="#{writeBackQryAction.appQryParam.appStatus}">
+                        <f:selectItems value="#{writeBackQryAction.appStatusList}"/>
+                    </h:selectOneMenu>
+
+                </h:panelGrid>
+                <h:panelGrid>
+                    <p:commandButton id="query" ajax="true" value="查询"
+                                     action="#{writeBackQryAction.onQryAppResult}"
+                                     style="margin-left:15px;width:90px"
+                                     update="input,pdt,msgs">
+                    </p:commandButton>
+                    <p:commandButton ajax="false" id="resetBtn" value="重置" action="#"
+                                     style="width:90px;margin-left:15px"/>
+                    <!--<p:commandButton ajax="false" value="导出Excel文件">
+                        <p:dataExporter type="xls" target="appDataTable" fileName="申请单状态查询结果"/>
+                    </p:commandButton>-->
+                </h:panelGrid>
+            </h:panelGrid>
+            <p:separator/>
+            <h:outputText value="#{writeBackQryAction.unSendAppMsgs}"/>
+        </p:panel>
+        <p:ajaxStatus style="width:16px;height:16px;">
+            <f:facet name="start">
+                <h:graphicImage value="/images/ajaxloading.gif"/>
+            </f:facet>
+            <f:facet name="complete">
+                <h:outputText value=""/>
+            </f:facet>
+        </p:ajaxStatus>
+
+
+        <p:dataTable id="pdt" height="200" selectionMode="single"
+                     value="#{writeBackQryAction.responseList}" var="record"
+                     selection="#{writeBackQryAction.selectedRecord}"
+                     paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                     paginator="true" rows="10" paginatorPosition="bottom" rowsPerPageTemplate="15,10,5"
+                     emptyMessage="记录为空..." style="margin-top:10px;width:100%">
+
+            <p:column headerText="申请单号" style="text-align:center">
+                <h:outputText value="#{record.stdsqdh}"/>
+            </p:column>
+
+            <p:column headerText="申请单状态" sortBy="#{record.stdsqdzt}" style="text-align:center">
+                <h:outputText value="#{writeBackQryAction.appStatusEnum.valueOfAlias(record.stdsqdzt).title}"/>
+            </p:column>
+
+            <!--<p:column headerText="客户号">
+                <h:outputText value="#{record.stdkhh}"/>
+            </p:column>-->
+
+            <p:column headerText="客户姓名" style="ext-align:center">
+                <h:outputText value="#{record.stdkhxm}"/>
+            </p:column>
+
+            <!--<p:column headerText="证件类型">
+                <h:outputText value="#{record.stdzjlx}" style="text-align:right">
+                </h:outputText>
+            </p:column>
+
+            <p:column headerText="证件号码" style="text-align:right">
+                <h:outputText value="#{record.stdzjhm}">
+                </h:outputText>
+            </p:column>-->
+
+            <p:column headerText="合同号" style="text-align:center">
+                <h:outputText value="#{record.stdhth}"/>
+            </p:column>
+
+            <!--<p:column headerText="借据号" style="text-align:center">
+                <h:outputText value="#{record.stdjjh}"/>
+            </p:column>-->
+
+            <p:column headerText="放款金额" style="text-align:center">
+                <h:outputText value="#{record.stdfkje}" style="float: right">
+                    <f:convertNumber type="number" pattern="#,###,###,###,###.##"/>
+                </h:outputText>
+            </p:column>
+
+            <p:column headerText="放款日期" style="text-align:center">
+                <h:outputText value="#{record.stdfkrq}"/>
+            </p:column>
+
+            <!--  <p:column headerText="到期日期" style="text-align:center">
+                <h:outputText value="#{record.stddqrq}"/>
+            </p:column>-->
+
+            <p:column headerText="贷款金额" style="text-align:right">
+                <h:outputText value="#{record.stddkje}" style="float: right">
+                    <f:convertNumber type="number" pattern="#,###,###,###,###.##"/>
+                </h:outputText>
+            </p:column>
+
+            <p:column headerText="贷款余额">
+                <h:outputText value="#{record.stdye}" style="float: right">
+                    <f:convertNumber type="number" pattern="#,###,###,###,###.##"/>
+                </h:outputText>
+            </p:column>
+            <p:column headerText="贷款形态">
+                <h:outputText value="#{writeBackQryAction.loanStatusEnum.valueOfAlias(record.stddkxt).title}"/>
+            </p:column>
+
+            <p:column headerText="操作" style="width:80px;text-align:center">
+                <h:commandLink id="showAppDetail" ajax="false" immediate="true" value="申请单信息"
+                               onclick="showAppInfo(this);"/>
+                <!-- <p:commandButton id="showAppDetail" ajax="false" immediate="true" value="申请单信息" onclick="showAppInfo(this);">
+                </p:commandButton>
+                <p:commandButton update=":inputform:detailPanel1" immediate="true" oncomplete="detailDialog1.show()"  value="申请单状态">
+                    <f:setPropertyActionListener value="#{record}" target="#{writeBackQryAction.selectedRecord}"/>
+                </p:commandButton>-->
+            </p:column>
+            <!--<f:facet name="footer">
+                <div align="right">
+                    <p:commandButton ajax="false" value="导出Excel文件">
+                        <p:dataExporter type="xls" target="pdt" fileName="AppStatusQueryResult"/>
+                    </p:commandButton>
+                </div>
+            </f:facet>-->
+            <!--<h:commandLink>
+                <p:graphicImage value="/images/xml.png" />
+                <p:dataExporter type="xml" target="tbl" fileName="cars" pageOnly="true"/>
+            </h:commandLink>-->
+        </p:dataTable>
+        <p:dialog header="申请单状态信息" widgetVar="detailDialog1" resizable="false" width="600" height="400" modal="true">
+            <h:panelGrid id="detailPanel1" columns="1" cellpadding="12">
+                <h:panelGrid columns="4" cellpadding="8"
+                             columnClasses="col-label,col-input,col-label,col-input">
+                    <h:outputLabel value="申请单号:"/>
+                    <p:inputText value="#{writeBackQryAction.selectedRecord.appno}" disabled="true"/>
+                    <h:outputLabel value="申请单状态:"/>
+                    <p:inputText value="#{writeBackQryAction.selectedRecord.stdsqdzt}" disabled="true"/>
+                    <h:outputLabel value="客户号:"/>
+                    <p:inputText value="#{writeBackQryAction.selectedRecord.stdkhh}" disabled="true"/>
+                    <h:outputLabel value="客户姓名:"/>
+                    <p:inputText value="#{writeBackQryAction.selectedRecord.stdkhxm}" disabled="true"/>
+                    <h:outputLabel value="证件类型:"/>
+                    <p:inputText value="#{writeBackQryAction.selectedRecord.stdzjlx}" disabled="true"/>
+                    <h:outputLabel value="证件号码:"/>
+                    <p:inputText value="#{writeBackQryAction.selectedRecord.stdzjhm}" disabled="true"/>
+                    <h:outputLabel value="合同号:"/>
+                    <p:inputText value="#{writeBackQryAction.selectedRecord.stdhth}" disabled="true"/>
+                    <h:outputLabel value="借据号:"/>
+                    <p:inputText value="#{writeBackQryAction.selectedRecord.stdjjh}" disabled="true"/>
+                    <h:outputLabel value="放款金额:"/>
+                    <p:inputText value="#{writeBackQryAction.selectedRecord.stdfkje}" disabled="true"/>
+                    <h:outputLabel value="放款日期:"/>
+                    <p:inputText value="#{writeBackQryAction.selectedRecord.stdfkrq}" disabled="true"/>
+                    <h:outputLabel value="到期日期:"/>
+                    <p:inputText value="#{writeBackQryAction.selectedRecord.stddqrq}" disabled="true"/>
+                    <h:outputLabel value="贷款金额:"/>
+                    <p:inputText value="#{writeBackQryAction.selectedRecord.stddkje}" disabled="true"/>
+                    <h:outputLabel value="贷款余额:"/>
+                    <p:inputText value="#{writeBackQryAction.selectedRecord.stdye}" disabled="true"/>
+                    <h:outputLabel value="贷款形态:"/>
+                    <p:inputText value="#{writeBackQryAction.selectedRecord.stddkxt}" disabled="true"/>
+                </h:panelGrid>
+            </h:panelGrid>
+        </p:dialog>
+
+    </h:form>
+
+</ui:define>
+</ui:composition>

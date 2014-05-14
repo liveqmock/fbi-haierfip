@@ -1,0 +1,129 @@
+﻿<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                template="/templates/ui.xhtml">
+
+    <ui:define name="head">
+        <style type="text/css">
+            .col-95 {
+                width: 95%;
+            }
+
+            .col-5 {
+                width: 5%;
+            }
+        </style>
+
+    </ui:define>
+
+    <ui:define name="content">
+        <h:form id="qryform">
+        <div style="margin:5px">
+            <p:tabView dynamic="true" cache="false" style="font-weight:normal;font-style:normal">
+                <p:tab title="银联交易历史查询">
+                    <p:messages id="msgs" showDetail="false"/>
+
+                    <div id="qrytable">
+                        <p:growl id="qrymsgs" showDetail="false"/>
+                            <p:panel style="margin-top:10px">
+                                <h:panelGrid columns="2" cellspacing="5" columnClasses="col-95,col-5">
+                                    <h:panelGrid columns="4" cellspacing="5">
+                                        <h:outputLabel value="起始日期:" for="startdate"/>
+                                        <p:inputText id="startdate"
+                                                     value="#{unipayTxnHisQryAction.qryParam.BEGIN_DATE}"
+                                                     onclick="WdatePicker()"/>
+                                        <h:outputLabel value="结束日期:" for="enddate"/>
+                                        <p:inputText id="enddate"
+                                                     value="#{unipayTxnHisQryAction.qryParam.END_DATE}"
+                                                     onclick="WdatePicker()"/>
+
+                                        <h:outputLabel value="查询类型:"/>
+                                        <h:selectOneMenu id="certtype" style="width:153px;"
+                                                         value="#{unipayTxnHisQryAction.qryParam.RESULT_TYPE}">
+                                            <f:selectItems value="#{unipayTxnHisQryAction.qryTypeList}"/>
+                                        </h:selectOneMenu>
+                                        <h:outputLabel value="交易流水号:"/>
+                                        <p:inputText id="certno" value="#{unipayTxnHisQryAction.qryParam.QUERY_SN}"/>
+                                    </h:panelGrid>
+                                    <h:panelGrid>
+                                        <p:commandButton id="qrybtn" style="width:90px;" value="查询"
+                                                         action="#{unipayTxnHisQryAction.onQuery}"
+                                                         update="pdt,msgs">
+                                        </p:commandButton>
+                                <p:commandButton ajax="false" id="btnExport" value="导出CSV"
+                                                 style="width:90px;">
+                                    <p:dataExporter type="csv" target="pdt" fileName="unipayHisRpt" encoding="GBK"
+                                                    pageOnly="false"/>
+                                </p:commandButton>
+
+                                    </h:panelGrid>
+                                </h:panelGrid>
+                            </p:panel>
+                            <p:ajaxStatus style="height:18px;text-align:center">
+                                <f:facet name="start">
+                                    <h:graphicImage value="/images/ajaxloadingbar.gif"/>
+                                </f:facet>
+                                <f:facet name="complete">
+                                    <h:outputText value=""/>
+                                </f:facet>
+                            </p:ajaxStatus>
+                            <p:dataTable id="pdt" dynamic="true" style="width:100%;"
+                                         value="#{unipayTxnHisQryAction.detlList}" var="record"
+                                         rowKey="#{record.SN}"
+                                         selection="#{unipayTxnHisQryAction.selectedQryRecords}"
+                                         filteredValue="#{unipayTxnHisQryAction.filteredDetlList}"
+                                         paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown} 【总笔数:#{unipayTxnHisQryAction.totalcount}】"
+                                         currentPageReportTemplate="【过滤后笔数:{totalRecords}】"
+                                         paginator="true" rows="15" paginatorPosition="bottom"
+                                         rowsPerPageTemplate="100,50,30,15,5"
+                                         emptyMessage="数据记录为空...">
+                                <p:column selectionMode="multiple" style="width:18px"/>
+<!--
+                                <p:column headerText="流水号" style="text-align: center">
+                                    <h:outputText value="#{record.QUERY_SN}"/>
+                                </p:column>
+-->
+                                <p:column headerText="记录序号"
+                                    filterBy="#{record.SN}" sortBy="#{record.SN}"
+                                    style="text-align: center">
+                                    <h:outputText value="#{record.SN}"/>
+                                </p:column>
+                                <p:column headerText="处理时间" style="text-align: center"
+                                        filterBy="#{record.COMPLETE_TIME}" filterMatchMode="contains">
+                                    <h:outputText value="#{record.COMPLETE_TIME}"/>
+                                </p:column>
+                                <p:column headerText="文件ID" style="text-align: center">
+                                    <h:outputText value="#{record.ORAFILE_ID}"/>
+                                </p:column>
+                                <p:column headerText="账号" style="text-align: center">
+                                    <h:outputText value="#{record.ACCOUNT}"/>
+                                </p:column>
+                                <p:column headerText="姓名"
+                                          filterBy="#{record.ACCOUNT_NAME}" filterMatchMode="contains"
+                                          style="text-align: center">
+                                    <h:outputText value="#{record.ACCOUNT_NAME}"/>
+                                </p:column>
+                                <p:column headerText="金额">
+                                    <h:outputText value="#{record.AMOUNT}" style="float: right">
+                                        <f:convertNumber type="number" pattern="#,###,###,###,##0.00"/>
+                                    </h:outputText>
+                                </p:column>
+                                <p:column headerText="返回码"
+                                          filterBy="#{record.RET_CODE}"
+                                          style="text-align: center">
+                                    <h:outputText value="#{record.RET_CODE}"/>
+                                </p:column>
+                                <p:column headerText="返回信息" style="text-align: center">
+                                    <h:outputText value="#{record.ERR_MSG}"/>
+                                </p:column>
+                            </p:dataTable>
+                    </div>
+                </p:tab>
+            </p:tabView>
+        </div>
+        </h:form>
+
+    </ui:define>
+</ui:composition>

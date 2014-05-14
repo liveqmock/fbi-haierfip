@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:jms="http://www.springframework.org/schema/jms"
+
+       xsi:schemaLocation=" http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
+             http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+             http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-3.0.xsd
+             http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
+             http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+             http://www.springframework.org/schema/jms http://www.springframework.org/schema/jms/spring-jms-3.0.xsd">
+
+    <context:property-placeholder location="classpath:credit.properties"/>
+
+    <!-- 配置数据库连接池 -->
+    <bean id="fipDataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+        <property name="driverClassName" value="${pub.platform.db.ConnectionManager.sDBDriver}"/>
+        <property name="url" value="${pub.platform.db.ConnectionManager.sConnStr}"/>
+        <property name="username" value="${pub.platform.db.ConnectionManager.user}"/>
+        <property name="password" value="${pub.platform.db.ConnectionManager.passwd}"/>
+        <property name="maxActive" value="15"/>
+        <property name="maxIdle" value="5"/>
+    </bean>
+
+
+    <!-- transaction manager, use JtaTransactionManager for global tx -->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="fipDataSource"/>
+    </bean>
+
+
+    <!-- enable component scanning (beware that this does not enable mapper scanning!) -->
+    <context:component-scan base-package="fip,hfc,skyline.service"/>
+
+    <!-- enable autowire -->
+    <context:annotation-config/>
+
+    <!--<tx:jta-transaction-manager />-->
+
+    <!-- enable transaction demarcation with annotations -->
+    <tx:annotation-driven/>
+
+    <!-- define the SqlSessionFactory, notice that configLocation is not needed when you use MapperFactoryBean -->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="fipDataSource"/>
+        <!--<property name="mapperLocations" value="classpath:fip/repository/mapper/**/*.xml"/>-->
+        <property name="mapperLocations">
+            <list>
+                <value>
+                    classpath:fip/repository/mapper/**/*.xml
+                </value>
+            </list>
+        </property>
+    </bean>
+
+    <!-- scan for mappers and let them be autowired -->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage"
+                  value="fip.repository.dao,pams.repository.dao.telemarketing"/>
+    </bean>
+
+    <!--viewscope-->
+    <bean class="org.springframework.beans.factory.config.CustomScopeConfigurer">
+        <property name="scopes">
+            <map>
+                <entry key="view">
+                    <bean class="skyline.config.scope.ViewScope"/>
+                </entry>
+            </map>
+        </property>
+    </bean>
+
+    <!-- JMS-->
+    <bean id="jmsConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
+        <property name="brokerURL">
+            <value>${jms.brokerURL}</value>
+        </property>
+        <property name="userName" value="${jms.username}"/>
+        <property name="password" value="${jms.password}"/>
+
+    </bean>
+
+    <bean id="jmsSendTemplate" class="org.springframework.jms.core.JmsTemplate">
+        <property name="connectionFactory" ref="jmsConnectionFactory"/>
+        <property name="defaultDestination" ref="send.unipay"/>
+        <property name="timeToLive" value="${jms.timeToLive}"/>
+    </bean>
+    <bean id="jmsRecvTemplate" class="org.springframework.jms.core.JmsTemplate">
+        <property name="connectionFactory" ref="jmsConnectionFactory"/>
+        <property name="defaultDestination" ref="recv.unipay"/>
+        <property name="timeToLive" value="${jms.timeToLive}"/>
+        <property name="receiveTimeout" value="${jms.realtime_receive_timeout}"/>
+    </bean>
+    <!-- 实时发送  -->
+    <bean id="send.unipay" class="org.apache.activemq.command.ActiveMQQueue">
+        <constructor-arg index="0">
+            <value>${queue.fip.to.dep}</value>
+        </constructor-arg>
+    </bean>
+    <!-- 实时接收  -->
+    <bean id="recv.unipay" class="org.apache.activemq.command.ActiveMQQueue">
+        <constructor-arg index="0">
+            <value>${queue.fip.from.dep}</value>
+        </constructor-arg>
+    </bean>
+
+    <bean id="jmsFipOutTemplate" class="org.springframework.jms.core.JmsTemplate">
+        <property name="connectionFactory" ref="jmsConnectionFactory"/>
+        <property name="defaultDestinationName" value="${queue.dep.core.fip.out}"/>
+        <property name="timeToLive" value="${jms.timeToLive}"/>
+    </bean>
+<!--
+    <jms:listener-container connection-factory="jmsConnectionFactory" concurrency="5">
+        <jms:listener destination="${queue.dep.core.fip.in}" ref="depPayoutMessageListener"
+                      selector="JMSX_BIZID='1002001' or JMSX_BIZID='1003001'"/>
+    </jms:listener-container>
+-->
+
+
+    <!--定时任务定义 -->
+    <!-- 总分账户对账 cronTrigger -->
+    <bean id="actchkZongFenHandler" class="fip.batch.actchk.ZongFenHandler"/>
+    <bean id="actchkZongFenJobDetailBean"
+          class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <property name="targetObject" ref="actchkZongFenHandler"/>
+        <property name="targetMethod" value="startActChk4Cron"/>
+        <property name="concurrent" value="false"/>
+    </bean>
+    <bean id="zongfenCronTriggerBean" class="org.springframework.scheduling.quartz.CronTriggerBean">
+    <property name="jobDetail" ref="actchkZongFenJobDetailBean"/>
+        <property name="cronExpression" value="0 50 7,8 * * ?"/>
+    </bean>
+
+    <!-- 总分账户对账校验结果通知 cronTrigger -->
+    <bean id="zongfenNotifyJobDetailBean"
+          class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <property name="targetObject" ref="actchkZongFenHandler"/>
+        <property name="targetMethod" value="notifyResult4Cron"/>
+        <property name="concurrent" value="false"/>
+    </bean>
+    <bean id="zongfenNotifyCronTriggerBean" class="org.springframework.scheduling.quartz.CronTriggerBean">
+        <property name="jobDetail" ref="zongfenNotifyJobDetailBean"/>
+        <property name="cronExpression" value="0 0 9 * * ?"/>
+    </bean>
+
+
+    <!-- 新消费信贷代扣账单自动获取 cronTrigger -->
+    <bean id="ccmsCutpay_1_JobDetailBean"
+          class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <property name="targetObject" ref="ccmsCutpayHandler"/>
+        <property name="targetMethod" value="processAll"/>
+        <property name="concurrent" value="false"/>
+    </bean>
+    <bean id="ccmsCutpayCronTriggerBean_1" class="org.springframework.scheduling.quartz.CronTriggerBean">
+        <property name="jobDetail" ref="ccmsCutpay_1_JobDetailBean"/>
+        <property name="cronExpression" value="0 0 17 * * ?"/>
+    </bean>
+    <!-- 新消费信贷代扣账单自动结果查询并回写 cronTrigger -->
+    <bean id="ccmsCutpay_2_JobDetailBean"
+          class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <property name="targetObject" ref="ccmsCutpayHandler"/>
+        <property name="targetMethod" value="processResultQueryAndWriteBack"/>
+        <property name="concurrent" value="false"/>
+    </bean>
+    <bean id="ccmsCutpayCronTriggerBean_2" class="org.springframework.scheduling.quartz.CronTriggerBean">
+        <property name="jobDetail" ref="ccmsCutpay_2_JobDetailBean"/>
+        <property name="cronExpression" value="0 10 17 * * ?"/>
+    </bean>
+
+    <!--SBS内部总分账户清算数据发送到EAI（JDE）-->
+    <bean id="autoSendSbsZfqsRecordsJobDetailBean"
+          class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <property name="targetObject" ref="autoSendSbszfqsHandler"/>
+        <property name="targetMethod" value="obtainAndSendSbsZfqsRecords"/>
+        <property name="concurrent" value="false"/>
+    </bean>
+    <bean id="autoSendSbsZfqsRecordsCronTriggerBean" class="org.springframework.scheduling.quartz.CronTriggerBean">
+        <property name="jobDetail" ref="autoSendSbsZfqsRecordsJobDetailBean"/>
+        <property name="cronExpression" value="0 0 1 * * ?"/>
+    </bean>
+
+
+    <!-- 设置调度 -->
+    <bean id="myScheduler" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+        <property name="triggers">
+            <list>
+                <ref bean="zongfenCronTriggerBean"/>
+                <ref bean="zongfenNotifyCronTriggerBean"/>
+                <ref bean="ccmsCutpayCronTriggerBean_1"/>
+                <ref bean="ccmsCutpayCronTriggerBean_2"/>
+                <ref bean="autoSendSbsZfqsRecordsCronTriggerBean"/>
+            </list>
+        </property>
+        <property name="quartzProperties">
+            <props>
+                <prop key="org.quartz.threadPool.threadCount">1</prop>
+                <prop key="org.quartz.scheduler.instanceId">AUTO</prop>
+            </props>
+        </property>
+    </bean>
+</beans>

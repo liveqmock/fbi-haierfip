@@ -1,0 +1,152 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                template="/templates/ui.xhtml">
+
+    <ui:define name="head">
+        <script type="text/javascript">
+           function doPopupWindow(obj) {
+                var pkid = obj.parentNode.parentNode.parentNode.getAttribute("data-rk");
+                var popupwindow = window.open("common/cutpayDetlFields.xhtml?pkid=" + pkid, "", "height=600,width=800,left=200,top=100,toolbar=no,menubar=no,scrollbars=yes,location=no");
+                popupwindow.focus;
+            }
+        </script>
+
+    </ui:define>
+    <ui:define name="content">
+        <div style="margin:5px">
+            <p:tabView id="tabview" dynamic="true" cache="false" style="font-weight:normal;font-style:normal">
+                <p:tab title="信贷系统代扣记录查询">
+                    <div id="qrytable">
+                        <h:form id="qryform">
+                            <p:messages  id="qrymsgs" showDetail="false"/>
+                            <p:menubar>
+                                <p:menuitem type="push" value="查询信贷系统的代扣记录" icon="ui-icon ui-icon-gear"
+                                            action="#{obtainBillsAction.onQryCms}" update="qrymsgs, qrypdt"
+                                            ajax="true"/>
+                                <p:menuitem type="push" value="获取选择的代扣记录" icon="ui-icon ui-icon-gear"
+                                            action="#{obtainBillsAction.onObtainMulti}" update="qrymsgs, qrypdt, :tabview:form:pdt"
+                                            ajax="true"/>
+                                <p:menuitem type="push" value="EXCEL导出" icon="ui-icon ui-icon-disk"
+                                            action="#{obtainBillsAction.onExportQryList}" ajax="false"
+                                            update="qrymsgs, qrypdt"/>
+                            </p:menubar>
+                            <p:ajaxStatus style="height:18px;text-align:center">
+                                <f:facet name="start">
+                                    <h:graphicImage value="/images/ajaxloadingbar.gif"/>
+                                </f:facet>
+                                <f:facet name="complete">
+                                    <h:outputText value=""/>
+                                </f:facet>
+                            </p:ajaxStatus>
+                            <p:dataTable id="qrypdt" dynamic="true" style="width:100%;"
+                                         value="#{obtainBillsAction.qrydetlList}" var="record"
+                                         rowKey="#{record.pkid}"
+                                         filteredValue="#{obtainBillsAction.filteredQrydetlList}"
+                                         selection="#{obtainBillsAction.selectedQryRecords}"
+                                         paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown} 【总笔数:#{obtainBillsAction.totalqrycount}】【总金额:#{obtainBillsAction.totalqryamt}】"
+                                         paginator="true" rows="15" paginatorPosition="bottom"
+                                         rowsPerPageTemplate="100,50,30,15,5"
+                                         emptyMessage="数据记录为空...">
+                                <p:column selectionMode="multiple" style="width:18px"/>
+<!--
+                                <p:column headerText="申请单号">
+                                    <h:outputText value="#{record.appno}"/>
+                                </p:column>
+-->
+                                <p:column headerText="借据号"
+                                          filterBy="#{record.iouno}" filterMatchMode="contains" sortBy="#{record.iouno}">
+                                    <h:outputText value="#{record.iouno}"/>
+                                </p:column>
+                                <p:column headerText="期次号" style="text-align: center">
+                                    <h:outputText value="#{record.poano}"/>
+                                </p:column>
+                                <p:column headerText="姓 名"
+                                          filterBy="#{record.clientname}" filterMatchMode="contains" style="text-align: center">
+                                <h:outputText value="#{record.clientname}"/>
+                                </p:column>
+                                <p:column headerText="还款金额">
+                                    <h:outputText value="#{record.paybackamt}" style="float: right">
+                                        <f:convertNumber type="number" pattern="#,###,###,###,###.##"/>
+                                    </h:outputText>
+                                </p:column>
+                                <p:column headerText="本金">
+                                    <h:outputText value="#{record.principalamt}" style="float: right">
+                                        <f:convertNumber type="number" pattern="#,###,###,###,###.##"/>
+                                    </h:outputText>
+                                </p:column>
+                                <p:column headerText="利息">
+                                    <h:outputText value="#{record.interestamt}" style="float: right">
+                                        <f:convertNumber type="number" pattern="#,###,###,###,###.##"/>
+                                    </h:outputText>
+                                </p:column>
+                                <p:column headerText="罚息">
+                                    <h:outputText value="#{record.punitiveintamt}" style="float: right">
+                                        <f:convertNumber type="number" pattern="#,###,###,###,###.##"/>
+                                    </h:outputText>
+                                </p:column>
+                                <p:column headerText="扣款帐号" style="text-align: center">
+                                    <h:outputText value="#{record.biBankactno}"/>
+                                </p:column>
+                                <p:column headerText="地区" rendered="#{obtainBillsAction.bizType.code=='FD'}"
+                                          filterBy="#{record.biCity}" filterMatchMode="contains" style="text-align: center">
+                                    <h:outputText value="#{record.biCity}"/>
+                                </p:column>
+                            </p:dataTable>
+                        </h:form>
+                    </div>
+                </p:tab>
+                <p:tab title="信贷系统代扣记录处理">
+                    <div id="table">
+                        <h:form id="form">
+                            <p:messages id="msgs" showDetail="false"/>
+                            <p:menubar>
+                                <p:menuitem type="push" value="获取信贷系统的代扣记录" icon="ui-icon ui-icon-gear"
+                                            action="#{obtainBillsAction.onObtain}" update="msgs,:tabview:form:pdt" ajax="true"/>
+                                <p:menuitem type="push" value="删除列表中全部记录" icon="ui-icon ui-icon-close"
+                                            onclick="confirmDel.show()" ajax="true"
+                                            update="msgs, pdt"/>
+                                <p:menuitem type="push" value="删除所选记录" icon="ui-icon ui-icon-disk"
+                                            action="#{obtainBillsAction.onDeleteMulti}" update="msgs, pdt" ajax="true"/>
+                                <p:menuitem type="push" value="EXCEL导出" icon="ui-icon ui-icon-disk"
+                                            action="#{obtainBillsAction.onExportObtainedList}" ajax="false"
+                                            update="msgs, pdt"/>
+                            </p:menubar>
+                            <p:ajaxStatus style="height:18px;text-align:center">
+                                <f:facet name="start">
+                                    <h:graphicImage value="/images/ajaxloadingbar.gif"/>
+                                </f:facet>
+                                <f:facet name="complete">
+                                    <h:outputText value=""/>
+                                </f:facet>
+                            </p:ajaxStatus>
+                            <p:dataTable id="pdt" widgetVar="billtbl" style="width:100%;"
+                                         value="#{obtainBillsAction.detlList}" var="record"
+                                         rowKey="#{record.pkid}"
+                                         filteredValue="#{obtainBillsAction.filteredDetlList}"
+                                         selection="#{obtainBillsAction.selectedRecords}"
+                                         paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown} 【总笔数:#{obtainBillsAction.totalcount}】【总金额:#{obtainBillsAction.totalamt}】"
+                                         paginator="true" rows="15" paginatorPosition="bottom"
+                                         rowsPerPageTemplate="100,50,30,15,5"
+                                         emptyMessage="数据记录为空...">
+                                <p:column selectionMode="multiple" style="width:18px"/>
+                                <ui:include src="common/cutpayListFields.xhtml">
+                                    <ui:param name="backBean" value="#{obtainBillsAction}"/>
+                                </ui:include>
+                            </p:dataTable>
+                            <p:confirmDialog id="confirmDelDialog" message="确认删除列表中全部记录吗?" width="300"
+                                             header="请确认" severity="alert" widgetVar="confirmDel">
+                                <p:commandButton id="confirm" value="确定" update="msgs, pdt"
+                                                 oncomplete="confirmDel.hide();billtbl.clearFilters()"
+                                                 actionListener="#{obtainBillsAction.onDeleteAll}"/>
+                                <p:commandButton id="decline" value="取消" onclick="confirmDel.hide()" type="button"/>
+                            </p:confirmDialog>
+                        </h:form>
+                    </div>
+                </p:tab>
+            </p:tabView>
+        </div>
+    </ui:define>
+</ui:composition>

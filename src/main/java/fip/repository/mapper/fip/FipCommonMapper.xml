@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="fip.repository.dao.fip.FipCommonMapper">
+
+    <select id="selectAppByCondition" parameterType="hfc.parambean.AppQryParam" resultType="fip.repository.model.Xfapp">
+        <![CDATA[
+        SELECT  * FROM XFAPP app WHERE app.APPSTATUS != '0'
+         ]]>
+        <if test="appno != null and appno != ''">
+            and appno like  CONCAT('%',CONCAT(trim(#{appno}),'%'))
+        </if>
+        <if test="idType != null and idType != ''">
+            and idtype = #{idType}
+        </if>
+        <if test="id != null and id != ''">
+            and id like CONCAT('%',CONCAT(trim(#{id}),'%'))
+        </if>
+        <if test="clientName != null and clientName != ''">
+            and name like  CONCAT('%',CONCAT(trim(#{clientName}),'%'))
+        </if>
+        <if test = " (fromDate != null and fromDate != '') and (toDate != null and toDate != '') ">
+                 and appDate  between TO_DATE(#{fromDate},'yyyy-MM-dd') and TO_DATE(#{toDate},'yyyy-MM-dd')
+        </if>
+    </select>
+
+    <!--查询已扣款成功的记录 for 退款处理 -->
+    <select id="selectCutpaysByCondition"  resultMap="fip.repository.dao.FipCutpaydetlMapper.BaseResultMap">
+            SELECT  * FROM fip_cutpaydetl
+              WHERE  deletedflag != '1'
+                and origin_bizid = #{bizid}
+                and billstatus = #{billstatus}
+                <if test="iouno != null and iouno != ''">
+                    and iouno = #{iouno}
+                </if>
+                <if test="poano != null and poano != ''">
+                    and poano = #{poano}
+                </if>
+                <if test="clientname != null and clientname != ''">
+                    and clientname like  '%${clientname}%'
+                </if>
+                <if test = " (startdate != null and startdate != '') and (enddate != null and enddate != '') ">
+                    and date_cms_put  between TO_DATE(#{startdate},'yyyy-MM-dd') and TO_DATE(#{enddate},'yyyy-MM-dd')
+                </if>
+    </select>
+
+
+</mapper>

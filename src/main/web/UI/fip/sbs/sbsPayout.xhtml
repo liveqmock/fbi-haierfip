@@ -1,0 +1,196 @@
+<!--sbs账户通过银联付款 -->
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                template="/templates/ui.xhtml">
+
+    <ui:define name="head">
+        <script type="text/javascript">
+            function doPopupWindow(obj) {
+                var reqsn = obj.parentNode.parentNode.parentNode.getAttribute("data-rk");
+                var popupwindow = window.open("../common/payoutDetlList.xhtml?reqsn=" + reqsn, "", "height=700,width=1000,left=150,top=100,toolbar=no,menubar=no,scrollbars=yes,location=no");
+                popupwindow.focus;
+            }
+        </script>
+    </ui:define>
+
+    <ui:define name="content">
+        <div style="margin:5px">
+
+            <p:tabView id="tabview"  dynamic="true" cache="false" style="font-weight:normal;font-style:normal">
+                <p:tab title="SBS账户支付入账[N057]">
+                    <div id="table">
+                        <h:form id="form">
+                            <p:messages id="msgs" showDetail="false"/>
+                            <p:menubar>
+                                <p:menuitem type="push" value="支付全部记录" icon="ui-icon ui-icon-document"
+                                            action="#{sbsPayoutAction.onAllN057}" update="msgs, pdt"
+                                            oncomplete="pdtbl.clearFilters()"
+                                            ajax="true"/>
+                                <p:menuitem type="push" value="支付所选记录" icon="ui-icon ui-icon-disk"
+                                            action="#{sbsPayoutAction.onN057()}" update="msgs, pdt"/>
+                            </p:menubar>
+                            <p:ajaxStatus style="height:18px;text-align:center">
+                                <f:facet name="start">
+                                    <h:graphicImage value="/images/ajaxloadingbar.gif"/>
+                                </f:facet>
+                                <f:facet name="complete">
+                                    <h:outputText value=""/>
+                                </f:facet>
+                            </p:ajaxStatus>
+                            <p:dataTable id="pdt" widgetVar="pdtbl" style="width:100%;"
+                                         value="#{sbsPayoutAction.n057List}" var="record"
+                                         rowKey="#{record.reqSn}"
+                                         selection="#{sbsPayoutAction.selectedBats}"
+                                         paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                                         paginator="true" rows="15" paginatorPosition="bottom"
+                                         rowsPerPageTemplate="100,50,30,15,5"
+                                         emptyMessage="数据记录为空...">
+                                <p:column selectionMode="multiple" style="width:18px"/>
+                                <ui:include src="../common/payoutBatListFields.xhtml">
+                                    <ui:param name="backBean" value="#{sbsPayoutAction}"/>
+                                </ui:include>
+                            </p:dataTable>
+                        </h:form>
+                    </div>
+                </p:tab>
+                <p:tab title="发送银联代付">
+                    <div id="unipaytable">
+                        <h:form id="unipayform">
+                            <p:messages id="unipaymsgs" showDetail="false"/>
+                            <p:menubar>
+                                <p:menuitem type="push" value="支付全部记录" icon="ui-icon ui-icon-document"
+                                            action="#{sbsPayoutAction.onUnipayout()}" update="unipaymsgs,unipaypdt"/>
+                            </p:menubar>
+                            <p:ajaxStatus style="height:18px;text-align:center">
+                                <f:facet name="start">
+                                    <h:graphicImage value="/images/ajaxloadingbar.gif"/>
+                                </f:facet>
+                                <f:facet name="complete">
+                                    <h:outputText value=""/>
+                                </f:facet>
+                            </p:ajaxStatus>
+                            <p:dataTable id="unipaypdt" widgetVar="unipaytbl" style="width:100%;"
+                                         value="#{sbsPayoutAction.unipayList}" var="record"
+                                         rowKey="#{record.reqSn}"
+                                         selection="#{sbsPayoutAction.selectedBats}"
+                                         paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                                         paginator="true" rows="15" paginatorPosition="bottom"
+                                         rowsPerPageTemplate="100,50,30,15,5"
+                                         emptyMessage="数据记录为空...">
+                                <p:column selectionMode="multiple" style="width:18px"/>
+                                <ui:include src="../common/payoutBatListFields.xhtml">
+                                    <ui:param name="backBean" value="#{sbsPayoutAction}"/>
+                                </ui:include>
+                            </p:dataTable>
+                        </h:form>
+                    </div>
+                </p:tab>
+                <p:tab title="银联代付结果查询">
+                    <div id="qryListTable">
+                        <h:form id="qryListform">
+                            <p:messages id="qrymsgs" showDetail="false"/>
+                            <p:menubar>
+                                <p:menuitem type="push" value="查询全部记录结果" icon="ui-icon ui-icon-disk" ajax="true"
+                                            action="#{sbsPayoutAction.onUnionpayQry()}"
+                                            update="qrymsgs,qrypdt"/>
+                            </p:menubar>
+                            <p:ajaxStatus style="height:18px;text-align:center">
+                                <f:facet name="start">
+                                    <h:graphicImage value="/images/ajaxloadingbar.gif"/>
+                                </f:facet>
+                                <f:facet name="complete">
+                                    <h:outputText value=""/>
+                                </f:facet>
+                            </p:ajaxStatus>
+                            <p:dataTable id="qrypdt" widgetVar="qrytbl" style="width:100%;"
+                                         value="#{sbsPayoutAction.qryList}" var="record"
+                                         rowKey="#{record.reqSn}"
+                                         selection="#{sbsPayoutAction.selectedBats}"
+                                         paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown} "
+                                         paginator="true" rows="15" paginatorPosition="bottom"
+                                         rowsPerPageTemplate="100,50,30,15,5"
+                                         emptyMessage="数据记录为空...">
+                                <p:column selectionMode="multiple" style="width:18px"/>
+                                <ui:include src="../common/payoutBatListFields.xhtml">
+                                    <ui:param name="backBean" value="#{sbsPayoutAction}"/>
+                                </ui:include>
+                            </p:dataTable>
+                        </h:form>
+                    </div>
+                </p:tab>
+                <p:tab title="SBS支付入账确认和撤销[N058,N059]">
+                    <div id="actListTable">
+                        <h:form id="actListform">
+                            <p:messages id="sbsmsgs" showDetail="false"/>
+                            <p:menubar>
+                                <p:menuitem type="push" value="入账全部记录" icon="ui-icon ui-icon-disk" ajax="true"
+                                            action="#{sbsPayoutAction.onSbsConfirm()}"
+                                            update="sbsmsgs,actpdt"/>
+                            </p:menubar>
+                            <p:ajaxStatus style="height:18px;text-align:center">
+                                <f:facet name="start">
+                                    <h:graphicImage value="/images/ajaxloadingbar.gif"/>
+                                </f:facet>
+                                <f:facet name="complete">
+                                    <h:outputText value=""/>
+                                </f:facet>
+                            </p:ajaxStatus>
+                            <p:dataTable id="actpdt" widgetVar="acttbl" dynamic="true" style="width:100%;"
+                                         value="#{sbsPayoutAction.sbsConfirmList}" var="record"
+                                         rowKey="#{record.reqSn}"
+                                         selection="#{sbsPayoutAction.selectedBats}"
+                                         paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown} "
+                                         paginator="true" rows="15" paginatorPosition="bottom"
+                                         rowsPerPageTemplate="100,50,30,15,5"
+                                         emptyMessage="数据记录为空...">
+                                <p:column selectionMode="multiple" style="width:18px"/>
+                                <ui:include src="../common/payoutBatListFields.xhtml">
+                                    <ui:param name="backBean" value="#{sbsPayoutAction}"/>
+                                </ui:include>
+                            </p:dataTable>
+                        </h:form>
+                    </div>
+                </p:tab>
+                <p:tab title="全部代付记录">
+                    <div id="payoutListTable">
+                        <h:form id="payoutListform">
+                            <p:messages id="payoutmsgs" showDetail="false"/>
+                            <p:menubar>
+                                <p:menuitem type="push" value="查看全部记录" icon="ui-icon ui-icon-disk" ajax="true"
+                                            action="#{sbsPayoutAction.onQryALl()}"
+                                            update="payoutmsgs,payoutpdt"/>
+                            </p:menubar>
+                            <p:ajaxStatus style="height:18px;text-align:center">
+                                <f:facet name="start">
+                                    <h:graphicImage value="/images/ajaxloadingbar.gif"/>
+                                </f:facet>
+                                <f:facet name="complete">
+                                    <h:outputText value=""/>
+                                </f:facet>
+                            </p:ajaxStatus>
+                            <p:dataTable id="payoutpdt" widgetVar="payouttbl" dynamic="true" style="width:100%;"
+                                         value="#{sbsPayoutAction.allList}" var="record"
+                                         rowKey="#{record.reqSn}"
+                                         selection="#{sbsPayoutAction.selectedBats}"
+                                         paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown} "
+                                         paginator="true" rows="15" paginatorPosition="bottom"
+                                         rowsPerPageTemplate="100,50,30,15,5"
+                                         emptyMessage="数据记录为空...">
+                                <p:column selectionMode="multiple" style="width:18px"/>
+                                <ui:include src="../common/payoutBatListFields.xhtml">
+                                    <ui:param name="backBean" value="#{sbsPayoutAction}"/>
+                                </ui:include>
+                            </p:dataTable>
+                        </h:form>
+                    </div>
+                </p:tab>
+
+            </p:tabView>
+        </div>
+
+    </ui:define>
+
+</ui:composition>

@@ -1,0 +1,276 @@
+<!--银行直连代扣 批量模式 -->
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                template="/templates/ui.xhtml">
+
+<ui:define name="head">
+    <script type="text/javascript">
+        function doPopupWindow(obj) {
+            var pkid = obj.parentNode.parentNode.parentNode.getAttribute("data-rk");
+            var popupwindow = window.open("common/cutpayDetlFields.xhtml?pkid=" + pkid, "", "height=600,width=800,left=200,top=100,toolbar=no,menubar=no,scrollbars=yes,location=no");
+            popupwindow.focus;
+        }
+        function doPopupBatWindow(obj) {
+            var pkid = obj.parentNode.parentNode.parentNode.getAttribute("data-rk");
+            var popupwindow = window.open("common/cutpayBatDetlFields.xhtml?pkid=" + pkid, "", "height=600,width=800,left=200,top=100,toolbar=no,menubar=no,scrollbars=yes,location=no");
+            popupwindow.focus;
+        }
+        function doPopupBatDetlWindow(obj) {
+            var pkid = obj.parentNode.parentNode.parentNode.getAttribute("data-rk");
+            var popupwindow = window.open("cutpayQryList.xhtml?pkid=" + pkid, "", "height=600,width=1050,left=100,top=100,toolbar=no,menubar=no,scrollbars=yes,location=no");
+            popupwindow.focus;
+        }
+    </script>
+</ui:define>
+
+<ui:define name="content">
+    <div style="margin:5px">
+
+        <p:tabView id="tabview" dynamic="true" cache="false" style="font-weight:normal;font-style:normal">
+            <p:tab title="住房按揭直连代扣记录清单">
+                <div id="table">
+                    <h:form id="form">
+                        <p:messages id="msgs" showDetail="false"/>
+                        <p:menubar>
+                            <p:menuitem type="push" value="全部打包" icon="ui-icon ui-icon-document"
+                                        action="#{bankDirectPayBatchCmsAction.onTxPkgAll}" update="msgs, pdt,pkgPdt"/>
+                            <p:menuitem type="push" value="打包所选记录" icon="ui-icon ui-icon-disk"
+                                        action="#{bankDirectPayBatchCmsAction.onTxPkgMulti}" update="msgs, pdt,pkgPdt"/>
+                            <p:menuitem type="push" value="变更所选记录代扣渠道:银联" icon="ui-icon ui-icon-disk"
+                                        action="#{bankDirectPayBatchCmsAction.onChangeChannel}" update="msgs, pdt,pkgPdt"/>
+                            <p:menuitem type="push" value="打包对应上期次已扣成功记录" icon="ui-icon ui-icon-disk"
+                                        action="#{bankDirectPayBatchCmsAction.onTxPkgAll4FilterByLastPoano}" update="msgs, pdt,pkgPdt"/>
+                        </p:menubar>
+                        <p:ajaxStatus style="height:18px;text-align:center">
+                            <f:facet name="start">
+                                <h:graphicImage value="/images/ajaxloadingbar.gif"/>
+                            </f:facet>
+                            <f:facet name="complete">
+                                <h:outputText value=""/>
+                            </f:facet>
+                        </p:ajaxStatus>
+                        <p:dataTable id="pdt" dynamic="true" style="width:100%;"
+                                     value="#{bankDirectPayBatchCmsAction.detlList}" var="record"
+                                     rowKey="#{record.pkid}"
+                                     filteredValue="#{bankDirectPayBatchCmsAction.filteredDetlList}"
+                                     selection="#{bankDirectPayBatchCmsAction.selectedRecords}"
+                                     paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown} 【总笔数:#{bankDirectPayBatchCmsAction.totalcount}】【总金额:#{bankDirectPayBatchCmsAction.totalamt}】"
+                                     paginator="true" rows="5" paginatorPosition="bottom"
+                                     rowsPerPageTemplate="100,50,30,15,5"
+                                     emptyMessage="数据记录为空...">
+                            <p:column selectionMode="multiple" style="width:18px"/>
+                            <ui:include src="common/cutpayListFields.xhtml">
+                                <ui:param name="backBean" value="#{bankDirectPayBatchCmsAction}"/>
+                            </ui:include>
+                        </p:dataTable>
+
+                        <p:separator style="margin-top:40px;margin-bottom:10px"/>
+                        <p:menubar>
+                            <p:menuitem type="push" value="全部发送" icon="ui-icon ui-icon-arrowrefresh-1-w"
+                                        onclick="confirmationSend.show()"
+                                        update="msgs, pdt,pkgPdt, :tabview:qryform:qrypdt"/>
+                            <p:menuitem type="push" value="发送所选批量报文" icon="ui-icon ui-icon-disk"
+                                        action="#{bankDirectPayBatchCmsAction.onSendRequestMulti}"
+                                        update="msgs, pdt,pkgPdt, :tabview:qryform:qrypdt"/>
+                            <p:menuitem type="push" value="报文解包"  style="float:right;" icon="ui-icon ui-icon-disk"
+                                        action="#{bankDirectPayBatchCmsAction.onUnpackMulti}"
+                                        update="msgs, pdt,pkgPdt"/>
+                        </p:menubar>
+                        <p:ajaxStatus style="height:18px;text-align:center">
+                            <f:facet name="start">
+                                <h:graphicImage value="/images/ajaxloadingbar.gif"/>
+                            </f:facet>
+                            <f:facet name="complete">
+                                <h:outputText value=""/>
+                            </f:facet>
+                        </p:ajaxStatus>
+                        <p:dataTable id="pkgPdt" dynamic="true" style="width:100%;"
+                                     value="#{bankDirectPayBatchCmsAction.sendablePkgList}" var="record"
+                                     rowKey="#{record.txpkgSn}"
+                                     selection="#{bankDirectPayBatchCmsAction.selectedSendableRecords}"
+                                     paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown} "
+                                     paginator="true" rows="15" paginatorPosition="bottom"
+                                     rowsPerPageTemplate="100,50,30,15,5"
+                                     emptyMessage="数据记录为空...">
+                            <p:column selectionMode="multiple" style="width:18px"/>
+                            <ui:include src="common/cutpayBatListFields.xhtml">
+                                <ui:param name="backBean" value="#{bankDirectPayBatchCmsAction}"/>
+                            </ui:include>
+                        </p:dataTable>
+                        <p:confirmDialog id="confirmSendDialog" message="确认发送全部处理请求吗?" width="300"
+                                         header="confirm" severity="alert" widgetVar="confirmationSend">
+                            <p:commandButton id="confirm" value="发送" style="float:right" update="msgs, pdt,pkgPdt, :tabview:qryform:qrypdt" oncomplete="confirmationSend.hide()"
+                                             actionListener="#{bankDirectPayBatchCmsAction.onSendRequestAll}" />
+                            <p:commandButton id="decline" value="不发送" style="float:right" onclick="confirmationSend.hide()" type="button" />
+                        </p:confirmDialog>
+                    </h:form>
+                </div>
+            </p:tab>
+            <p:tab title="结果查询交易处理">
+                <div id="qrytable">
+                    <h:form id="qryform">
+                        <p:messages id="qrymsgs" showDetail="false"/>
+                        <p:menubar>
+                            <p:menuitem type="push" value="全部查询" icon="ui-icon ui-icon-document"
+                                        action="#{bankDirectPayBatchCmsAction.onQueryAll}" update="qrymsgs,qrypdt,hisbatpdt"/>
+                            <p:menuitem type="push" value="查询所选记录" icon="ui-icon ui-icon-disk"
+                                        action="#{bankDirectPayBatchCmsAction.onQueryMulti}" update="qrymsgs,qrypdt,hisbatpdt"/>
+<!--
+                            <p:menuitem type="push" value="报文解包"  style="float:right;" icon="ui-icon ui-icon-disk"
+                                        action="#{bankDirectPayBatchAction.onUnpackMultiForQryList}"
+                                        update="qrymsgs,qrypdt, :tabview:form:pdt"/>
+-->
+                        </p:menubar>
+                        <p:ajaxStatus style="height:18px;text-align:center">
+                            <f:facet name="start">
+                                <h:graphicImage value="/images/ajaxloadingbar.gif"/>
+                            </f:facet>
+                            <f:facet name="complete">
+                                <h:outputText value=""/>
+                            </f:facet>
+                        </p:ajaxStatus>
+                        <p:dataTable id="qrypdt" dynamic="true" style="width:100%;"
+                                     value="#{bankDirectPayBatchCmsAction.needQueryBatList}" var="record"
+                                     rowKey="#{record.txpkgSn}"
+                                     selection="#{bankDirectPayBatchCmsAction.selectedQueryRecords}"
+                                     paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                                     paginator="true" rows="15" paginatorPosition="bottom"
+                                     rowsPerPageTemplate="100,50,30,15,5"
+                                     emptyMessage="数据记录为空...">
+                            <p:column selectionMode="multiple" style="width:18px"/>
+                            <ui:include src="common/cutpayBatListFields.xhtml">
+                                <ui:param name="backBean" value="#{bankDirectPayBatchCmsAction}"/>
+                            </ui:include>
+                        </p:dataTable>
+
+                        <p:separator  style="margin-top:30px" />
+                        <p style="margin-top: -5px">历史记录：</p>
+                        <p:dataTable id="hisbatpdt" dynamic="true" style="margin-top: -10px;width:100%;"
+                                     value="#{bankDirectPayBatchCmsAction.historyBatList}" var="record"
+                                     rowKey="#{record.txpkgSn}"
+                                     selection="#{bankDirectPayBatchCmsAction.selectedHistoryRecords}"
+                                     paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                                     paginator="true" rows="15" paginatorPosition="bottom"
+                                     rowsPerPageTemplate="100,50,30,15,5"
+                                     emptyMessage="数据记录为空...">
+                            <p:column selectionMode="multiple" style="width:18px"/>
+                            <ui:include src="common/cutpayBatListFields.xhtml">
+                                <ui:param name="backBean" value="#{bankDirectPayBatchCmsAction}"/>
+                            </ui:include>
+                        </p:dataTable>
+                    </h:form>
+                </div>
+            </p:tab>
+            <p:tab title="代扣失败记录清单">
+                <div id="failListTable">
+                    <h:form id="failListform">
+                        <p:messages id="failmsgs" showDetail="false"/>
+                        <p:menubar>
+                            <p:menuitem type="push" value="EXCEL导出" icon="ui-icon ui-icon-disk" ajax="false"
+                                        action="#{bankDirectPayBatchCmsAction.onExportFailureList}"
+                                        update="failmsgs,failpdt"/>
+                            <p:menuitem type="push" value="存档全部列表中记录" icon="ui-icon ui-icon-disk" ajax="true"
+                                        action="#{bankDirectPayBatchCmsAction.onArchiveAllFailureRecord}"
+                                        oncomplete="failtbl.clearFilters()"
+                                        update="failmsgs,failpdt"/>
+                            <p:menuitem type="push" value="存档所选记录" icon="ui-icon ui-icon-disk" ajax="true"
+                                        action="#{bankDirectPayBatchCmsAction.onArchiveMultiFailureRecord}"
+                                        update="failmsgs,failpdt"/>
+                        </p:menubar>
+                        <p:ajaxStatus style="height:18px;text-align:center">
+                            <f:facet name="start">
+                                <h:graphicImage value="/images/ajaxloadingbar.gif"/>
+                            </f:facet>
+                            <f:facet name="complete">
+                                <h:outputText value=""/>
+                            </f:facet>
+                        </p:ajaxStatus>
+                        <p:dataTable id="failpdt" widgetVar="failtbl" style="width:100%;"
+                                     value="#{bankDirectPayBatchCmsAction.failureDetlList}" var="record"
+                                     rowKey="#{record.pkid}"
+                                     filteredValue="#{bankDirectPayBatchCmsAction.filteredFailureDetlList}"
+                                     selection="#{bankDirectPayBatchCmsAction.selectedFailRecords}"
+                                     paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown} 【总笔数:#{bankDirectPayBatchCmsAction.totalFailureCount}】【总金额:#{bankDirectPayBatchCmsAction.totalFailureAmt}】"
+                                     currentPageReportTemplate="【过滤后笔数:{totalRecords}】"
+                                     paginator="true" rows="15" paginatorPosition="bottom"
+                                     rowsPerPageTemplate="100,50,30,15,5"
+                                     emptyMessage="数据记录为空...">
+                            <p:column selectionMode="multiple" style="width:18px"/>
+                            <ui:include src="common/cutpayListFields.xhtml">
+                                <ui:param name="backBean" value="#{bankDirectPayBatchCmsAction}"/>
+                            </ui:include>
+                        </p:dataTable>
+                    </h:form>
+                </div>
+            </p:tab>
+            <p:tab title="代扣成功记录清单">
+                <div id="succListTable">
+                    <h:form id="succListform">
+                        <p:messages id="succmsgs" showDetail="false"/>
+                        <p:menubar>
+                            <p:menuitem type="push" value="EXCEL导出" icon="ui-icon ui-icon-disk"
+                                        action="#{bankDirectPayBatchCmsAction.onExportSuccessList}" ajax="false"
+                                        update="succmsgs,succpdt,:tabview:actListform:actpdt"/>
+                            <p:menuitem type="push" value="入帐列表中全部记录" icon="ui-icon ui-icon-document"
+                                        action="#{bankDirectPayBatchCmsAction.onConfirmAccountAll}"
+                                        update="succmsgs,succpdt,:tabview:actListform:actpdt"/>
+                            <p:menuitem type="push" value="入帐所选记录" icon="ui-icon ui-icon-disk"
+                                        action="#{bankDirectPayBatchCmsAction.onConfirmAccountMulti}"
+                                        update="succmsgs,succpdt,:tabview:actListform:actpdt"/>
+                        </p:menubar>
+                        <p:ajaxStatus style="height:18px;text-align:center">
+                            <f:facet name="start">
+                                <h:graphicImage value="/images/ajaxloadingbar.gif"/>
+                            </f:facet>
+                            <f:facet name="complete">
+                                <h:outputText value=""/>
+                            </f:facet>
+                        </p:ajaxStatus>
+                        <p:dataTable id="succpdt" widgetVar="succtbl" style="width:100%;"
+                                     value="#{bankDirectPayBatchCmsAction.successDetlList}" var="record"
+                                     rowKey="#{record.pkid}"
+                                     filteredValue="#{bankDirectPayBatchCmsAction.filteredSuccessDetlList}"
+                                     selection="#{bankDirectPayBatchCmsAction.selectedConfirmAccountRecords}"
+                                     paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown} 【总笔数:#{bankDirectPayBatchCmsAction.totalSuccessCount}】【总金额:#{bankDirectPayBatchCmsAction.totalSuccessAmt}】"
+                                     currentPageReportTemplate="【过滤后笔数:{totalRecords}】"
+                                     paginator="true" rows="15" paginatorPosition="bottom"
+                                     rowsPerPageTemplate="100,50,30,15,5"
+                                     emptyMessage="数据记录为空...">
+                            <p:column selectionMode="multiple" style="width:18px"/>
+                            <ui:include src="common/cutpayListFields.xhtml">
+                                <ui:param name="backBean" value="#{bankDirectPayBatchCmsAction}"/>
+                            </ui:include>
+                        </p:dataTable>
+                    </h:form>
+                </div>
+            </p:tab>
+            <p:tab title="待入帐记录" id="acttab">
+                <div id="actListTable">
+                    <h:form id="actListform">
+                        <p:dataTable id="actpdt" dynamic="true" style="width:100%;"
+                                     value="#{bankDirectPayBatchCmsAction.actDetlList}" var="record"
+                                     rowKey="#{record.pkid}"
+                                     filteredValue="#{bankDirectPayBatchCmsAction.filteredActDetlList}"
+                                     selection="#{bankDirectPayBatchCmsAction.selectedAccountRecords}"
+                                     paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown} 【总笔数:#{bankDirectPayBatchCmsAction.totalAccountCount}】【总金额:#{bankDirectPayBatchCmsAction.totalAccountAmt}】"
+                                     paginator="true" rows="15" paginatorPosition="bottom"
+                                     rowsPerPageTemplate="100,50,30,15,5"
+                                     emptyMessage="数据记录为空...">
+                            <p:column selectionMode="multiple"/>
+                            <ui:include src="common/cutpayListFields.xhtml">
+                                <ui:param name="backBean" value="#{bankDirectPayBatchCmsAction}"/>
+                            </ui:include>
+                        </p:dataTable>
+                    </h:form>
+                </div>
+
+            </p:tab>
+        </p:tabView>
+    </div>
+
+</ui:define>
+
+</ui:composition>

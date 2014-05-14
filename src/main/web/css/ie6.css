@@ -1,0 +1,29 @@
+.ui-widget {
+    font-size: 12px !important;
+}
+
+.ui-widget .ui-widget {
+	FONT-SIZE:  12px !important;
+}
+.ui-widget TABLE {
+	FONT-SIZE:  12px !important;
+}
+
+.ui-widget LABEL {
+	FONT-FAMILY: Arial, sans-serif; FONT-SIZE:  12px !important;
+}
+
+.ui-widget INPUT {
+	FONT-FAMILY: Arial, sans-serif; FONT-SIZE:  12px !important;
+}
+
+.ui-widget SELECT {
+	FONT-FAMILY: Arial, sans-serif; FONT-SIZE:  12px !important;
+}
+.ui-widget TEXTAREA {
+	FONT-FAMILY: Arial, sans-serif; FONT-SIZE:  12px !important;
+}
+.ui-widget BUTTON {
+	FONT-FAMILY: Arial, sans-serif; FONT-SIZE:  12px !important;
+}
+

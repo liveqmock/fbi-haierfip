@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE  html  PUBLIC  "-//W3C//DTD  XHTML  1.0  Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui">
+
+<f:view contentType="text/html">
+    <head>
+        <title></title>
+    </head>
+    <body>
+    <ui:composition>
+        <p:column style="display:none;" headerText="pkid">
+            <h:outputText value="#{record.txpkgSn}"/>
+        </p:column>
+        <p:column headerText="报文包号" style="text-align:center">
+            <h:outputText value="#{record.txpkgSn}"/>
+        </p:column>
+        <p:column headerText="本包总笔数" style="text-align: center">
+            <h:outputText value="#{record.currcount}"/>
+        </p:column>
+        <p:column headerText="交易日期" style="text-align: center">
+            <h:outputText value="#{record.txndate}">
+                <f:convertDateTime dateStyle="default"/>
+            </h:outputText>
+        </p:column>
+        <p:column headerText="总金额">
+            <h:outputText value="#{record.totalamt}" style="float: right">
+                <f:convertNumber type="number" pattern="#,###,###,###,###.##"/>
+            </h:outputText>
+        </p:column>
+        <p:column headerText="业务种类" style="text-align:center">
+            <h:outputText  value="#{backBean.bizType.valueOfAlias(record.originBizid).title}" style="text-align: center">
+            </h:outputText>
+        </p:column>
+        <p:column headerText="交易类别" style="text-align:center">
+            <h:outputText  value="#{backBean.txnType.valueOfAlias(record.txntype).title}" style="text-align: center">
+
+            </h:outputText>
+        </p:column>
+        <p:column headerText="账单状态" style="text-align:center">
+            <h:outputText  value="#{backBean.batchStatus.valueOfAlias(record.txpkgStatus).title}" style="text-align: center">
+            </h:outputText>
+        </p:column>
+
+        <p:column headerText="操作" style="width:50px;text-align:center">
+            <p:commandLink style="color:blue;" value="详细"
+                           onclick="doPopupBatWindow(this);">
+            </p:commandLink>
+        </p:column>
+        <p:column headerText="操作" style="width:70px;text-align:center">
+            <p:commandLink style="color:blue;" value="明细帐单"
+                           onclick="doPopupBatDetlWindow(this);">
+            </p:commandLink>
+        </p:column>
+
+    </ui:composition>
+    </body>
+</f:view>
+</html>

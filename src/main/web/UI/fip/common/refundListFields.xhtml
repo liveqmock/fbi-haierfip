@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE  html  PUBLIC  "-//W3C//DTD  XHTML  1.0  Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui">
+
+<f:view contentType="text/html">
+    <head>
+        <title></title>
+    </head>
+    <body>
+    <ui:composition>
+        <p:column style="display:none;" headerText="pkid">
+            <h:outputText value="#{record.pkid}"/>
+        </p:column>
+
+        <p:column headerText="流水号">
+            <h:outputText value="#{record.batchSn}#{record.batchDetlSn}"/>
+        </p:column>
+
+        <p:column headerText="借据号"
+                  filterBy="#{record.iouno}" filterMatchMode="contains" sortBy="#{record.iouno}">
+            <h:outputText value="#{record.iouno}"/>
+        </p:column>
+
+        <p:column headerText="姓 名" style="text-align: center"
+                  filterBy="#{record.clientname}" filterMatchMode="contains">
+            <h:outputText value="#{record.clientname}"/>
+        </p:column>
+
+        <p:column headerText="还款金额" >
+            <h:outputText value="#{record.payamt}" style="float: right">
+                <f:convertNumber type="number" pattern="#,###,###,###,##0.00"/>
+            </h:outputText>
+        </p:column>
+
+        <p:column headerText="帐单状态" style="text-align: center">
+            <h:outputText value="#{backBean.status.valueOfAlias(record.billstatus).title}"/>
+        </p:column>
+
+        <p:column headerText="操作" style="width:50px;text-align:center">
+            <p:commandLink style="color:blue;" value="详细"
+                           onclick="doPopupWindow(this)">
+            </p:commandLink>
+        </p:column>
+
+    </ui:composition>
+    </body>
+</f:view>
+</html>

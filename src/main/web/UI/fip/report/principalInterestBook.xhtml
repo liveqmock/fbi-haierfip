@@ -1,0 +1,119 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:p="http://primefaces.org/ui"
+                template="/templates/ui.xhtml">
+    <ui:define name="head">
+        <style type="text/css">
+            .datalist-noborder .ui-widget-content {
+                border: none;
+                color: #999999;
+            }
+
+            .help-row {
+                vertical-align: top;
+            }
+
+            .input-col-s {
+                width: 45px;
+            }
+
+            .input-col-m {
+                width: 60px;
+            }
+
+            .input-col-l {
+                width: 80px;
+            }
+
+            .input-col-xl {
+                width: 140px;
+            }
+
+            .input-col-xxl {
+                width: 500px;
+                text-align: right
+            }
+
+            .datagrid-help {
+                border: 0;
+                margin: 0;
+                border-collapse: collapse;
+            }
+
+            .datagrid-help td {
+                padding: 1;
+            }
+
+        </style>
+        <script language="JavaScript" type="text/JavaScript">
+            window.onload = doOnLoad;
+            function isIE6() {
+                var Sys = {};
+                var ua = navigator.userAgent.toLowerCase();
+                var s;
+                (s = ua.match(/msie ([\d.]+)/)) ? Sys.ie = s[1] :
+                        (s = ua.match(/firefox\/([\d.]+)/)) ? Sys.firefox = s[1] :
+                                (s = ua.match(/chrome\/([\d.]+)/)) ? Sys.chrome = s[1] :
+                                        (s = ua.match(/opera.([\d.]+)/)) ? Sys.opera = s[1] :
+                                                (s = ua.match(/version\/([\d.]+).*safari/)) ? Sys.safari = s[1] : 0;
+
+                //以下进行测试
+                if (Sys.ie) {
+                    if (Sys.ie == '6.0')
+                        return true;
+                    else
+                        return false;
+                }else{
+                    return false;
+                }
+            }
+
+            function doOnLoad() {
+                var w_width;
+                var w_height;
+
+                if (isIE6()) {
+                    w_height = document.body.clientHeight;
+                    w_width = document.body.clientWidth;
+                } else {
+                    w_height = document.documentElement.clientHeight;
+                    w_width = document.documentElement.clientWidth;
+                }
+
+                document.getElementById('top').style.marginTop = (w_height - 300) / 2 + 'px';
+                document.getElementById('top').style.marginLeft = (w_width - 500) / 2 + 'px';
+            }
+        </script>
+    </ui:define>
+    <ui:define name="content">
+        <div class="entry" id="top">
+            <h:form id="form1">
+                <p:panel header="收本收息报表" id="input" style="width:500px;">
+                    <h:panelGrid columns="2" cellspacing="5" style="margin-top:15px;"
+                                 columnClasses="label-col-xl,input-col-xl">
+
+                        <h:outputLabel value="输入查询日期:"/>
+                        <p:calendar value="#{principalInterestBookAction.qryDt}" mode="popup" pattern="yyyy-MM-dd"
+                                    locale="zh_CN" showButtonPanel="true" navigator="true"
+                                    required="true" requiredMessage="开始日期不能为空。"/>
+                    </h:panelGrid>
+                    <h:panelGrid columns="2" cellspacing="5" columnClasses="input-col-xl,input-col-xl"
+                                 style="color:#999999;">
+                        <h:outputLabel value="系统日期: #{principalInterestBookAction.sysDate}"/>
+                        <h:outputLabel value="系统时间: #{principalInterestBookAction.sysTime}"/>
+                    </h:panelGrid>
+                    <p:separator/>
+                    <h:panelGrid columns="1" cellspacing="5" columnClasses="input-col-xxl">
+                        <h:commandButton id="btnExp" value="导出"
+                                         action="#{principalInterestBookAction.Excelexport}"
+                                         ajax="false">
+                        </h:commandButton>
+                    </h:panelGrid>
+                </p:panel>
+            </h:form>
+        </div>
+        <br/>
+    </ui:define>
+</ui:composition>

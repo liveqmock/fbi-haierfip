@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="fip.repository.dao.actchk.ActchkCmnMapper">
+    <!--流水对帐结果 不平数据 -->
+    <select id="selectChkTxnFailResult" parameterType="java.lang.String"
+            resultType="fip.repository.model.actchk.ActchkVO">
+            select * from (
+                 select t1.pkid     as pkid1,
+                        t1.txn_date as txnDate1,
+                        t1.actno_in    as actnoIn1,
+                        t1.actno_out    as actnoOut1,
+                        t1.txnamt   as txnAmt1,
+                        t1.msg_sn   as msgSn1,
+                        t1.dc_flag   as dcFlag1,
+                        t2.pkid     as pkid2,
+                        t2.txn_date as txnDate2,
+                        t2.actno_in    as actnoIn2,
+                        t2.actno_out    as actnoOut2,
+                        t2.txnamt   as txnAmt2,
+                        t2.msg_sn   as msgSn2,
+                        t2.dc_flag   as dcFlag2
+                   from CHK_ZONGFEN_TXN t1, CHK_ZONGFEN_TXN t2
+                  where t1.txn_date = #{txnDate}
+                    and t1.txn_date = t2.txn_date
+                    and t1.send_sys_id = #{sendSysId1}
+                    and t2.send_sys_id = #{sendSysId2}
+                    and t1.msg_sn = t2.msg_sn
+                    and t1.chksts = '2'
+                    and t2.chksts = '2'
+                union all
+                   select   t1.pkid     as pkid1,
+                            t1.txn_date as txnDate1,
+                            t1.actno_in    as actnoIn1,
+                            t1.actno_out    as actnoOut1,
+                            t1.txnamt   as txnAmt1,
+                            t1.msg_sn   as msgSn1,
+                            t1.dc_flag   as dcFlag1,
+                            ''     as pkid2,
+                            '' as txnDate2,
+                            ''    as actnoIn2,
+                            ''    as actnoOut2,
+                            0   as txnAmt2,
+                            ''   as msgSn2,
+                            ''   as dcFlag2
+                      from CHK_ZONGFEN_TXN t1
+                     where t1.txn_date = #{txnDate}
+                       and t1.send_sys_id = #{sendSysId1}
+                       and t1.chksts = '1'
+            union all
+                 select t2.pkid  as pkid1,
+                        '' as txnDate1,
+                        ''    as actnoIn1,
+                        ''    as actnoOut1,
+                        0   as txnAmt1,
+                        ''   as msgSn1,
+                        ''   as dcFlag1,
+                        t2.pkid     as pkid2,
+                        t2.txn_date as txnDate2,
+                        t2.actno_in    as actnoIn2,
+                        t2.actno_out    as actnoOut2,
+                        t2.txnamt   as txnAmt2,
+                        t2.msg_sn   as msgSn2,
+                        t2.dc_flag   as dcFlag2
+                  from CHK_ZONGFEN_TXN t2
+                 where t2.txn_date = #{txnDate}
+                   and t2.send_sys_id =  #{sendSysId2}
+                   and t2.chksts = '1'
+            )
+            order by coalesce(msgSn1,msgSn2)
+    </select>
+
+    <!--流水对帐结果 平账数据 -->
+    <select id="selectChkTxnSuccResult" parameterType="java.lang.String"
+            resultType="fip.repository.model.actchk.ActchkVO">
+            select * from (
+                 select t1.pkid     as pkid1,
+                        t1.txn_date as txnDate1,
+                        t1.actno_in    as actnoIn1,
+                        t1.actno_out    as actnoOut1,
+                        t1.txnamt   as txnAmt1,
+                        t1.msg_sn   as msgSn1,
+                        t1.dc_flag   as dcFlag1,
+                        t2.pkid     as pkid2,
+                        t2.txn_date as txnDate2,
+                        t2.actno_in    as actnoIn2,
+                        t2.actno_out    as actnoOut2,
+                        t2.txnamt   as txnAmt2,
+                        t2.msg_sn   as msgSn2,
+                        t2.dc_flag   as dcFlag2
+                   from CHK_ZONGFEN_TXN t1, CHK_ZONGFEN_TXN t2
+                  where t1.txn_date = #{txnDate}
+                    and t1.txn_date = t2.txn_date
+                    and t1.send_sys_id = #{sendSysId1}
+                    and t2.send_sys_id = #{sendSysId2}
+                    and t1.msg_sn = t2.msg_sn
+                    and t1.chksts = '0'
+                    and t2.chksts = '0'
+            )
+            order by coalesce(msgSn1,msgSn2)
+    </select>
+
+</mapper>

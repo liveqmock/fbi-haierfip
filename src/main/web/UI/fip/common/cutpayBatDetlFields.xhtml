@@ -1,0 +1,99 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                template="/templates/ui.xhtml">
+
+    <ui:define name="head">
+        <style type="text/css">
+            .col-label {
+                width: 70px;
+            }
+            .col-label2 {
+                padding-left: 70px;
+                width: 80px;
+            }
+
+            .col-input {
+                width: 30px;
+            }
+
+        </style>
+
+    </ui:define>
+
+    <ui:define name="content">
+        <div style="margin:1px 15px 5px 15px">
+            <p:growl id="msgs" showDetail="false"/>
+            <h:form id="form">
+                <h:panelGrid id="detailPanel1" columns="1" cellpadding="3" style="font-family: Gill Sans,Arial,sans-serif; font-size: 1.2em">
+                    <h:panelGrid columns="4" cellpadding="2"
+                                 columnClasses="col-label,col-input,col-label2,col-input">
+                        <h:outputLabel value="批量报文号:"/>
+                        <h:inputText value="#{batchDetlAction.selectedRecord.txpkgSn}" size="30" disabled="true"/>
+                        <h:outputLabel value="业务流水号:"/>
+                        <h:inputText value="#{batchDetlAction.selectedRecord.bizSn}" size="30" disabled="true"/>
+                        <h:outputLabel value="交易日期:"/>
+                        <h:inputText value="#{batchDetlAction.selectedRecord.txndate}" size="30" disabled="true"/>
+                        <h:outputLabel value="交易类别:"/>
+                        <h:inputText value="#{batchDetlAction.selectedRecord.txntype}" size="30" disabled="true"/>
+                        <h:outputLabel value="代理渠道:"/>
+                        <h:inputText value="#{batchDetlAction.channelMap[batchDetlAction.selectedRecord.channel]}" size="30" disabled="true"/>
+                        <h:outputLabel value="业务类别:"/>
+                        <h:inputText value="#{batchDetlAction.selectedRecord.originBizid}" size="30" disabled="true"/>
+                        <h:outputLabel value="报文状态:"/>
+                        <h:inputText value="#{batchDetlAction.selectedRecord.txpkgStatus}" size="30" disabled="true"/>
+                    </h:panelGrid>
+                    <h:panelGrid columns="4" cellpadding="2"
+                                 columnClasses="col-label,col-input,col-label2,col-input">
+                        <h:outputLabel value="总笔数:"/>
+                        <h:inputText value="#{batchDetlAction.selectedRecord.totalcount}" size="30" disabled="true"/>
+                        <h:outputLabel value="本包总笔数:"/>
+                        <h:inputText value="#{batchDetlAction.selectedRecord.currcount}" size="30" disabled="true"/>
+                        <h:outputLabel value="总金额:"/>
+                        <h:inputText value="#{batchDetlAction.selectedRecord.totalamt}" size="30" disabled="true"/>
+                        <h:outputLabel value="失败笔数:"/>
+                        <h:inputText value="#{batchDetlAction.selectedRecord.failcount}" size="30" disabled="true"/>
+                        <h:outputLabel value="失败金额:"/>
+                        <h:inputText value="#{batchDetlAction.selectedRecord.failamt}" size="30" disabled="true"/>
+                    </h:panelGrid>
+                    <h:panelGrid columns="4" cellpadding="2"
+                                 columnClasses="col-label,col-input,col-label2,col-input">
+                        <h:outputLabel value="用途:"/>
+                        <h:inputText value="#{batchDetlAction.selectedRecord.usage}" size="30" disabled="true"/>
+                        <h:outputLabel value="备注1:"/>
+                        <h:inputText value="#{batchDetlAction.selectedRecord.remark}" size="30" disabled="true"/>
+                        <h:outputLabel value="备注2:"/>
+                        <h:inputText value="#{batchDetlAction.selectedRecord.remark1}" size="30" disabled="true"/>
+                        <h:outputLabel value="备注3:"/>
+                        <h:inputText value="#{batchDetlAction.selectedRecord.remark2}" size="30" disabled="true"/>
+                    </h:panelGrid>
+                </h:panelGrid>
+
+                <p:separator/>
+                <p:dataTable id="logpdt" style="margin-top:5px;width:100%;"
+                             value="#{batchDetlAction.logList}" var="log"
+                             emptyMessage="日志记录为空...">
+                    <p:column id="jobname" headerText="操作" style="text-align:center">
+                        <h:outputText value="#{log.jobname}"/>
+                    </p:column>
+                    <p:column id="jobdesc" headerText="处理日志">
+                        <h:outputText value="#{log.jobdesc}"/>
+                    </p:column>
+                    <p:column id="jobusername" headerText="操作人员" style="text-align:center">
+                        <h:outputText value="#{log.jobusername}"/>
+                    </p:column>
+                    <p:column id="jobtime" headerText="操作时间" style="text-align:center">
+                        <h:outputText value="#{log.jobtime}">
+                            <f:convertDateTime pattern="yyyy-MM-dd HH:mm:ss" timeZone="GMT+8"/>
+                        </h:outputText>
+                    </p:column>
+
+                </p:dataTable>
+
+            </h:form>
+        </div>
+    </ui:define>
+
+</ui:composition>

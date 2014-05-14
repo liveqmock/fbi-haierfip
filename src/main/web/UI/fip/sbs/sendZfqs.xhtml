@@ -1,0 +1,106 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                template="/templates/ui.xhtml">
+
+    <ui:define name="head">
+        <style type="text/css">
+            .col-95 {
+                width: 95%;
+            }
+
+            .col-5 {
+                width: 5%;
+            }
+        </style>
+
+    </ui:define>
+
+    <ui:define name="content">
+        <div style="margin:5px;">
+            <h:form id="form">
+                <p:growl id="msgs" showDetail="false" life="5000"/>
+
+                <div id="header">
+                    <p:fieldset>
+                        <h:panelGrid columns="2" cellspacing="5" columnClasses="col-95,col-5">
+                            <h:panelGrid columns="4" cellspacing="5">
+                                <h:outputLabel value="起始日期:"/>
+                                <p:inputText id="startDate" value="#{depSbsZfqsAction.startDate}"
+                                             required="true"
+                                             onclick="WdatePicker({dateFmt:'yyyy-MM-dd'})"/>
+                                <h:outputLabel value="截止日期:"/>
+                                <p:inputText id="endDate" value="#{depSbsZfqsAction.endDate}"
+                                             required="true"
+                                             onclick="WdatePicker({dateFmt:'yyyy-MM-dd'})"/>
+                            </h:panelGrid>
+                            <h:panelGrid>
+                                <p:commandButton id="qrybtn" style="width:90px;" value="查询"
+                                                 action="#{depSbsZfqsAction.onQuery}"
+                                                 update="pdt,msgs">
+                                </p:commandButton>
+                                <p:commandButton id="sendbtn" style="width:90px;" value="全部发送"
+                                                 action="#{depSbsZfqsAction.onSend()}"
+                                                 update="pdt,msgs">
+                                </p:commandButton>
+                            </h:panelGrid>
+                        </h:panelGrid>
+                    </p:fieldset>
+                </div>
+
+                <p:ajaxStatus style="height:20px;text-align:center">
+                    <f:facet name="start">
+                        <h:graphicImage value="/images/ajaxloadingbar.gif"/>
+                    </f:facet>
+                    <f:facet name="complete">
+                        <h:outputText value=""/>
+                    </f:facet>
+                </p:ajaxStatus>
+
+                <p:dataTable id="pdt" style="width:100%;"
+                             value="#{depSbsZfqsAction.recordList}" var="record"
+                             paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown} "
+                             currentPageReportTemplate="{startRecord}-{endRecord} 共{totalRecords}笔未发送明细"
+                             paginator="true" rows="15"
+                             paginatorPosition="bottom"
+                             rowsPerPageTemplate="100,50,30,15,5"
+                             emptyMessage="数据记录为空...">
+                    <p:column headerText="SBS流水号" style="text-align: left">
+                        <h:outputText value="#{record.serialNo}"/>
+                    </p:column>
+                    <p:column headerText="交易日期" style="text-align: center">
+                        <h:outputText value="#{record.txnDate}"/>
+                    </p:column>
+                    <p:column headerText="分公司账号" style="text-align: center">
+                        <h:outputText value="#{record.fenAccountNo}"/>
+                    </p:column>
+                    <p:column headerText="总公司账号" style="text-align: center">
+                        <h:outputText value="#{record.zongAccountNo}"/>
+                    </p:column>
+                    <p:column headerText="金额" style="text-align: right">
+                        <h:outputText value="#{record.txnAmt}">
+                            <f:convertNumber pattern="###,###,##0.00"/>
+                        </h:outputText>
+                    </p:column>
+                    <p:column headerText="清算方向" style="text-align: center">
+                        <h:outputText value="#{record.txnDirection}"/>
+                    </p:column>
+                    <p:column headerText="业务日期" style="text-align: center">
+                        <h:outputText value="#{record.createTime}"/>
+                    </p:column>
+                    <p:column headerText="发送标志" style="text-align: center">
+                        <h:outputText value="#{depSbsZfqsAction.sendFlag.valueOfAlias(record.sendFlag).title}"/>
+                    </p:column>
+                    <p:column headerText="发送时间" style="text-align: center">
+                        <h:outputText value="#{record.operTime}"/>
+                    </p:column>
+                    <p:column headerText="备注" style="text-align: center">
+                        <h:outputText value="#{record.remark}"/>
+                    </p:column>
+                </p:dataTable>
+            </h:form>
+        </div>
+    </ui:define>
+</ui:composition>

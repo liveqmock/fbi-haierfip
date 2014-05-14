@@ -1,0 +1,117 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                template="/templates/ui.xhtml">
+
+    <ui:define name="head">
+        <style type="text/css">
+            .col-label {
+                width: 90px;
+                text-align: right;
+            }
+
+            .col-label2 {
+                padding-left: 90px;
+                width: 90px;
+                text-align: right;
+            }
+
+            .col-input {
+                width: 30px;
+            }
+
+        </style>
+
+    </ui:define>
+
+    <ui:define name="content">
+        <div style="margin:1px 15px 5px 15px">
+            <p:growl id="msgs" showDetail="false"/>
+            <h:form id="form">
+                <h:panelGrid id="detailPanel1" columns="1" cellpadding="3"
+                             style="font-family: Gill Sans,Arial,sans-serif; font-size: 1.2em">
+                    <h:panelGrid columns="4" cellpadding="2"
+                                 columnClasses="col-label,col-input,col-label2,col-input">
+                        <h:outputLabel value="批次号:"/>
+                        <h:inputText value="#{refundFormAction.selectedRecord.batchSn}" size="30" disabled="true"/>
+                        <h:outputLabel value="批内顺序号:"/>
+                        <h:inputText value="#{refundFormAction.selectedRecord.batchDetlSn}" size="30" disabled="true"/>
+                        <h:outputLabel value="借据号:"/>
+                        <h:inputText value="#{refundFormAction.selectedRecord.iouno}" size="30" disabled="true"/>
+                        <h:outputLabel value="帐期序号:"/>
+                        <h:inputText value="#{refundFormAction.selectedRecord.poano}" size="30" disabled="true"/>
+                        <h:outputLabel value="合同号:"/>
+                        <h:inputText value="#{refundFormAction.selectedRecord.contractno}" size="30" disabled="true"/>
+                    </h:panelGrid>
+                    <h:panelGrid columns="4" cellpadding="2"
+                                 columnClasses="col-label,col-input,col-label2,col-input">
+                        <h:outputLabel value="客户姓名:"/>
+                        <h:inputText value="#{refundFormAction.selectedRecord.clientname}" size="30" disabled="true"/>
+                        <h:outputLabel value="客户号:"/>
+                        <h:inputText value="#{refundFormAction.selectedRecord.clientno}" size="30" disabled="true"/>
+                    </h:panelGrid>
+                    <h:panelGrid columns="4" cellpadding="2"
+                                 columnClasses="col-label,col-input,col-label2,col-input">
+                        <h:outputLabel value="金额:"/>
+                        <h:inputText value="#{refundFormAction.selectedRecord.payamt}" size="30" disabled="true"/>
+                    </h:panelGrid>
+                    <h:panelGrid columns="4" cellpadding="2"
+                                 columnClasses="col-label,col-input,col-label2,col-input">
+                        <h:outputLabel value="还款帐号:"/>
+                        <h:inputText value="#{refundFormAction.selectedRecord.biBankactno}" size="30" disabled="true"/>
+                        <h:outputLabel value="户名:"/>
+                        <h:inputText value="#{refundFormAction.selectedRecord.biBankactname}" size="30"
+                                     disabled="true"/>
+                        <h:outputLabel value="开户行:"/>
+                        <h:inputText value="#{refundFormAction.selectedRecord.biActopeningbank}" size="30"
+                                     disabled="true"/>
+                        <h:outputLabel value="签约号:"/>
+                        <h:inputText value="#{refundFormAction.selectedRecord.biCustomerCode}" size="30"
+                                     disabled="true"/>
+                        <h:outputLabel value="代扣渠道:"/>
+                        <h:inputText value="#{refundFormAction.channelMap[refundFormAction.selectedRecord.biChannel]}"
+                                     size="30" disabled="true"/>
+                        <!--<h:inputText value="#{refundFormAction.channelEnum.valueOfAlias(refundFormAction.selectedRecord.biChannel).title}" size="30" disabled="true"/>-->
+                    </h:panelGrid>
+                    <h:panelGrid columns="4" cellpadding="2"
+                                 columnClasses="col-label,col-input,col-label2,col-input">
+                        <h:outputLabel value="退款生成时间:"/>
+                        <h:inputText value="#{refundFormAction.selectedRecord.dateInit}" size="30" disabled="true">
+                            <f:convertDateTime pattern="yyyy-MM-dd HH:mm:ss" timeZone="GMT+8"/>
+                        </h:inputText>
+                        <h:outputLabel value="退款完成时间:"/>
+                        <h:inputText value="#{refundFormAction.selectedRecord.dateBankPay}" size="30"
+                                     disabled="true">
+                            <f:convertDateTime pattern="yyyy-MM-dd HH:mm:ss" timeZone="GMT+8"/>
+                        </h:inputText>
+                    </h:panelGrid>
+                </h:panelGrid>
+
+                <p:separator/>
+                <p:dataTable id="logpdt" style="margin-top:5px;width:100%;"
+                             value="#{refundFormAction.logList}" var="log"
+                             emptyMessage="日志记录为空...">
+                    <p:column id="jobname" headerText="操作" style="text-align:center">
+                        <h:outputText value="#{log.jobname}"/>
+                    </p:column>
+                    <p:column id="jobdesc" headerText="处理日志">
+                        <h:outputText value="#{log.jobdesc}"/>
+                    </p:column>
+                    <p:column id="jobusername" headerText="操作人员" style="text-align:center">
+                        <h:outputText value="#{log.jobusername}"/>
+                    </p:column>
+                    <p:column id="jobtime" headerText="操作时间" style="text-align:center">
+                        <h:outputText value="#{log.jobtime}">
+                            <f:convertDateTime pattern="yyyy-MM-dd HH:mm:ss" timeZone="GMT+8"/>
+                        </h:outputText>
+                    </p:column>
+
+                </p:dataTable>
+
+            </h:form>
+        </div>
+    </ui:define>
+
+</ui:composition>

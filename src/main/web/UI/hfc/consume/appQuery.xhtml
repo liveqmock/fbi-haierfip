@@ -1,0 +1,149 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:fbi="http://www.fbifaces.org"
+                template="/templates/ui.xhtml">
+    <ui:define name="head">
+        <link rel="stylesheet" type="text/css" href="#{request.contextPath}/css/fbicbs.css"/>
+        <script language="javascript" type="text/javascript">
+            document.onkeydown = function TabReplace() {
+                if (event.keyCode == 13) {
+                    if (event.srcElement.tagName != 'BUTTON')
+                        event.keyCode = 9;
+                    else
+                        event.srcElement.click();
+                }
+            }
+            function appEdit(obj) {
+                var oAppno = obj.parentNode.parentNode.childNodes[2].innerHTML;
+                var childWin = window.open("application_start.jsp?appno=" + oAppno, "_blank");
+                childWin.focus();
+
+            }
+            function appNew() {
+                var childWin = window.open("application_start.jsp", "_blank");
+                childWin.focus();
+            }
+
+
+        </script>
+    </ui:define>
+    <ui:define name="content">
+        <div class="entry" id="top">
+            <p:growl id="growl" showDetail="true" globalOnly="true"/>
+            <h:form id="queryForm">
+                <p:panel header="查询条件" id="input">
+                    <h:panelGrid cellspacing="0" border="0" columns="2"
+                                 columnClasses="qrytableWidth,qrytableWidth1">
+                        <h:panelGroup>
+                            <h:panelGrid cellspacing="0" border="0" columns="4"
+                                    columnClasses="lblWidth,data_input_width,lblWidth,data_input_width">
+                                <h:outputLabel value="申请编号："/>
+                                <h:inputText id="appno" autocomplete="off" style="width:160px;ime-mode:disabled;"
+                                             value="#{appQryAction.strAppno}"/>
+                                <h:outputLabel value="客户姓名："/>
+                                <h:inputText id="name" autocomplete="off" style="width:160px;"
+                                             value="#{appQryAction.strCustName}"/>
+                                <h:outputLabel value="证件种类："/>
+                                <h:selectOneMenu style="width:164px;" value="#{appQryAction.strIdType}" id="selIdType">
+                                    <f:selectItems value="#{appQryAction.idTypeList}"/>
+                                </h:selectOneMenu>
+                                <h:outputLabel value="证件号码："/>
+                                <h:inputText style="width:160px;" id="txtId" autocomplete="off"
+                                             value="#{appQryAction.strId}"/>
+                                <h:outputLabel value="申请状态："/>
+                                <h:selectOneMenu style="width:164px;" value="#{appQryAction.strAppStatus}" id="selAppStatus">
+                                    <f:selectItems value="#{appQryAction.appStatusList}"/>
+                                </h:selectOneMenu>
+                                <h:outputLabel/>
+                            </h:panelGrid>
+                        </h:panelGroup>
+                        <h:panelGrid cellspacing="0" border="0" columns="1"
+                                     width="100%"  columnClasses="btnWidth">
+                            <p:commandButton style="width:60px;" ajax="false" action="#{appQryAction.onBtnQueryClick}" id="btnQuery"
+                                         value="确 定"></p:commandButton>
+                            <p:commandButton type="reset" style="width:60px;" value="重 置"></p:commandButton>
+                        </h:panelGrid>
+                    </h:panelGrid>
+                </p:panel>
+                <br></br>
+                <p:dataTable style="width:100%;border-left:1px solid #A6C9E2;" var="record" id="xfappTab"
+                             height="400" value="#{appQryAction.xfappList}"
+                             selection="#{appQryAction.selectRecord}" selectionMode="single"
+                             paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                             paginator="true" rows="15" paginatorPosition="bottom" rowsPerPageTemplate="100,50,30,15,5"
+                             emptyMessage="无满足条件数据...">
+                    <f:facet name="header">
+                        <div style="" align="right">
+                            <h:commandButton style="color:red;width:100px;height: 26px" ajax="false"
+                                             id="btnApp"
+                                             value="Excel导出">
+                                <fbi:DataExporter titleName="申请信息明细表" target="xfappTab" type="xls"
+                                                  fileName="appInformation" excludeColumnsWidth="20,10,14,26,16,16,16,12"/>
+                            </h:commandButton>
+                        </div>
+                    </f:facet>
+                    <p:column>
+                        <f:facet name="header">
+                            <h:outputText value="申请编号"></h:outputText>
+                        </f:facet>
+                        <h:outputText value="#{record.appno}"/>
+                    </p:column>
+                    <p:column style="text-align:center;">
+                        <f:facet name="header">
+                            <h:outputText value="姓名"/>
+                        </f:facet>
+                        <h:outputText value="#{record.name}"/>
+                    </p:column>
+                    <p:column style="text-align:center;">
+                        <f:facet name="header">
+                            <h:outputText value="申请日期"></h:outputText>
+                        </f:facet>
+                        <h:outputText value="#{record.appdate}">
+                            <f:convertDateTime pattern="yyyy-MM-dd"/>
+                        </h:outputText>
+                    </p:column>
+                    <p:column>
+                        <f:facet name="header">
+                            <h:outputText value="销售单位"/>
+                        </f:facet>
+                        <h:outputText style="float:left;" value="#{record.channel}"/>
+                    </p:column>
+                    <p:column>
+                        <f:facet name="header">
+                            <h:outputText value="首付"/>
+                        </f:facet>
+                        <h:outputText style="float:right;" value="#{record.receiveamt}">
+                            <f:convertNumber pattern="###,###.00"></f:convertNumber>
+                        </h:outputText>
+                    </p:column>
+                    <p:column>
+                        <f:facet name="header">
+                            <h:outputText value="总金额"/>
+                        </f:facet>
+                        <h:outputText style="float:right;" value="#{record.totalamt}">
+                            <f:convertNumber pattern="###,###.00"></f:convertNumber>
+                        </h:outputText>
+                    </p:column>
+                    <p:column>
+                        <f:facet name="header">
+                            <h:outputText value="分期金额"/>
+                        </f:facet>
+                        <h:outputText style="float:right;" value="#{record.appamt}">
+                            <f:convertNumber pattern="###,###.00"></f:convertNumber>
+                        </h:outputText>
+                    </p:column>
+                    <p:column style="text-align:center;">
+                        <f:facet name="header">
+                            <h:outputText value="申请状态"/>
+                        </f:facet>
+                        <h:outputText value="#{appQryAction.appStatus.aliasEnums1[record.appstatus].title}">
+                        </h:outputText>
+                    </p:column>
+                </p:dataTable>
+            </h:form>
+        </div>
+    </ui:define>
+</ui:composition>

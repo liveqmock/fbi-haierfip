@@ -1,0 +1,104 @@
+/** 整体的基本元素，主要是：字体大小颜色，背景颜色等。 */
+body {
+	font-size: 12px;
+	font-family: SimSun;
+	color: black;
+	background-color: white;
+	margin-top: 6px;
+	margin-bottom: 0px;
+	margin-left: 0px;
+	margin-right: 0px;
+	padding: 0px;
+}
+
+.bodyBorder {
+	margin-top: 10px;
+	margin-bottom: 5px;
+	margin-left: 10px;
+	margin-right: 1px;
+}
+table {
+	margin-top: 0px;
+	margin-bottom: 0px;
+	margin-left: 0px;
+	margin-right: 0px;
+	border-collapse: collapse;
+	border-right: medium none;
+	border-top: medium none;
+	font-size: 12px;
+	border-left: medium none;
+	border-bottom: medium none;
+}
+
+/*表示专用，行长度专用*/
+.lblWidth {
+    width:20%;
+    text-align: right;
+}
+.data_input_width {
+    width:80%;
+}
+.btnWidth {
+    width:60%;
+    text-align:right;
+}
+.leftCellBorder {
+    border-left:1px #A6C9E2 solid
+}
+.login_top_bg {
+	background-image: url(../images/login-top-bg.gif);
+	background-repeat: repeat-x;
+}
+.login_bg {
+	background-image: url(../images/login_bg.jpg);
+	background-repeat: repeat-x;
+}
+.login_bg2 {
+	background-image: url(../images/login-content-bg.gif);
+	background-repeat: no-repeat;
+	background-position: right;
+}
+.left_txt {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	line-height: 25px;
+	color: #666666;
+}
+.left_txt2 {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	line-height: 25px;
+	color: #000000;
+}
+.login_txt_bt {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 14px;
+	line-height: 25px;
+	color: #666666;
+	font-weight: bold;
+}
+.login-buttom-bg {
+	background-image: url(../images/login-buttom-bg.gif);
+	background-repeat: repeat-x;
+}
+.login_head_hw {
+    width:100%;
+    height:42px;
+}
+.login_body_hw {
+    width:49%;
+    height:520px;
+}
+/*.login_foot_hw {
+    background-color:
+}*/
+.login_content_pos {
+    vertical-text:middle;
+}
+.login_Title {
+    height:38px;
+}
+.login_loginLbl {
+    width:13%;
+    height:38px;
+}

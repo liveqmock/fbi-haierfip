@@ -1,0 +1,88 @@
+DIV.clear {
+    LINE-HEIGHT: 0px;
+    CLEAR: both
+}
+
+BODY {
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    PADDING-LEFT: 0px;
+    PADDING-RIGHT: 0px;
+    FONT-FAMILY: Tahoma, Verdana, Helvetica, sans-serif;
+    FONT-SIZE: 11px;
+    FONT-WEIGHT: normal;
+    PADDING-TOP: 0px
+}
+
+H2 {
+    MARGIN: 1.2em 0em;
+    FONT-SIZE: 11px;
+    FONT-WEIGHT: bold
+}
+
+.formSeparator {
+    BACKGROUND-IMAGE: url(/images/separator_bg.gif);
+    WIDTH: 100%;
+    BACKGROUND-REPEAT: repeat-x;
+    BACKGROUND-POSITION: left center;
+    OVERFLOW: hidden
+}
+
+.formSeparator H2 {
+    PADDING-BOTTOM: 0px;
+    BACKGROUND-COLOR: #fff;
+    MARGIN: 2px 30px;
+    PADDING-LEFT: 4px;
+    PADDING-RIGHT: 4px;
+    FLOAT: left; /*COLOR: #19355e;*/
+    COLOR: #003399;
+    FONT-WEIGHT: bold;
+    PADDING-TOP: 0px
+}
+
+.help-window {
+    BORDER-BOTTOM: medium none;
+    BORDER-LEFT: medium none;
+    MARGIN: 10px;
+    BORDER-TOP: medium none;
+    BORDER-RIGHT: medium none
+}
+
+.help-info {
+    BORDER-BOTTOM: medium none;
+    BORDER-LEFT: medium none;
+    MARGIN: 10px;
+    BORDER-TOP: medium none;
+    BORDER-RIGHT: medium none
+}
+
+OL {
+    LINE-HEIGHT: 1.3em;
+    MARGIN-TOP: 0.2em;
+    MARGIN-BOTTOM: 0.1em;
+    FONT-SIZE: 11px
+}
+
+UL {
+    LINE-HEIGHT: 1.3em;
+    MARGIN-TOP: 0.2em;
+    MARGIN-BOTTOM: 0.1em;
+    FONT-SIZE: 11px
+}
+
+LI {
+    LINE-HEIGHT: 2.1em;
+    MARGIN-TOP: 0.2em;
+    MARGIN-BOTTOM: 0.1em;
+    FONT-SIZE: 11px;
+    COLOR: #999999
+}
+
+P {
+    MARGIN: 1.2em 0em
+}
+
+LI > P {
+    MARGIN-TOP: 0.2em
+}
+

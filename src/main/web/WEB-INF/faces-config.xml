@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<faces-config version="2.0"
+              xmlns="http://java.sun.com/xml/ns/javaee"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="
+              http://java.sun.com/xml/ns/javaee
+              http://java.sun.com/xml/ns/javaee/web-facesconfig_2_0.xsd">
+
+    <lifecycle>
+        <phase-listener>
+            pub.auth.DebugPhaseListener
+        </phase-listener>
+<!--
+        <phase-listener>
+            pub.auth.SecurityPhaseListener
+        </phase-listener>
+-->
+    </lifecycle>
+
+    <application>
+        <resource-bundle>
+            <base-name>messages</base-name>
+            <var>msgs</var>
+        </resource-bundle>
+        <el-resolver>org.springframework.web.jsf.el.SpringBeanFacesELResolver</el-resolver>
+    </application>
+
+<!--
+    <render-kit>
+        <renderer>
+            <component-family>org.primefaces.component</component-family>
+            <renderer-type>org.primefaces.component.SelectManyCheckboxRenderer</renderer-type>
+            <renderer-class>com.example.MySelectManyCheckboxRenderer</renderer-class>
+        </renderer>
+    </render-kit>
+-->
+</faces-config>
+

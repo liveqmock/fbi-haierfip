@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE  html  PUBLIC  "-//W3C//DTD  XHTML  1.0  Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui">
+
+<f:view contentType="text/html">
+
+    <h:head>
+        <title>FBI Technology</title>
+        <meta content='text/html; charset=UTF-8' http-equiv="Content-Type"/>
+
+        <link type="text/css" rel="stylesheet" href="#{request.contextPath}/css/default.css"/>
+
+        <style type="text/css">
+            .ui-inputfield {
+                padding: 2px;
+            }
+            .ui-widget {
+                font-size: 12px !important;
+            }
+        </style>
+
+        <script type="text/javascript">
+            /* <![CDATA[ */
+            jQuery(function() {
+                jQuery(document).bind('ajaxComplete', function(event, xhr) {
+                    var timeoutpage = xhr.getResponseHeader('X-ERROR-PAGE');
+                    if (timeoutpage != null && timeoutpage != '') {
+                        alert('操作员超时，请重新登录！');
+                        if (top) {
+                            top.location.href = timeoutpage + '/pages/security/loginPage.jsp';
+                        } else {
+                            location.href = timeoutpage + '/pages/security/loginPage.jsp';
+                        }
+                        //window.location = timeoutpage;
+                    }
+                });
+            });
+            /* ]]> */
+        </script>
+
+        <script language="javascript" src="#{request.contextPath}/My97DatePicker/WdatePicker.js" type="text/javascript"></script>
+        <ui:insert name="head"> </ui:insert>
+    </h:head>
+
+    <h:body>
+        <!--<h:outputScript library="js/My97DatePicker" name="WdatePicker.js" target="head"/>-->
+        <!--<div id="wrapper">-->
+        <div id="page">
+            <div id="content">
+                <div class="post">
+                    <ui:insert name="content">...</ui:insert>
+                </div>
+            </div>
+            <div style="clear: both;">&nbsp;</div>
+        </div>
+        <!--</div>-->
+    </h:body>
+
+</f:view>
+</html>

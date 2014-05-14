@@ -1,0 +1,144 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                template="/templates/ui.xhtml">
+
+    <ui:define name="head">
+        <style type="text/css">
+            .col-label {
+                width: 70px;
+            }
+
+            .col-input {
+                width: 120px;
+            }
+
+            .col-input-200 {
+                width: 300px;
+            }
+
+
+        </style>
+        <script language="javascript" type="text/javascript">
+            function showAppInfo(source) {
+                var oAppno = source.parentNode.parentNode.childNodes[1].innerHTML;
+                window.open("application_start.jsp?sendflag=1&amp;appno=" + oAppno, "", "height=600,width=800,left=200,top=100,toolbar=no,menubar=no,scrollbars=yes,location=no");
+            }
+        </script>
+    </ui:define>
+
+    <ui:define name="content">
+        <div style="margin:5px">
+
+            <p:tabView dynamic="true" cache="false" style="font-weight:normal;font-style:normal">
+                <p:tab title="消费分期首付款列表">
+                    <p:growl id="msgs" showDetail="false"/>
+
+                    <div id="table">
+                        <h:form id="form">
+                            <p:menubar>
+                                <p:menuitem type="push" value="全部代扣确认" icon="ui-icon ui-icon-document"
+                                            action="#{prepayAction.onConfirmAll}" update="msgs, pdt" ajax="false"/>
+                                <p:menuitem type="push" value="多笔代扣确认" icon="ui-icon ui-icon-disk"
+                                            action="#{prepayAction.onConfirmMulti}" update="msgs, pdt"/>
+                            </p:menubar>
+                            <p:ajaxStatus style="height:18px;text-align:center">
+                                <f:facet name="start">
+                                    <h:graphicImage value="/images/ajaxloadingbar.gif"/>
+                                </f:facet>
+                                <f:facet name="complete">
+                                    <h:outputText value=""/>
+                                </f:facet>
+                            </p:ajaxStatus>
+                            <p:dataTable id="pdt" dynamic="true" style="width:100%;"
+                                         value="#{prepayAction.detlList}" var="record"
+                                         selection="#{prepayAction.selectedRecords}"
+                                         paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                                         paginator="true" rows="15" paginatorPosition="bottom"
+                                         rowsPerPageTemplate="100,50,30,15,5"
+                                         emptyMessage="数据记录为空...">
+                                <p:column selectionMode="multiple"/>
+                                <p:column headerText="申请单号">
+                                    <h:outputText value="#{record.appno}"/>
+                                </p:column>
+                                <p:column headerText="客户姓名" style="text-align: left">
+                                    <h:outputText value="#{record.name}"/>
+                                </p:column>
+                                <p:column headerText="贷款总金额">
+                                    <h:outputText value="#{record.appamt}" style="float: right">
+                                        <f:convertNumber type="number" pattern="#,###,###,###,##0.00"/>
+                                    </h:outputText>
+                                </p:column>
+                                <p:column headerText="贷款期限(月)" style="text-align: right">
+                                    <h:outputText value="#{record.divid}"/>
+                                </p:column>
+                                <p:column headerText="首付款">
+                                    <h:outputText value="#{record.receiveamt}">
+                                        <f:convertNumber type="number" pattern="#,###,###,###,##0.00"/>
+                                    </h:outputText>
+                                </p:column>
+                                <p:column headerText="首付是否代扣" style="text-align:center">
+                                    <h:outputText value="#{record.prepayCutpayType=='1'? '是':'否'}"/>
+                                </p:column>
+
+                                <p:column headerText="操作" style="width:80px;text-align:center">
+                                    <p:commandLink style="color:blue" id="showAppDetail" immediate="true" value="申请单"
+                                                   onclick="showAppInfo(this);">
+                                    </p:commandLink>
+                                </p:column>
+                            </p:dataTable>
+                        </h:form>
+                    </div>
+                </p:tab>
+                <p:tab title="已生成代扣首付记录列表">
+                    <p:growl id="msgs1" showDetail="false"/>
+
+                    <div id="table1">
+                        <h:form id="form1">
+                            <p:dataTable id="pdt1" dynamic="true" style="width:100%;"
+                                         value="#{prepayAction.handledDetlList}" var="record"
+                                         selection="#{prepayAction.selectedRecords}"
+                                         paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                                         paginator="true" rows="15" paginatorPosition="bottom"
+                                         rowsPerPageTemplate="100,50,30,15,5"
+                                         emptyMessage="数据记录为空...">
+                                <p:column selectionMode="multiple"/>
+                                <p:column headerText="申请单号">
+                                    <h:outputText value="#{record.appno}"/>
+                                </p:column>
+                                <p:column headerText="客户姓名" style="text-align: left">
+                                    <h:outputText value="#{record.name}"/>
+                                </p:column>
+                                <p:column headerText="贷款总金额">
+                                    <h:outputText value="#{record.appamt}" style="float: right">
+                                        <f:convertNumber type="number" pattern="#,###,###,###,##0.00"/>
+                                    </h:outputText>
+                                </p:column>
+                                <p:column headerText="贷款期限(月)" style="text-align: right">
+                                    <h:outputText value="#{record.divid}"/>
+                                </p:column>
+                                <p:column headerText="首付款">
+                                    <h:outputText value="#{record.receiveamt}">
+                                        <f:convertNumber type="number" pattern="#,###,###,###,##0.00"/>
+                                    </h:outputText>
+                                </p:column>
+                                <p:column headerText="首付是否代扣" style="text-align:center">
+                                    <h:outputText value="#{record.prepayCutpayType=='1'? '是':'否'}"/>
+                                </p:column>
+
+                                <p:column headerText="操作" style="width:80px;text-align:center">
+                                    <p:commandLink style="color:blue" id="showAppDetail" immediate="true" value="详细"
+                                                   onclick="showAppInfo(this);">
+                                    </p:commandLink>
+                                </p:column>
+                            </p:dataTable>
+                        </h:form>
+                    </div>
+                </p:tab>
+            </p:tabView>
+        </div>
+    </ui:define>
+
+</ui:composition>

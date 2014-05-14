@@ -1,0 +1,105 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                template="/templates/ui.xhtml">
+
+    <ui:define name="head">
+        <script type="text/javascript">
+        </script>
+    </ui:define>
+
+    <ui:define name="content">
+        <div style="margin:5px">
+            <div id="payoutListTable">
+                <h:form id="payoutListform">
+                    <p:dataTable id="payoutpdt" widgetVar="payouttbl" dynamic="true" style="width:100%;"
+                                 value="#{sbsPayoutAction.detlList}" var="record"
+                                 rowKey="#{record.pkid}"
+                                 selection="#{sbsPayoutAction.selectedDetl}"
+                                 paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown} "
+                                 paginator="true" rows="15" paginatorPosition="bottom"
+                                 rowsPerPageTemplate="100,50,30,15,5"
+                                 emptyMessage="数据记录为空...">
+                        <f:facet name="header">
+                            SBS银联代付交易明细信息
+                        </f:facet>
+                        <p:column selectionMode="single" style="width:18px"/>
+                        <p:column style="display:none;" headerText="pkid">
+                            <h:outputText value="#{record.pkid}"/>
+                        </p:column>
+
+                        <p:column headerText="流水号" sortBy="#{record.reqSn}">
+                            <h:outputText value="#{record.reqSn}"/>
+                        </p:column>
+
+                        <p:column headerText="序号" sortBy="#{record.sn}">
+                            <h:outputText value="#{record.sn}"/>
+                        </p:column>
+
+                        <p:column headerText="代付金额[分]">
+                            <h:outputText value="#{record.amount}"/>
+                        </p:column>
+                        <p:column headerText="交易状态">
+                            <h:outputText
+                                    value="#{sbsPayoutAction.detlRetCode.valueOfAlias(record.retCode).title}"/>
+                        </p:column>
+                        <p:column headerText="交易进度">
+                            <h:outputText
+                                    value="#{sbsPayoutAction.detlTxnStep.valueOfAlias(record.trxStep).title}"/>
+                        </p:column>
+                        <p:column headerText="接收时间">
+                            <h:outputText value="#{record.createTime}"/>
+                        </p:column>
+                        <p:column headerText="发送银联时间">
+                            <h:outputText value="#{record.unionpayTxnTime}"/>
+                        </p:column>
+                        <p:column headerText="查询银联时间">
+                            <h:outputText value="#{record.qryrtnTime}"/>
+                        </p:column>
+                        <p:column headerText="SBS交易时间">
+                            <h:outputText value="#{record.sbsTxnTime}"/>
+                        </p:column>
+                    </p:dataTable>
+                    <p:separator/>
+                    <p:fieldset legend="操作日志">
+                        <br/>
+                        <p:dataTable id="logpdt" widgetVar="logtbl" dynamic="true" style="width:100%;"
+                                     value="#{sbsPayoutAction.joblogList}" var="record"
+                                     rowKey="#{record.pkid}"
+                                     paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown} "
+                                     paginator="true" rows="15" paginatorPosition="bottom"
+                                     rowsPerPageTemplate="100,50,30,15,5"
+                                     emptyMessage="数据记录为空...">
+                            <p:column style="display:none;" headerText="pkid">
+                                <h:outputText value="#{record.pkid}"/>
+                            </p:column>
+
+                            <p:column headerText="操作" sortBy="#{record.jobname}">
+                                <h:outputText value="#{record.jobname}"/>
+                            </p:column>
+
+                            <p:column headerText="处理日志">
+                                <h:outputText value="#{record.jobdesc}"/>
+                            </p:column>
+                            <p:column headerText="操作员ID">
+                                <h:outputText value="#{record.jobuserid}"/>
+                            </p:column>
+                            <p:column headerText="操作人员">
+                                <h:outputText value="#{record.jobusername}"/>
+                            </p:column>
+                            <p:column id="jobtime" headerText="操作时间" style="text-align:center">
+                                <h:outputText value="#{record.jobtime}">
+                                    <f:convertDateTime pattern="yyyy-MM-dd HH:mm:ss" timeZone="GMT+8"/>
+                                </h:outputText>
+                            </p:column>
+                        </p:dataTable>
+                    </p:fieldset>
+                </h:form>
+            </div>
+        </div>
+
+    </ui:define>
+
+</ui:composition>

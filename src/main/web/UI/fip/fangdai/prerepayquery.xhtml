@@ -1,0 +1,144 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                template="/templates/ui.xhtml">
+
+    <ui:define name="head">
+        <style type="text/css">
+            .col-95 {
+                width: 75%;
+            }
+
+            .col-5 {
+                width: 5%;
+            }
+        </style>
+    </ui:define>
+
+    <ui:define name="content">
+        <div style="padding:1px 1px">
+            <p:ajaxStatus onstart="statusDialog.show();" onsuccess="statusDialog.hide();"/>
+            <p:dialog modal="true" widgetVar="statusDialog" header="数据读取中..." draggable="false" closable="false">
+                <p:graphicImage value="/images/ajaxloadingbar.gif"/>
+            </p:dialog>
+            <h:form>
+                <p:messages id="msgs" showDetail="true"/>
+                <p:panel header="住房按揭提前还款记录查询条件">
+                    <h:panelGrid columns="2"  >
+                        <h:panelGrid columns="2" style="width:400px;">
+                            <h:outputLabel value="合同号:" for="hth"/>
+                            <h:inputText id="hth" size="30" value="#{T100103.responseRecord.stdhth}"/>
+                            <h:outputLabel value="客户名称:" for="khmc"/>
+                            <h:inputText id="khmc" size="30" value="#{T100103.responseRecord.stdkhmc}"/>
+                            <h:outputLabel value="地区:" for="dqh"/>
+                            <h:selectOneMenu id="dqh" value="#{T100103.responseRecord.stddqh}" style="width:100px">
+                                <f:selectItems value="#{T100103.regionOptions}"/>
+                            </h:selectOneMenu>
+                            <h:outputText/>
+                        </h:panelGrid>
+                        <h:panelGrid  style="width:100px;text-align: right">
+                            <p:commandButton id="qrybtn" style="width:80px" value="查询" action="#{T100103.query}"
+                                             update="msgs, :dataform:pdt"/>
+                            <p:commandButton style="width:80px" value="重置" type="reset"/>
+                        </h:panelGrid>
+                    </h:panelGrid>
+                </p:panel>
+            </h:form>
+        </div>
+        <h:form id="dataform">
+            <p:toolbar style="margin-top:10px;margin-bottom:2px">
+                <p:toolbarGroup align="left">
+                    <p:commandButton type="push" value="全部锁定" image="ui-icon-query"
+                                     action="#{T100103.doLockAll}" update="msgs"
+                                     ajax="false"/>
+                    <p:commandButton type="push" value="锁定所选记录" image="ui-icon-query"
+                                     action="#{T100103.doLockMulti}" update="msgs"
+                                     ajax="false"/>
+                    <p:commandButton type="push" value="全部解锁" image="ui-icon-query"
+                                     action="#{T100103.doUnlockAll}" update="msgs"
+                                     ajax="false"/>
+                    <p:commandButton type="push" value="解锁所选记录" image="ui-icon-query"
+                                     action="#{T100103.doUnlockMulti}" update="msgs"
+                                     ajax="false"/>
+                </p:toolbarGroup>
+            </p:toolbar>
+
+            <div style="padding:0 0px ">
+                <p:dataTable id="pdt" var="response" value="#{T100103.responseFDList}"
+                             rowKey="#{response.stdjjh}"
+                             paginator="true" rows="30"
+                             selection="#{T100103.selectedRecords}"
+                             paginatorPosition="bottom"
+                             rowSelectListener="#{T100103.onRowSelectNavigate}"
+                             paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                             rowsPerPageTemplate="15,30,50,100" emptyMessage="数据记录为空...">
+
+                    <p:column selectionMode="multiple"/>
+                    <p:column sortBy="#{response.stdkhmc}">
+                        <f:facet name="header">
+                            姓 名
+                        </f:facet>
+                        <h:outputText value="#{response.stdkhmc}"/>
+                    </p:column>
+                    <p:column>
+                        <f:facet name="header">
+                            计划还款日
+                        </f:facet>
+                        <h:outputText value="#{response.stdjhhkr}"/>
+                    </p:column>
+                    <p:column style="text-align:right">
+                        <f:facet name="header">
+                            <h:outputText value="还款金额" style="text-align:left"/>
+                        </f:facet>
+                        <h:outputText value="#{response.stdhkje}"/>
+                    </p:column>
+                    <p:column style="text-align:right">
+                        <f:facet name="header">
+                            本金
+                        </f:facet>
+                        <h:outputText value="#{response.stdhkbj}"/>
+                    </p:column>
+                    <p:column style="text-align:right">
+                        <f:facet name="header">
+                            利息
+                        </f:facet>
+                        <h:outputText value="#{response.stdhklx}"/>
+                    </p:column>
+                    <p:column>
+                        <f:facet name="header">
+                            贷款帐号
+                        </f:facet>
+                        <h:outputText value="#{response.stddkzh}"/>
+                    </p:column>
+                    <p:column>
+                        <f:facet name="header">
+                            扣款帐号
+                        </f:facet>
+                        <h:outputText value="#{response.stdhkzh}"/>
+                    </p:column>
+                    <p:column sortBy="#{response.stddqh}">
+                        <f:facet name="header">
+                            地区
+                        </f:facet>
+                        <h:outputText value="#{response.stddqh}"/>
+                    </p:column>
+                    <p:column>
+                        <f:facet name="header">
+                            银行
+                        </f:facet>
+                        <h:outputText value="#{response.stdyhh}"/>
+                    </p:column>
+                    <p:column>
+                        <f:facet name="header">
+                            是否锁定
+                        </f:facet>
+                        <h:outputText value="#{response.locked}"/>
+                    </p:column>
+                </p:dataTable>
+            </div>
+        </h:form>
+    </ui:define>
+
+</ui:composition>

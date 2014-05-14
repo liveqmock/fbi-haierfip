@@ -1,0 +1,60 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                template="/templates/ui.xhtml">
+
+    <ui:define name="head">
+        <script type="text/javascript">
+            function doPopupWindow(obj) {
+                var pkid = obj.parentNode.parentNode.parentNode.getAttribute("data-rk");
+                var popupwindow = window.open("common/cutpayDetlFields.xhtml?pkid=" + pkid, "", "height=600,width=800,left=200,top=100,toolbar=no,menubar=no,scrollbars=yes,location=no");
+                popupwindow.focus;
+            }
+        </script>
+        <style type="text/css">
+            .col-label {
+                width: 70px;
+            }
+            .col-input {
+                width: 120px;
+            }
+            .col-input-200 {
+                width: 300px;
+            }
+        </style>
+    </ui:define>
+
+    <ui:define name="content">
+        <div style="margin:5px">
+
+            <p:tabView dynamic="true" cache="false" style="font-weight:normal;font-style:normal">
+                <p:tab title="已归档明细代扣记录清单">
+                    <p:growl id="msgs" showDetail="false"/>
+
+
+                    <div id="table">
+                        <h:form id="form">
+                            <p:dataTable id="pdt" dynamic="true" style="width:100%;"
+                                         value="#{cutpayArchiveQryAction.detlList}" var="record"
+                                         rowKey="#{record.pkid}"
+                                         filteredValue="#{cutpayArchiveQryAction.filteredDetlList}"
+                                         paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown} "
+                                         currentPageReportTemplate="【过滤后笔数:{totalRecords}】"
+                                         paginator="true" rows="15" paginatorPosition="bottom"
+                                         rowsPerPageTemplate="100,50,30,15,5"
+                                         selection="#{cutpayArchiveQryAction.selectedRecords}"
+                                         emptyMessage="数据记录为空...">
+                                <p:column selectionMode="multiple" style="width:18px"/>
+                                <ui:include src="common/cutpayListFields.xhtml">
+                                    <ui:param name="backBean" value="#{cutpayArchiveQryAction}"/>
+                                </ui:include>
+                            </p:dataTable>
+                        </h:form>
+                    </div>
+                </p:tab>
+            </p:tabView>
+        </div>
+    </ui:define>
+</ui:composition>

@@ -1,0 +1,20 @@
+<?xml version='1.0' encoding='iso-8859-1'?>
+<tree id="0">
+	<item text="Books" id="books" open="1" im0="tombs.gif" im1="tombs.gif" im2="iconSafe.gif" call="1" select="1">
+		<item text="Mystery &amp; Thrillers" id="mystery" im0="folderClosed.gif" im1="folderOpen.gif" im2="folderClosed.gif">
+			<item text="Lawrence Block" id="lb" im0="book_titel.gif" im1="book.gif" im2="book_titel.gif">
+				<item text="All the Flowers Are Dying" id="lb_1" im0="book_titel.gif" im1="book.gif" im2="book_titel.gif"/>
+				<item text="The Burglar on the Prowl" id="lb_2" im0="book_titel.gif" im1="book.gif" im2="book_titel.gif"/>
+				<item text="The Plot Thickens" id="lb_3" im0="book_titel.gif" im1="book.gif" im2="book_titel.gif"/>
+				<item text="Grifter's Game" id="lb_4" im0="book_titel.gif" im1="book.gif" im2="book_titel.gif"/>
+				<item text="The Burglar Who Thought He Was Bogart" id="lb_5" im0="book_titel.gif" im1="book.gif" im2="book_titel.gif"/>
+			</item>
+		</item>
+		<item text="History" id="history" im0="folderClosed.gif" im1="folderOpen.gif" im2="folderClosed.gif">
+			<item text="John Mack Faragher" id="jmf" im0="book_titel.gif" im1="book.gif" im2="book_titel.gif"></item>
+			<item text="Jim Dwyer" id="jd" im0="book_titel.gif" im1="book.gif" im2="book_titel.gif"></item>
+			<item text="Larry Schweikart" id="ls" im0="book_titel.gif" im1="book.gif" im2="book_titel.gif"></item>
+			<item text="R. Lee Ermey" id="rle" im0="book_titel.gif" im1="book.gif" im2="book_titel.gif"></item>
+		</item>
+		</item>
+</tree> 

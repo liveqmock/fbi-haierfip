@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html
+        PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:ui="http://java.sun.com/jsf/facelets">
+<h:head>
+    <title>用户登录</title>
+    <link rel="stylesheet" type="text/css" href="#{request.contextPath}/resources/login2/css/login2.css"/>
+
+</h:head>
+<f:view>
+    <h:body style="background-color:#1D3647;">
+        <h:panelGrid styleClass="login_head_hw" columnClasses="login_head_hw" cellpadding="0" cellspacing="0" border="0"
+                     width="100%" columns="1">
+            <h:panelGrid cellpadding="0" cellspacing="0" border="0" width="100%" columns="1"
+                         styleClass="login_head_hw login_top_bg">
+                <h:panelGroup styleClass="login_head_hw"></h:panelGroup>
+            </h:panelGrid>
+            <h:panelGrid columnClasses="login_body_hw" width="100%" columns="2" cellpadding="0" cellspacing="0" border="0"
+                         styleClass="login_bg">
+                <h:panelGroup>
+                        <h:panelGrid style="width:100%;height:100%;text-align:center;" styleClass="login_bg2" cellpadding="0" 
+                                     cellspacing="0" border="0" columns="1">
+                            <h:panelGrid cellpadding="0" cellspacing="0" border="0" columns="1">
+                                <h:panelGroup> 
+                                    <img alt="logo" src="resources/login2/images/logo.png" width="279" height="68"/>
+                                </h:panelGroup>
+                                <br/>
+                                <h:panelGroup>
+                                    <p class="left_txt">1- 金融管理部门首选方案...</p>
+                                    <p class="left_txt">2- 完整的银行业务交易...</p>
+                                    <p class="left_txt">3- 强大的后台系统，管理内容易如反掌...</p>
+                                </h:panelGroup>
+                            </h:panelGrid>
+                        </h:panelGrid>
+                    </h:panelGroup>
+                    <h:panelGroup>
+                        <h:panelGrid style="width:100%;height:100%;" cellpadding="0"
+                                     cellspacing="0" border="0" columns="1" columnClasses="login_content_pos">
+                            <h:panelGrid columns="1" style="width:600px;text-align:left;" cellpadding="0"
+                                         cellspacing="0" border="0">
+                                <h:panelGroup style="text-align:left;" styleClass="login_txt_bt">
+                                    <h:outputText>系统登录</h:outputText>
+                                </h:panelGroup>
+                                 <h:panelGroup>
+                                     <h:panelGrid columnClasses="login_loginLbl" style="width:100%;"
+                                                  columns="2" cellpadding="0" cellspacing="0" border="0">
+                                         <h:outputLabel>管理员：</h:outputLabel>
+                                         <h:inputText></h:inputText>
+                                         <h:outputLabel>密码：</h:outputLabel>
+                                         <h:inputText></h:inputText>
+                                         <h:outputLabel>&nbsp;</h:outputLabel>
+                                         <h:panelGroup>
+                                             <h:commandButton type="submit" value="登 录"></h:commandButton>
+                                             &nbsp;&nbsp;&nbsp;
+                                             <h:commandButton type="reset" value="重 置"></h:commandButton>
+                                         </h:panelGroup>
+                                     </h:panelGrid>
+                                 </h:panelGroup>
+
+                            </h:panelGrid>
+                        </h:panelGrid>
+                </h:panelGroup>
+            </h:panelGrid>
+            <h:panelGrid cellpadding="0" cellspacing="0" border="0" width="100%" columns="1"
+                         styleClass="login-buttom-bg">
+                <h:panelGroup styleClass="login_head_hw"></h:panelGroup>
+            </h:panelGrid>
+        </h:panelGrid>
+    </h:body>
+</f:view>
+</html>

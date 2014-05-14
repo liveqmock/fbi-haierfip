@@ -1,0 +1,190 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                template="/templates/ui.xhtml">
+
+<ui:define name="head">
+    <style type="text/css">
+        .input-col-m {
+            width: 60px;
+        }
+
+        .input-col-l {
+            width: 80px;
+        }
+
+        .input-col-xxl {
+            width: 1%;
+            text-align: right;
+        }
+
+        .col-80 {
+        }
+
+        .col-20 {
+            width: 5%;
+        }
+    </style>
+
+</ui:define>
+
+<ui:define name="content">
+    <h:form>
+        <div style="padding:5px 1px">
+            <p:ajaxStatus onstart="statusDialog.show();" onsuccess="statusDialog.hide();"/>
+            <p:dialog modal="true" widgetVar="statusDialog" header="数据读取中..." draggable="false" closable="false">
+                <p:graphicImage value="/images/ajaxloadingbar.gif"/>
+            </p:dialog>
+
+            <p:messages id="msgs" showDetail="true"/>
+            <p:panel id="querypanel" header="住房按揭正常还款记录查询条件">
+                <h:panelGrid columns="2" cellspacing="5" columnClasses="col-80,col-20">
+                    <h:panelGrid columns="2" style="text-align:left">
+                        <h:outputLabel value="合同号:" for="hth"/>
+                        <h:inputText id="hth" size="30" value="#{T100101.responseRecord.stdhth}"/>
+                        <h:outputLabel value="客户名称:" for="khmc"/>
+                        <h:inputText id="khmc" size="30" value="#{T100101.responseRecord.stdkhmc}"/>
+                        <h:outputLabel value="地区:" for="dqh"/>
+                        <h:selectOneMenu id="dqh" value="#{T100101.responseRecord.stddqh}" style="width:100px">
+                            <f:selectItems value="#{T100101.regionOptions}"/>
+                        </h:selectOneMenu>
+                        <h:outputText/>
+                    </h:panelGrid>
+                    <h:panelGrid>
+                        <p:commandButton id="qrybtn" value="查询" style="width:100px" action="#{T100101.query}" update="msgs,tbl,querypanel"/>
+                        <p:commandButton id="excel" value="导出" style="width:100px" ajax="false">
+                            <p:dataExporter type="xls" target="tbl" fileName="repayquery"
+                                            postProcessor="#{T100101.postProcessXLS}"/>
+                        </p:commandButton>
+
+                    </h:panelGrid>
+
+                </h:panelGrid>
+                <!--</h:form>-->
+            </p:panel>
+        </div>
+
+        <div style="padding:0 1px ">
+            <p:dataTable id="tbl" var="response" value="#{T100101.responseFDList}" style="width:100%;"
+                         paginator="true" rows="15" paginatorPosition="bottom"
+                         selection="#{T100101.selectedRecord}"
+                         rowSelectListener="#{T100101.onRowSelectNavigate}"
+                         paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                         rowsPerPageTemplate="15,30,50,100" emptyMessage="数据记录为空...">
+                <f:facet name="header">
+                    还款记录清单
+                </f:facet>
+                <p:column selectionMode="multiple" />
+                <p:column sortBy="#{response.stdhth}">
+                    <f:facet name="header">
+                        合同号
+                    </f:facet>
+                    <h:outputText value="#{response.stdhth}"/>
+                    <f:facet name="footer">
+                        <h:outputText value="共#{T100101.totalcount}笔"/>
+                    </f:facet>
+                </p:column>
+                <p:column sortBy="#{response.stdkhmc}">
+                    <f:facet name="header">
+                        姓 名
+                    </f:facet>
+                    <h:outputText value="#{response.stdkhmc}"/>
+                </p:column>
+                <p:column>
+                    <f:facet name="header">
+                        计划还款日
+                    </f:facet>
+                    <h:outputText value="#{response.stdjhhkr}"/>
+                </p:column>
+                <p:column style="text-align:right">
+                    <f:facet name="header">
+                        <h:outputText value="还款金额"/>
+                    </f:facet>
+                    <h:outputText value="#{response.stdhkje}"/>
+                    <f:facet name="footer">
+                        <h:outputText value="#{T100101.totalamt}"/>
+                    </f:facet>
+                </p:column>
+                <p:column style="text-align:right">
+                    <f:facet name="header">
+                        本金
+                    </f:facet>
+                    <h:outputText value="#{response.stdhkbj}"/>
+                    <f:facet name="footer">
+                        <h:outputText value="#{T100101.totalPrincipalAmt}"/>
+                    </f:facet>
+                </p:column>
+                <p:column style="text-align:right">
+                    <f:facet name="header">
+                        利息
+                    </f:facet>
+                    <h:outputText value="#{response.stdhklx}"/>
+                    <f:facet name="footer">
+                        <h:outputText value="#{T100101.totalInterestAmt}"/>
+                    </f:facet>
+                </p:column>
+                <p:column style="text-align:right">
+                    <f:facet name="header">
+                        罚息
+                    </f:facet>
+                    <h:outputText value="#{response.stdfxje}"/>
+                    <f:facet name="footer">
+                        <h:outputText value="#{T100101.totalFxjeAmt}"/>
+                    </f:facet>
+                </p:column>
+                <p:column>
+                    <f:facet name="header">
+                        贷款帐号
+                    </f:facet>
+                    <h:outputText value="#{response.stddkzh}"/>
+                </p:column>
+                <p:column>
+                    <f:facet name="header">
+                        扣款帐号
+                    </f:facet>
+                    <h:outputText value="#{response.stdhkzh}"/>
+                </p:column>
+                <p:column sortBy="#{response.stddqh}">
+                    <f:facet name="header">
+                        地区
+                    </f:facet>
+                    <h:outputText value="#{response.stddqh}"/>
+                </p:column>
+                <p:column>
+                    <f:facet name="header">
+                        银行
+                    </f:facet>
+                    <h:outputText value="#{response.stdyhh}"/>
+                </p:column>
+            </p:dataTable>
+
+            <p:dialog header="正常还款记录明细" widgetVar="FDRecordDialog" width="650" height="600">
+                <h:panelGrid id="display" columns="2" cellpadding="4">
+
+                    <f:facet name="header">
+                        明细
+                    </f:facet>
+
+                    <h:outputText value="合同号:"/>
+                    <h:outputText value="#{T100101.selectedRecord.stdhth}"/>
+
+                    <h:outputText value="姓名:"/>
+                    <h:outputText value="#{T100101.selectedRecord.stdkhmc}"/>
+
+                    <h:outputText value="客户号:"/>
+                    <h:outputText value="#{T100101.selectedRecord.stdkhh}"/>
+
+                    <h:outputText value="借据号:"/>
+                    <h:outputText value="#{T100101.selectedRecord.stdjjh}"/>
+                </h:panelGrid>
+            </p:dialog>
+
+
+        </div>
+    </h:form>
+
+</ui:define>
+
+</ui:composition>

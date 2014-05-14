@@ -1,0 +1,240 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                template="/templates/ui.xhtml">
+
+<ui:define name="head">
+    <script type="text/javascript">
+        function doPopupWindow(obj) {
+            var pkid = obj.parentNode.parentNode.parentNode.getAttribute("data-rk");
+            var popupwindow = window.open("common/cutpayDetlFields.xhtml?pkid=" + pkid, "", "height=600,width=800,left=200,top=100,toolbar=no,menubar=no,scrollbars=yes,location=no");
+            popupwindow.focus;
+        }
+        function doPopupBatWindow(obj) {
+            var pkid = obj.parentNode.parentNode.parentNode.getAttribute("data-rk");
+            var popupwindow = window.open("common/cutpayBatDetlFields.xhtml?pkid=" + pkid, "", "height=600,width=800,left=200,top=100,toolbar=no,menubar=no,scrollbars=yes,location=no");
+            popupwindow.focus;
+        }
+        function doPopupBatDetlWindow(obj) {
+            var pkid = obj.parentNode.parentNode.parentNode.getAttribute("data-rk");
+            var popupwindow = window.open("cutpayQryList.xhtml?pkid=" + pkid, "", "height=600,width=1010,left=100,top=100,toolbar=no,menubar=no,scrollbars=yes,location=no");
+            popupwindow.focus;
+        }
+    </script>
+</ui:define>
+
+<ui:define name="content">
+    <div style="margin:5px">
+
+        <p:tabView id="tabview" dynamic="true" cache="false" style="font-weight:normal;font-style:normal">
+            <p:tab title="银联代扣记录清单">
+                <div id="table">
+                    <h:form id="form">
+                        <p:messages id="msgs" showDetail="false"/>
+                        <p:menubar>
+                            <p:menuitem type="push" value="全部打包" icon="ui-icon ui-icon-document"
+                                        action="#{unionpayBatchAction.onTxPkgAll}" update="msgs, pdt,pkgPdt"/>
+                            <p:menuitem type="push" value="打包所选记录" icon="ui-icon ui-icon-disk"
+                                        action="#{unionpayBatchAction.onTxPkgMulti}" update="msgs, pdt,pkgPdt"/>
+                        </p:menubar>
+                        <p:ajaxStatus style="height:18px;text-align:center">
+                            <f:facet name="start">
+                                <h:graphicImage value="/images/ajaxloadingbar.gif"/>
+                            </f:facet>
+                            <f:facet name="complete">
+                                <h:outputText value=""/>
+                            </f:facet>
+                        </p:ajaxStatus>
+                        <p:dataTable id="pdt" dynamic="true" style="width:100%;"
+                                     value="#{unionpayBatchAction.detlList}" var="record"
+                                     rowKey="#{record.pkid}"
+                                     selection="#{unionpayBatchAction.selectedRecords}"
+                                     paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown} 【总笔数:#{unionpayBatchAction.totalcount}】【总金额:#{unionpayBatchAction.totalamt}】"
+                                     paginator="true" rows="5" paginatorPosition="bottom"
+                                     rowsPerPageTemplate="100,50,30,15,5"
+                                     emptyMessage="数据记录为空...">
+                            <p:column selectionMode="multiple" style="width:18px"/>
+                            <ui:include src="common/cutpayListFields.xhtml">
+                                <ui:param name="backBean" value="#{unionpayBatchAction}"/>
+                            </ui:include>
+                        </p:dataTable>
+
+                        <p:separator style="margin-top:40px;margin-bottom:10px"/>
+                        <p:menubar>
+                            <p:menuitem type="push" value="全部发送" icon="ui-icon ui-icon-arrowrefresh-1-w"
+                                        action="#{unionpayBatchAction.onSendRequestAll}"
+                                        update="msgs, pdt,pkgPdt, :tabview:qryform:qrypdt"/>
+                            <p:menuitem type="push" value="发送所选批量报文" icon="ui-icon ui-icon-disk"
+                                        action="#{unionpayBatchAction.onSendRequestMulti}"
+                                        update="msgs, pdt,pkgPdt, :tabview:qryform:qrypdt"/>
+                            <p:menuitem type="push" value="报文解包"  style="float:right;" icon="ui-icon ui-icon-disk"
+                                        action="#{unionpayBatchAction.onUnpackMulti}"
+                                        update="msgs, pdt,pkgPdt"/>
+                        </p:menubar>
+                        <p:ajaxStatus style="height:18px;text-align:center">
+                            <f:facet name="start">
+                                <h:graphicImage value="/images/ajaxloadingbar.gif"/>
+                            </f:facet>
+                            <f:facet name="complete">
+                                <h:outputText value=""/>
+                            </f:facet>
+                        </p:ajaxStatus>
+                        <p:dataTable id="pkgPdt" dynamic="true" style="width:100%;"
+                                     value="#{unionpayBatchAction.sendablePkgList}" var="record"
+                                     rowKey="#{record.txpkgSn}"
+                                     selection="#{unionpayBatchAction.selectedSendableRecords}"
+                                     paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown} "
+                                     paginator="true" rows="15" paginatorPosition="bottom"
+                                     rowsPerPageTemplate="100,50,30,15,5"
+                                     emptyMessage="数据记录为空...">
+                            <p:column selectionMode="multiple" style="width:18px"/>
+                            <ui:include src="common/cutpayBatListFields.xhtml">
+                                <ui:param name="backBean" value="#{unionpayBatchAction}"/>
+                            </ui:include>
+                        </p:dataTable>
+                    </h:form>
+                </div>
+            </p:tab>
+            <p:tab title="交易结果查询处理">
+                <div id="qrytable">
+                    <h:form id="qryform">
+                        <p:messages id="qrymsgs" showDetail="false"/>
+                        <p:menubar>
+                            <p:menuitem type="push" value="全部查询" icon="ui-icon ui-icon-document"
+                                        action="#{unionpayBatchAction.onQueryAll}" update="qrymsgs,qrypdt"/>
+                            <p:menuitem type="push" value="多笔查询" icon="ui-icon ui-icon-disk"
+                                        action="#{unionpayBatchAction.onQueryMulti}" update="qrymsgs,qrypdt"/>
+                            <p:menuitem type="push" value="报文解包"  style="float:right;" icon="ui-icon ui-icon-disk"
+                                        action="#{unionpayBatchAction.onUnpackMultiForQryList}"
+                                        update="qrymsgs,qrypdt, :tabview:form:pdt"/>
+                        </p:menubar>
+                        <p:ajaxStatus style="height:18px;text-align:center">
+                            <f:facet name="start">
+                                <h:graphicImage value="/images/ajaxloadingbar.gif"/>
+                            </f:facet>
+                            <f:facet name="complete">
+                                <h:outputText value=""/>
+                            </f:facet>
+                        </p:ajaxStatus>
+                        <p:dataTable id="qrypdt" dynamic="true" style="width:100%;"
+                                     value="#{unionpayBatchAction.needQueryBatlList}" var="record"
+                                     rowKey="#{record.txpkgSn}"
+                                     selection="#{unionpayBatchAction.selectedQueryRecords}"
+                                     paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                                     paginator="true" rows="15" paginatorPosition="bottom"
+                                     rowsPerPageTemplate="100,50,30,15,5"
+                                     emptyMessage="数据记录为空...">
+                            <p:column selectionMode="multiple" style="width:18px"/>
+                            <ui:include src="common/cutpayBatListFields.xhtml">
+                                <ui:param name="backBean" value="#{unionpayBatchAction}"/>
+                            </ui:include>
+                        </p:dataTable>
+                    </h:form>
+                </div>
+            </p:tab>
+            <p:tab title="代扣失败记录清单">
+                <div id="failListTable">
+                    <h:form id="failListform">
+                        <p:messages id="failmsgs" showDetail="false"/>
+                        <p:menubar>
+                            <p:menuitem type="push" value="EXCEL导出" icon="ui-icon ui-icon-disk" ajax="false"
+                                        action="#{unionpayBatchAction.onExportFailureList}"
+                                        update="failmsgs,failpdt"/>
+                            <p:menuitem type="push" value="全部记录存档" icon="ui-icon ui-icon-disk" ajax="true"
+                                        action="#{unionpayBatchAction.onArchiveAllFailureRecord}"
+                                        update="failmsgs,failpdt"/>
+                            <p:menuitem type="push" value="多笔记录存档" icon="ui-icon ui-icon-disk" ajax="true"
+                                        action="#{unionpayBatchAction.onArchiveMultiFailureRecord}"
+                                        update="failmsgs,failpdt"/>
+                        </p:menubar>
+                        <p:ajaxStatus style="height:18px;text-align:center">
+                            <f:facet name="start">
+                                <h:graphicImage value="/images/ajaxloadingbar.gif"/>
+                            </f:facet>
+                            <f:facet name="complete">
+                                <h:outputText value=""/>
+                            </f:facet>
+                        </p:ajaxStatus>
+                        <p:dataTable id="failpdt" dynamic="true" style="width:100%;"
+                                     value="#{unionpayBatchAction.failureDetlList}" var="record"
+                                     rowKey="#{record.pkid}"
+                                     selection="#{unionpayBatchAction.selectedFailRecords}"
+                                     paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown} 【总笔数:#{unionpayBatchAction.totalFailureCount}】【总金额:#{unionpayBatchAction.totalFailureAmt}】"
+                                     paginator="true" rows="15" paginatorPosition="bottom"
+                                     rowsPerPageTemplate="100,50,30,15,5"
+                                     emptyMessage="数据记录为空...">
+                            <p:column selectionMode="multiple" style="width:18px"/>
+                            <ui:include src="common/cutpayListFields.xhtml">
+                                <ui:param name="backBean" value="#{unionpayBatchAction}"/>
+                            </ui:include>
+                        </p:dataTable>
+                    </h:form>
+                </div>
+            </p:tab>
+            <p:tab title="代扣成功记录清单">
+                <div id="succListTable">
+                    <h:form id="succListform">
+                        <p:messages id="succmsgs" showDetail="false"/>
+                        <p:menubar>
+                            <p:menuitem type="push" value="全部确认入帐" icon="ui-icon ui-icon-document"
+                                        action="#{unionpayBatchAction.onConfirmAccountAll}"
+                                        update="succmsgs,succpdt,:tabview:actListform:actpdt"/>
+                            <p:menuitem type="push" value="多笔确认入帐" icon="ui-icon ui-icon-disk"
+                                        action="#{unionpayBatchAction.onConfirmAccountMulti}"
+                                        update="succmsgs,succpdt,:tabview:actListform:actpdt"/>
+                            <p:menuitem type="push" value="EXCEL导出" icon="ui-icon ui-icon-disk"
+                                        action="#{unionpayBatchAction.onExportSuccessList}" ajax="false"
+                                        update="succmsgs,succpdt,:tabview:actListform:actpdt"/>
+                        </p:menubar>
+                        <p:ajaxStatus style="height:18px;text-align:center">
+                            <f:facet name="start">
+                                <h:graphicImage value="/images/ajaxloadingbar.gif"/>
+                            </f:facet>
+                            <f:facet name="complete">
+                                <h:outputText value=""/>
+                            </f:facet>
+                        </p:ajaxStatus>
+                        <p:dataTable id="succpdt" dynamic="true" style="width:100%;"
+                                     value="#{unionpayBatchAction.successDetlList}" var="record"
+                                     rowKey="#{record.pkid}"
+                                     selection="#{unionpayBatchAction.selectedConfirmAccountRecords}"
+                                     paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown} 【总笔数:#{unionpayBatchAction.totalSuccessCount}】【总金额:#{unionpayBatchAction.totalSuccessAmt}】"
+                                     paginator="true" rows="15" paginatorPosition="bottom"
+                                     rowsPerPageTemplate="100,50,30,15,5"
+                                     emptyMessage="数据记录为空...">
+                            <p:column selectionMode="multiple" style="width:18px"/>
+                            <ui:include src="common/cutpayListFields.xhtml">
+                                <ui:param name="backBean" value="#{unionpayBatchAction}"/>
+                            </ui:include>
+                        </p:dataTable>
+                    </h:form>
+                </div>
+            </p:tab>
+            <p:tab title="待入帐记录清单" id="acttab">
+                <div id="actListTable">
+                    <h:form id="actListform">
+                        <p:dataTable id="actpdt" dynamic="true" style="width:100%;"
+                                     value="#{unionpayBatchAction.actDetlList}" var="record"
+                                     rowKey="#{record.pkid}"
+                                     selection="#{unionpayBatchAction.selectedAccountRecords}"
+                                     paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown} 【总笔数:#{unionpayBatchAction.totalAccountCount}】【总金额:#{unionpayBatchAction.totalAccountAmt}】"
+                                     paginator="true" rows="15" paginatorPosition="bottom"
+                                     rowsPerPageTemplate="100,50,30,15,5"
+                                     emptyMessage="数据记录为空...">
+                            <p:column selectionMode="multiple"/>
+                            <ui:include src="common/cutpayListFields.xhtml">
+                                <ui:param name="backBean" value="#{unionpayBatchAction}"/>
+                            </ui:include>
+                        </p:dataTable>
+                    </h:form>
+                </div>
+
+            </p:tab>
+        </p:tabView>
+    </div>
+
+</ui:define>
+
+</ui:composition>

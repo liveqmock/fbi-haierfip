@@ -1,0 +1,166 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                template="/templates/ui.xhtml">
+
+    <ui:define name="head">
+        <script type="text/javascript">
+            function doPopupWindow(obj) {
+                var pkid = obj.parentNode.parentNode.parentNode.getAttribute("data-rk");
+                var popupwindow = window.open("common/cutpayDetlFields.xhtml?pkid=" + pkid, "", "height=600,width=800,left=200,top=100,toolbar=no,menubar=no,scrollbars=yes,location=no");
+                popupwindow.focus;
+            }
+            function doPopupBatWindow(obj) {
+                var pkid = obj.parentNode.parentNode.parentNode.getAttribute("data-rk");
+                var popupwindow = window.open("cutpayQryList.xhtml?pkid=" + pkid, "", "height=600,width=960,left=100,top=100,toolbar=no,menubar=no,scrollbars=yes,location=no");
+                popupwindow.focus;
+            }
+        </script>
+    </ui:define>
+
+    <ui:define name="content">
+        <div style="margin:5px">
+
+            <p:tabView id="tabview" dynamic="true" cache="false" style="font-weight:normal;font-style:normal">
+                <p:tab title="建行直连批量代扣记录清单">
+                    <div id="table">
+                        <h:form id="form">
+                            <p:messages id="msgs" showDetail="false"/>
+                            <p:menubar>
+                                <p:menuitem type="push" value="全部打包" icon="ui-icon ui-icon-document"
+                                            action="#{ccbDirectPayAction.onTxPkgAll}" update="msgs, pdt,pkgPdt"/>
+                                <p:menuitem type="push" value="多笔打包" icon="ui-icon ui-icon-disk"
+                                            action="#{ccbDirectPayAction.onTxPkgMulti}" update="msgs, pdt,pkgPdt"/>
+                            </p:menubar>
+                            <p:ajaxStatus style="height:18px;text-align:center">
+                                <f:facet name="start">
+                                    <h:graphicImage value="/images/ajaxloadingbar.gif"/>
+                                </f:facet>
+                                <f:facet name="complete">
+                                    <h:outputText value=""/>
+                                </f:facet>
+                            </p:ajaxStatus>
+                            <p:dataTable id="pdt" dynamic="true"   style="width:100%;"
+                                         value="#{ccbDirectPayAction.detlList}" var="record"
+                                         rowKey="#{record.pkid}"
+                                         selection="#{ccbDirectPayAction.selectedRecords}"
+                                         paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                                         paginator="true" rows="5" paginatorPosition="bottom"
+                                         rowsPerPageTemplate="100,50,30,15,5"
+                                         emptyMessage="数据记录为空...">
+                                <p:column selectionMode="multiple"/>
+                                <ui:include src="common/cutpayListFields.xhtml">
+                                    <ui:param name="backBean" value="#{ccbDirectPayAction}"/>
+                                </ui:include>
+                            </p:dataTable>
+
+                            <p:separator  style="margin-top:30px;margin-bottom:10px"/>
+                            <p:menubar>
+                                <p:menuitem type="push" value="批量报文全部发送" icon="ui-icon ui-icon-arrowrefresh-1-w"
+                                            action="#{ccbDirectPayAction.onSendRequestAll}" update="msgs, pdt,pkgPdt,:tabview:qryform:qrypdt"/>
+                                <p:menuitem type="push" value="批量报文多笔发送" icon="ui-icon ui-icon-disk"
+                                            action="#{ccbDirectPayAction.onSendRequestMulti}"
+                                            update="msgs, pdt,pkgPdt,:tabview:qryform:qrypdt"/>
+                            </p:menubar>
+                            <p:ajaxStatus style="height:18px;text-align:center">
+                                <f:facet name="start">
+                                    <h:graphicImage value="/images/ajaxloadingbar.gif"/>
+                                </f:facet>
+                                <f:facet name="complete">
+                                    <h:outputText value=""/>
+                                </f:facet>
+                            </p:ajaxStatus>
+                            <p:dataTable id="pkgPdt" dynamic="true"   style="width:100%;"
+                                         value="#{ccbDirectPayAction.sendablePkgList}" var="record"
+                                         selection="#{ccbDirectPayAction.selectedSendableRecords}"
+                                         emptyMessage="数据记录为空...">
+                                <p:column selectionMode="multiple"/>
+                                <ui:include src="common/cutpayBatListFields.xhtml">
+                                    <ui:param name="backBean" value="#{ccbDirectPayAction}"/>
+                                </ui:include>
+                            </p:dataTable>
+                        </h:form>
+                    </div>
+                </p:tab>
+                <p:tab title="交易结果查询处理">
+                    <p:growl id="qrymsgs" showDetail="false"/>
+
+                    <div id="qrytable">
+                        <h:form id="qryform">
+                            <p:menubar>
+                                <p:menuitem type="push" value="全部查询" icon="ui-icon ui-icon-document"
+                                            action="#{ccbDirectPayAction.onQueryAll}" update="msgs"
+                                        />
+                                <p:menuitem type="push" value="多笔查询" icon="ui-icon ui-icon-disk"
+                                            action="#{ccbDirectPayAction.onQueryMulti}" update="msgs"
+                                        />
+                            </p:menubar>
+                            <p:ajaxStatus style="height:18px;text-align:center">
+                                <f:facet name="start">
+                                    <h:graphicImage value="/images/ajaxloadingbar.gif"/>
+                                </f:facet>
+                                <f:facet name="complete">
+                                    <h:outputText value=""/>
+                                </f:facet>
+                            </p:ajaxStatus>
+                            <p:dataTable id="qrypdt" dynamic="true"  style="width:100%;"
+                                         value="#{ccbDirectPayAction.needQueryBatlList}" var="record"
+                                         selection="#{ccbDirectPayAction.selectedQueryRecords}"
+                                         paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                                         paginator="true" rows="15" paginatorPosition="bottom"
+                                         rowsPerPageTemplate="100,50,30,15,5"
+                                         emptyMessage="数据记录为空...">
+                                <p:column selectionMode="multiple"/>
+                                <ui:include src="common/cutpayBatListFields.xhtml">
+                                    <ui:param name="backBean" value="#{ccbDirectPayAction}"/>
+                                </ui:include>
+                            </p:dataTable>
+                        </h:form>
+                    </div>
+                </p:tab>
+                <p:tab title="代扣失败记录清单">
+                    <div id="failListTable">
+                        <h:form id="failListform">
+                            <p:dataTable id="failpdt" dynamic="true"  style="width:100%;"
+                                         value="#{ccbDirectPayAction.failureDetlList}" var="record"
+                                         selection="#{ccbDirectPayAction.selectedRecord}"
+                                         paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                                         paginator="true" rows="15" paginatorPosition="bottom"
+                                         rowsPerPageTemplate="100,50,30,15,5"
+                                         emptyMessage="数据记录为空...">
+                                <p:column selectionMode="multiple"/>
+                                <ui:include src="common/cutpayListFields.xhtml">
+                                    <ui:param name="backBean" value="#{ccbDirectPayAction}"/>
+                                </ui:include>
+                            </p:dataTable>
+                        </h:form>
+                    </div>
+
+                </p:tab>
+                <p:tab title="代扣成功记录清单">
+                    <div id="succListTable">
+                        <h:form id="succListform">
+                            <p:dataTable id="succpdt" dynamic="true"    style="width:100%;"
+                                         value="#{ccbDirectPayAction.successDetlList}" var="record"
+                                         selection="#{ccbDirectPayAction.selectedRecord}"
+                                         paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                                         paginator="true" rows="15" paginatorPosition="bottom"
+                                         rowsPerPageTemplate="100,50,30,15,5"
+                                         emptyMessage="数据记录为空...">
+                                <p:column selectionMode="multiple"/>
+                                <ui:include src="common/cutpayListFields.xhtml">
+                                    <ui:param name="backBean" value="#{ccbDirectPayAction}"/>
+                                </ui:include>
+                            </p:dataTable>
+                        </h:form>
+                    </div>
+
+                </p:tab>
+            </p:tabView>
+        </div>
+
+    </ui:define>
+
+</ui:composition>

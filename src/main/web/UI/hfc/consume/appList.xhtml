@@ -1,0 +1,141 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:p="http://primefaces.org/ui"
+                template="/templates/ui.xhtml">
+    <ui:define name="head">
+        <link rel="stylesheet" type="text/css" href="#{request.contextPath}/css/fbicbs.css"/>
+        <script language="javascript" type="text/javascript">
+            document.onkeydown = function TabReplace() {
+                if (event.keyCode == 13) {
+                    if (event.srcElement.tagName != 'BUTTON')
+                        event.keyCode = 9;
+                    else
+                        event.srcElement.click();
+                }
+            }
+            function appEdit(obj) {
+                var oAppno = obj.parentNode.parentNode.childNodes[2].innerHTML;
+                var childWin = window.open("application_start.jsp?appno=" + oAppno, "_blank");
+                childWin.focus();
+
+            }
+            function appNew() {
+                var childWin = window.open("application_start.jsp", "_blank");
+                childWin.focus();
+            }
+
+
+        </script>
+    </ui:define>
+    <ui:define name="content">
+        <div class="entry" id="top">
+            <p:growl id="growl" showDetail="true" globalOnly="true"/>
+            <h:form id="queryForm">
+                <p:panel header="查询条件" id="input">
+                    <h:panelGrid cellspacing="0" border="0" columns="2"
+                                 columnClasses="qrytableWidth,qrytableWidth1">
+                        <h:panelGroup>
+                            <h:panelGrid cellspacing="0" border="0" columns="4"
+                                    columnClasses="lblWidth,data_input_width,lblWidth,data_input_width">
+                                <h:outputLabel value="申请编号："/>
+                                <h:inputText id="appno" autocomplete="off" style="width:160px;ime-mode:disabled;"
+                                             value="#{appaction.strAppno}"/>
+                                <h:outputLabel value="客户姓名："/>
+                                <h:inputText id="name" autocomplete="off" style="width:160px;"
+                                             value="#{appaction.strCustName}"/>
+                                <h:outputLabel value="证件种类："/>
+                                <h:selectOneMenu style="width:164px;" value="#{appaction.strIdType}" id="selIdType">
+                                    <f:selectItems value="#{appaction.idTypeList}"/>
+                                </h:selectOneMenu>
+                                <h:outputLabel value="证件号码："/>
+                                <h:inputText style="width:160px;" id="txtId" autocomplete="off"
+                                             value="#{appaction.strId}"/>
+                                <h:outputLabel value="申请状态："/>
+                                <h:selectOneMenu style="width:164px;" value="#{appaction.strAppStatus}" id="selAppStatus">
+                                    <f:selectItems value="#{appaction.appStatusList}"/>
+                                </h:selectOneMenu>
+                                <h:outputLabel/>
+                            </h:panelGrid>
+                        </h:panelGroup>
+                        <h:panelGrid cellspacing="0" border="0" columns="1"
+                                     width="100%"  columnClasses="btnWidth">
+                            <p:commandButton style="width:60px;" ajax="false" action="#{appaction.onBtnQueryClick}" id="btnQuery"
+                                         value="确 定"></p:commandButton>
+                            <p:commandButton style="width:60px;" type="reset" value="重 置"></p:commandButton>
+                        </h:panelGrid>
+                    </h:panelGrid>
+                </p:panel>
+                <br></br>
+                <p:dataTable style="border-left:1px solid #A6C9E2;" var="record" id="xfappTab"
+                             height="400" value="#{appaction.xfappList}"
+                             selection="#{appaction.selectRecord}" selectionMode="single"
+                             paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                             paginator="true" rows="15" paginatorPosition="bottom" rowsPerPageTemplate="100,50,30,15,5"
+                             emptyMessage="无满足条件数据...">
+                    <f:facet name="header">
+                        <div style="" align="right">
+                            <h:commandButton style="color:red;width:100px;height: 26px" ajax="false" onclick="appNew()"
+                                             id="btnApp"
+                                             value="新申请"></h:commandButton>
+                        </div>
+                    </f:facet>
+                    <p:column style="text-align:center;">
+                        <f:facet name="header">
+                            <h:outputText value="姓名"/>
+                        </f:facet>
+                        <h:outputText value="#{record.name}"/>
+                    </p:column>
+                    <p:column>
+                        <f:facet name="header">
+                            <h:outputText value="证件号"/>
+                        </f:facet>
+                        <h:outputText value="#{record.id}"/>
+                    </p:column>
+                    <p:column>
+                        <f:facet name="header">
+                            <h:outputText value="申请编号"></h:outputText>
+                        </f:facet>
+                        <h:outputText value="#{record.appno}"/>
+                    </p:column>
+                    <p:column style="text-align:center;">
+                        <f:facet name="header">
+                            <h:outputText value="申请状态"></h:outputText>
+                        </f:facet>
+                        <h:outputText value="#{appaction.appStatus.valueOfAlias(record.appstatus).title}">
+                        </h:outputText>
+                    </p:column>
+                    <p:column style="text-align:center;">
+                        <f:facet name="header">
+                            <h:outputText value="申请日期"></h:outputText>
+                        </f:facet>
+                        <h:outputText value="#{record.appdate}">
+                            <f:convertDateTime pattern="yyyy-MM-dd"/>
+                        </h:outputText>
+                    </p:column>
+                    <p:column rendered="#{!appaction.strAppStatus.equals('0')}" style="text-align:center;">
+                        <f:facet name="header">
+                            <h:outputText value="操作"/>
+                        </f:facet>
+                        <h:commandLink style="width:30px;" onclick="appEdit(this)" id="btnEditClick" immediate="true"
+                                       value="编辑">
+                            <f:param name="appno" value="#{record.appno}"></f:param>
+                            <f:param name="action" value="edit"/>
+                        </h:commandLink>
+                    </p:column>
+                    <p:column rendered="#{!appaction.strAppStatus.equals('0')}" style="text-align:center;">
+                        <f:facet name="header">
+                            <h:outputText value="操作"/>
+                        </f:facet>
+                        <h:commandLink style="width:30px" action="#{appaction.onBtnFCClick}" id="btnFCClick"
+                                       immediate="false"
+                                       value="拒绝">
+                            <f:param name="appno" value="#{record.appno}"></f:param>
+                        </h:commandLink>
+                    </p:column>
+                </p:dataTable>
+            </h:form>
+        </div>
+    </ui:define>
+</ui:composition>

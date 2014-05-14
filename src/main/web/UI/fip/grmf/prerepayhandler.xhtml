@@ -1,0 +1,114 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                template="/templates/ui.xhtml">
+
+    <ui:define name="head">
+
+    </ui:define>
+
+    <ui:define name="content">
+        <p:messages id="msgs" showDetail="true" />
+        <h:form id="form">
+            <br/>
+            <p:toolbar>
+                <p:toolbarGroup align="left">
+                    <p:divider/>
+                    <p:commandButton type="push" value="获取信贷提前还款记录" image="ui-icon-query"
+                                     action="#{gmPreRepayAction.doGetCmsRecord}" update="msgs"
+                                     ajax="false"/>
+                    <p:divider/>
+                    <p:commandButton type="push" value="生成建行直连代扣通讯包" image="ui-icon-query"
+                                     action="#{gmPreRepayAction.writebackAll}" update="msgs"
+                                     ajax="false"/>
+                    <p:divider/>
+                </p:toolbarGroup>
+
+                <p:divider/>
+            </p:toolbar>
+
+            <div style="padding-top:15px" id="tabdiv">
+                <p:dataTable id="pdt" height="200" dynamic="true"
+                             value="#{gmPreRepayAction.dbrecords}" var="record"
+                             selection="#{gmPreRepayAction.selectedRecords}"
+                             paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                             paginator="true" rows="15" paginatorPosition="bottom"
+                             rowsPerPageTemplate="100,50,30,15,5"
+                             emptyMessage="数据记录为空...">
+
+                    <f:facet name="header">
+                        <h:outputText value="总笔数:#{gmPreRepayAction.totalcount}／总金额:" />
+
+                        <h:outputText value="#{gmPreRepayAction.totalamt}" >
+                            <f:convertNumber type="number" pattern="#,###,###,###,###.##"/>
+                        </h:outputText>
+                    </f:facet>
+                    <p:column selectionMode="multiple"/>
+                    
+                    <p:column>
+                        <f:facet name="header">
+                            流水号
+                        </f:facet>
+                        <h:outputText value="#{record.seqno}"/>
+                    </p:column>
+                    <p:column>
+                        <f:facet name="header">
+                            借据号
+                        </f:facet>
+                        <h:outputText value="#{record.iouno}"/>
+                    </p:column>
+                    <p:column>
+                        <f:facet name="header">
+                            姓 名
+                        </f:facet>
+                        <h:outputText value="#{record.clientname}"/>
+                    </p:column>
+                    <p:column style="text-align:right">
+                        <f:facet name="header">
+                            <h:outputText value="还款金额" style="text-align:left"/>
+                        </f:facet>
+                        <h:outputText value="#{record.repaymentamt}">
+                            <f:convertNumber type="number" pattern="#,###,###,###,###.00"/>
+                        </h:outputText>
+                    </p:column>
+                    <p:column style="text-align:right">
+                        <f:facet name="header">
+                            本金
+                        </f:facet>
+                        <h:outputText value="#{record.principalamt}">
+                            <f:convertNumber type="number" pattern="#,###,###,###,###.00"/>
+                        </h:outputText>
+                    </p:column>
+                    <p:column style="text-align:right">
+                        <f:facet name="header">
+                            利息
+                        </f:facet>
+                        <h:outputText value="#{record.interestamt}">
+                            <f:convertNumber type="number" pattern="#,###,###,###,###.00"/>
+                        </h:outputText>
+                    </p:column>
+                    <p:column>
+                        <f:facet name="header">
+                            扣款帐号
+                        </f:facet>
+                        <h:outputText value="#{record.repaymentactno}"/>
+                    </p:column>
+                    <p:column>
+                        <f:facet name="header">
+                            银行
+                        </f:facet>
+                        <h:outputText value="#{record.bankcd}"/>
+                    </p:column>
+                    <p:column>
+                        <f:facet name="header">
+                            帐单状态
+                        </f:facet>
+                        <h:outputText value="#{record.billstatus}"/>
+                    </p:column>
+                </p:dataTable>
+            </div>
+        </h:form>
+    </ui:define>
+</ui:composition>

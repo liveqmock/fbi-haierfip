@@ -1,0 +1,138 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                template="/templates/ui.xhtml">
+
+    <ui:define name="head">
+        <script type="text/javascript">
+            function doPopupWindow(obj) {
+                var pkid = obj.parentNode.parentNode.parentNode.getAttribute("data-rk");
+                //var pkid = obj.parentNode.parentNode.childNodes[1].innerHTML;
+                var popupwindow = window.open("../common/cutpayDetlFields.xhtml?pkid=" + pkid, "", "height=600,width=800,left=200,top=100,toolbar=no,menubar=no,scrollbars=yes,location=no");
+                popupwindow.focus;
+            }
+            function doPopupWindow_refund(obj) {
+                var pkid = obj.parentNode.parentNode.parentNode.getAttribute("data-rk");
+                //var pkid = obj.parentNode.parentNode.childNodes[1].innerHTML;
+                var popupwindow = window.open("refundFormFields.xhtml?pkid=" + pkid, "", "height=600,width=800,left=200,top=100,toolbar=no,menubar=no,scrollbars=yes,location=no");
+                popupwindow.focus;
+            }
+        </script>
+
+        <style type="text/css">
+            .col-95 {
+                width: 95%;
+            }
+            .col-5 {
+                width: 5%;
+            }
+        </style>
+
+    </ui:define>
+
+    <ui:define name="content">
+        <div style="margin:5px">
+            <p:tabView id="tabview" dynamic="true" cache="false" style="font-weight:normal;font-style:normal">
+                <p:tab title="退款业务处理">
+                    <div id="qrytable">
+                        <h:form id="qryform">
+                            <p:messages id="qrymsgs" showDetail="false"/>
+                            <p:panel style="margin-top:10px">
+                                <h:panelGrid columns="2" cellspacing="5" columnClasses="col-95,col-5">
+                                    <h:panelGrid columns="4" cellspacing="5">
+                                        <h:outputLabel value="回写成功起始日期:" for="startdate"/>
+                                        <p:inputText id="startdate"
+                                                     value="#{refundReqAction.startdate}"
+                                                     onclick="WdatePicker()"/>
+                                        <h:outputLabel value="回写成功结束日期:" for="enddate"/>
+                                        <p:inputText id="enddate"
+                                                     value="#{refundReqAction.enddate}"
+                                                     onclick="WdatePicker()"/>
+
+                                        <h:outputLabel value="客户名称:"/>
+                                        <p:inputText  value="#{refundReqAction.clientname}"/>
+                                        <h:outputLabel value="借据号:"/>
+                                        <p:inputText  value="#{refundReqAction.iouno}"/>
+                                        <h:outputLabel value="期次号:"/>
+                                        <p:inputText  value="#{refundReqAction.poano}"/>
+                                    </h:panelGrid>
+                                    <h:panelGrid>
+                                        <p:commandButton id="qrybtn" style="width:90px;" value="查询"
+                                                         action="#{refundReqAction.onQuery}"
+                                                         update="pdt,qrymsgs">
+                                        </p:commandButton>
+                                    </h:panelGrid>
+                                </h:panelGrid>
+                            </p:panel>
+                            <p:menubar style="margin-top:5px">
+                                <p:menuitem type="push" value="退款处理" icon="ui-icon ui-icon-gear"
+                                            action="#{refundReqAction.onMultiRefund}" update="qrymsgs,pdt"
+                                            ajax="true"/>
+                            </p:menubar>
+
+                            <p:ajaxStatus style="height:18px;text-align:center">
+                                <f:facet name="start">
+                                    <h:graphicImage value="/images/ajaxloadingbar.gif"/>
+                                </f:facet>
+                                <f:facet name="complete">
+                                    <h:outputText value=""/>
+                                </f:facet>
+                            </p:ajaxStatus>
+                            <p:dataTable id="pdt" dynamic="true" style="width:100%;"
+                                         value="#{refundReqAction.cutpayList}" var="record"
+                                         rowKey="#{record.pkid}"
+                                         paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                                         paginator="true" rows="15" paginatorPosition="bottom"
+                                         rowsPerPageTemplate="100,50,30,15,5"
+                                         selection="#{refundReqAction.selectedCutpayRecords}"
+                                         emptyMessage="数据记录为空...">
+                                <p:column selectionMode="multiple" style="width:18px"/>
+                                <ui:include src="../common/cutpayListFields.xhtml">
+                                    <ui:param name="backBean" value="#{refundReqAction}"/>
+                                </ui:include>
+                            </p:dataTable>
+                        </h:form>
+                    </div>
+                </p:tab>
+                <p:tab title="已生成退款记录清单">
+                    <div>
+                        <h:form id="refundform">
+                            <p:messages id="refundmsgs" showDetail="false"/>
+                            <p:menubar style="margin-top:5px">
+                                <p:menuitem type="push" value="取消退款" icon="ui-icon ui-icon-gear"
+                                            action="#{refundReqAction.onCancelRefund}" update="refundmsgs,refundpdt"
+                                            ajax="true"/>
+                            </p:menubar>
+
+                            <p:ajaxStatus style="height:18px;text-align:center">
+                                <f:facet name="start">
+                                    <h:graphicImage value="/images/ajaxloadingbar.gif"/>
+                                </f:facet>
+                                <f:facet name="complete">
+                                    <h:outputText value=""/>
+                                </f:facet>
+                            </p:ajaxStatus>
+                            <p:dataTable id="refundpdt" dynamic="true" style="width:100%;"
+                                         value="#{refundReqAction.refundList}" var="record"
+                                         rowKey="#{record.pkid}"
+                                         paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                                         paginator="true" rows="15" paginatorPosition="bottom"
+                                         rowsPerPageTemplate="100,50,30,15,5"
+                                         selection="#{refundReqAction.selectedRefundRecords}"
+                                         emptyMessage="数据记录为空...">
+                                <p:column selectionMode="multiple" style="width:18px"/>
+                                <ui:include src="refundListFields.xhtml">
+                                    <ui:param name="backBean" value="#{refundReqAction}"/>
+                                </ui:include>
+                            </p:dataTable>
+                        </h:form>
+                    </div>
+                </p:tab>
+            </p:tabView>
+        </div>
+
+    </ui:define>
+
+</ui:composition>
