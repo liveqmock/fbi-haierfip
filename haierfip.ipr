@@ -258,8 +258,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/src/main/Main.iml" filepath="$PROJECT_DIR$/src/main/Main.iml" />
-      <module fileurl="file://$PROJECT_DIR$/src/test/Test.iml" filepath="$PROJECT_DIR$/src/test/Test.iml" />
-      <module fileurl="file://$PROJECT_DIR$/src/src/sbstest/sbstest.iml" filepath="$PROJECT_DIR$/src/src/sbstest/sbstest.iml" />
     </modules>
   </component>
   <component name="ProjectResources">
@@ -287,24 +285,15 @@
   </component>
   <component name="WebServicesPlugin" addRequiredLibraries="true" />
   <component name="libraryTable">
-    <library name="ctgclient">
-      <CLASSES>
-        <root url="jar://$PROJECT_DIR$/../../lib/ctgclient.jar!/" />
-      </CLASSES>
-      <JAVADOC />
-      <SOURCES />
-    </library>
     <library name="lib">
       <CLASSES>
         <root url="file://$PROJECT_DIR$/../../lib" />
-        <root url="file://$PROJECT_DIR$/../../lib/unionpay" />
       </CLASSES>
       <JAVADOC />
       <SOURCES>
         <root url="file://$PROJECT_DIR$/../../lib" />
       </SOURCES>
       <jarDirectory url="file://$PROJECT_DIR$/../../lib" recursive="false" />
-      <jarDirectory url="file://$PROJECT_DIR$/../../lib/unionpay" recursive="false" />
       <jarDirectory url="file://$PROJECT_DIR$/../../lib" recursive="false" type="SOURCES" />
     </library>
   </component>

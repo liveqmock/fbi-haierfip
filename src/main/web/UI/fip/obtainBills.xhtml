@@ -67,7 +67,7 @@
                                           filterBy="#{record.clientname}" filterMatchMode="contains" style="text-align: center">
                                 <h:outputText value="#{record.clientname}"/>
                                 </p:column>
-                                <p:column headerText="还款金额">
+                                <p:column headerText="还款金额" sortBy="#{record.paybackamt}">
                                     <h:outputText value="#{record.paybackamt}" style="float: right">
                                         <f:convertNumber type="number" pattern="#,###,###,###,###.##"/>
                                     </h:outputText>
@@ -89,6 +89,10 @@
                                 </p:column>
                                 <p:column headerText="扣款帐号" style="text-align: center">
                                     <h:outputText value="#{record.biBankactno}"/>
+                                </p:column>
+                                <p:column headerText="银行"
+                                          filterBy="#{record.biActopeningbank}"  style="text-align: center">
+                                    <h:outputText value="#{record.biActopeningbank}"/>
                                 </p:column>
                                 <p:column headerText="地区" rendered="#{obtainBillsAction.bizType.code=='FD'}"
                                           filterBy="#{record.biCity}" filterMatchMode="contains" style="text-align: center">

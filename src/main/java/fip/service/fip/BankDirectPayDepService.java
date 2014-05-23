@@ -325,7 +325,10 @@ public class BankDirectPayDepService {
 
         paramList.add(txnDate);                       //交易日期
         paramList.add(StringUtils.rightPad(cutpaybat.getBizSn(), 18, " "));        //业务编号（消费信贷系统：XF+8位日期+6位顺序号       房贷系统：FD+8位日期+6位顺序号）
-        paramList.add(StringUtils.rightPad(cutpaybat.getTxpkgSn(), 16, " "));      //报文包号（批量发送时使用）
+
+        //流水号编码规则修改为：不足十六位前补零  20140523  zhanrui
+        //paramList.add(StringUtils.rightPad(cutpaybat.getTxpkgSn(), 16, " "));      //报文包号（批量发送时使用）
+        paramList.add(StringUtils.leftPad(cutpaybat.getTxpkgSn(), 16, "0"));      //报文包号（批量发送时使用）
 
         DecimalFormat df = new DecimalFormat("#############0.00");
 
@@ -382,7 +385,11 @@ public class BankDirectPayDepService {
         List<String> paramList = new ArrayList<String>();
 
         paramList.add(StringUtils.rightPad(cutpaybat.getBizSn(), 18, " "));        //业务编号（消费信贷系统：XF+8位日期+6位顺序号       房贷系统：FD+8位日期+6位顺序号）
-        paramList.add(StringUtils.rightPad(cutpaybat.getTxpkgSn(), 16, " "));      //报文包号（批量发送时使用）
+
+        //流水号编码规则修改为：不足十六位前补零  20140523  zhanrui
+        //paramList.add(StringUtils.rightPad(cutpaybat.getTxpkgSn(), 16, " "));      //报文包号（批量发送时使用）
+        paramList.add(StringUtils.leftPad(cutpaybat.getTxpkgSn(), 16, "0"));      //报文包号（批量发送时使用）
+
         paramList.add(txnDate);                                                    //交易日期
         paramList.add("000001");                                                   //起始笔数 6
 
