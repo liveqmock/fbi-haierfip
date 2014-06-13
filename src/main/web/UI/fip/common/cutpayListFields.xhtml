@@ -46,8 +46,8 @@
             </h:outputText>
         </p:column>
 -->
-        <p:column headerText="还款金额" >
-            <h:outputText value="#{record.paybackamt}" style="float: right">
+        <p:column headerText="还款金额" sortBy="#{record.paybackamt}" >
+            <h:outputText value="#{record.paybackamt}" style="float: right" >
                 <f:convertNumber type="number" pattern="#,###,###,###,##0.00"/>
             </h:outputText>
         </p:column>
@@ -85,6 +85,11 @@
 
         <p:column headerText="回写状态"  rendered="#{backBean.bizType.code != 'FD'}" style="text-align: center">
             <h:outputText value="#{record.writebackflag == '1' ? '已回写' : '未回写'}"/>
+        </p:column>
+
+        <p:column headerText="银行"
+                  filterBy="#{record.biActopeningbank}"  style="text-align: center">
+            <h:outputText value="#{record.biActopeningbank}"/>
         </p:column>
 
         <p:column headerText="城市" rendered="#{backBean.bizType.code=='FD'}"
