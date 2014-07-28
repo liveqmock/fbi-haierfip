@@ -161,7 +161,7 @@ public class CcmsCutpayHandler implements AutoCutpayManager{
             appendNewJoblog(pkid, "发送扣款请求", "发送银联扣款请求报文完成。");
         } catch (Exception e) {
             appendNewJoblog(pkid, "发送扣款请求", "发送银联扣款请求报文失败." + e.getMessage());
-            throw new RuntimeException("数据发送异常，请检查系统线路重新发送！", e);
+            //throw new RuntimeException("数据发送异常，请检查系统线路重新发送！", e);
         }
     }
 
@@ -172,7 +172,7 @@ public class CcmsCutpayHandler implements AutoCutpayManager{
             appendNewJoblog(pkid, "发送查询请求", "发送银联查询请求报文完成。");
         } catch (Exception e) {
             appendNewJoblog(pkid, "发送查询请求", "发送银联查询请求报文失败." + e.getMessage());
-            throw new RuntimeException("数据发送异常，请检查系统线路重新发送！" ,e);
+            //throw new RuntimeException("数据发送异常，请检查系统线路重新发送！" ,e);
         }
     }
 

@@ -136,6 +136,12 @@
                                 <ui:include src="common/cutpayListFields.xhtml">
                                     <ui:param name="backBean" value="#{unionpayDepAction}"/>
                                 </ui:include>
+                                <p:column headerText="代扣响应信息"
+                                          filterBy="#{record.txRetmsg}" filterMatchMode="contains"
+                                          sortBy="#{record.txRetmsg}" style="text-align: center">
+                                    <h:outputText value="#{record.txRetmsg}"/>
+                                </p:column>
+
                             </p:dataTable>
                         </h:form>
                     </div>
