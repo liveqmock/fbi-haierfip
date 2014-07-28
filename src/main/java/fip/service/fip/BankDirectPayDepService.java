@@ -116,8 +116,17 @@ public class BankDirectPayDepService {
                 billManagerService.updateCutpaybatRecordStatus4NewTransactional(cutpaybat, TxpkgStatus.SEND_PEND, "1");
                 throw new RuntimeException("该笔业务不存在或已被银行拒绝。请重新组包。" + errmsg);
             } else {                                //其它错误需要进行结果查询再次确认
-                billManagerService.updateCutpaybatRecordStatus4NewTransactional(cutpaybat, TxpkgStatus.QRY_PEND, "1");
-                throw new RuntimeException("银行处理结果不明，请发起结果查询交易进行确认。" + errmsg);
+                //---20140623 zhanrui 针对建行升级外联平台后错误码变化 进行特殊处理
+                if (errmsg.contains("CCB-0130Z110B358")) {  //CCB-0130Z110B358:未找到代发代扣单据
+                    billManagerService.updateCutpaybatRecordStatus4NewTransactional(cutpaybat, TxpkgStatus.SEND_PEND, "1");
+                    throw new RuntimeException("该笔业务不存在或已被银行拒绝。请重新组包。" + errmsg);
+                }else if (errmsg.contains("CCB-0130Z110BB22")) {  //CCB-0130Z110BB22:您没有不确定结果的交易流水
+                    billManagerService.updateCutpaybatRecordStatus4NewTransactional(cutpaybat, TxpkgStatus.SEND_PEND, "1");
+                    throw new RuntimeException("该笔业务不存在或已被银行拒绝。请重新组包。" + errmsg);
+                }else {
+                    billManagerService.updateCutpaybatRecordStatus4NewTransactional(cutpaybat, TxpkgStatus.QRY_PEND, "1");
+                    throw new RuntimeException("银行处理结果不明，请发起结果查询交易进行确认。" + errmsg);
+                }
             }
         } else {                                    //报文发送成功
             //解包处理
