@@ -44,6 +44,12 @@ public final class JmsManager {
     }
 
     public Object sendAndRecv(TIA tia) throws JMSException {
+         return sendAndRecv(tia, MQ_TIME_OUT);
+    }
+
+    public Object sendAndRecv(TIA tia,  long timeout) throws JMSException {
+        long start = System.currentTimeMillis();
+
         Session session = null;
         try {
             session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -59,6 +65,8 @@ public final class JmsManager {
             logger.info("MQ连接成功...");
         }
 
+        long end1 = System.currentTimeMillis();
+
         try {
             Destination requestDestination = session.createQueue(requestQueueName);
             MessageProducer sender = session.createProducer(requestDestination);
@@ -67,18 +75,22 @@ public final class JmsManager {
             ObjectMessage message = session.createObjectMessage(tia);
             initMessage(tia, message);
             sender.send(message);
+            long end2 = System.currentTimeMillis();
 
             String sentMsgID = message.getJMSMessageID();
             String filter = "JMSCorrelationID = '" + sentMsgID + "'";
             Destination responseDestination = session.createQueue(responseQueueName);
             MessageConsumer receiver = session.createConsumer(responseDestination, filter);
 
-            ObjectMessage objectMessage = (ObjectMessage) receiver.receive(MQ_TIME_OUT);
+            ObjectMessage objectMessage = (ObjectMessage) receiver.receive(timeout);
             if (objectMessage == null) {
                 throw new RuntimeException("消息接收超时！");
             } else {
                 Object rtnBean = objectMessage.getObject();
                 //TODO  logger
+                long end3 = System.currentTimeMillis();
+                logger.info("JMS connect time:" + (end1 - start) + " send time:" + (end2 - end1) + " recv time:" + (end3 - end2) +   " PID:" + Thread.currentThread().getId());
+
                 return rtnBean;
             }
         } catch (JMSException e) {

@@ -31,6 +31,7 @@ import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 银联代扣处理（全部走DEP APP接口）.
@@ -172,6 +173,8 @@ public class UnionpayDepAction implements Serializable {
             MessageUtil.addWarn("没有要发送的记录！");
             return null;
         }
+
+        long start = System.currentTimeMillis();
         try {
             int retrytimes = 0;
             for (FipCutpaydetl cutpaydetl : this.filteredDetlList) {
@@ -191,9 +194,12 @@ public class UnionpayDepAction implements Serializable {
 */
 
             }
-            MessageUtil.addInfo("数据发送结束！请查看处理结果明细。");
+
+            long end = System.currentTimeMillis();
+            MessageUtil.addInfo("数据发送结束！请查看处理结果明细。" + "耗时:" + (end - start));
         } catch (Exception e) {
-            MessageUtil.addError("数据发送结束处理异常" + e.getMessage());
+            long end = System.currentTimeMillis();
+            MessageUtil.addError("数据发送结束处理异常" + e.getMessage() + "耗时:" + (end - start));
         }
         initList();
         return null;
@@ -204,13 +210,18 @@ public class UnionpayDepAction implements Serializable {
             MessageUtil.addWarn("未选中要处理的记录！");
             return null;
         }
+
+        long start = System.currentTimeMillis();
         try {
             for (FipCutpaydetl cutpaydetl : this.selectedRecords) {
                 processOneCutpayRequestRecord(cutpaydetl);
             }
-            MessageUtil.addInfo("数据发送结束！请查看处理结果明细。");
+
+            long end = System.currentTimeMillis();
+            MessageUtil.addInfo("数据发送结束！请查看处理结果明细。" + "耗时:" + (end - start));
         } catch (Exception e) {
-            MessageUtil.addError("数据发送结束处理异常" + e.getMessage());
+            long end = System.currentTimeMillis();
+            MessageUtil.addError("数据发送结束处理异常" + e.getMessage() + "耗时:" + (end - start));
         }
         initList();
         return null;
@@ -238,28 +249,35 @@ public class UnionpayDepAction implements Serializable {
             MessageUtil.addWarn("没有要发送的记录！");
             return null;
         }
+
+        long start = System.currentTimeMillis();
         try {
+/*
             int retrytimes = 0;
             for (FipCutpaydetl cutpaydetl : this.filteredNeedQueryDetlList) {
                 try {
                     processOneQueryRecord(cutpaydetl);
                 } catch (Exception e) {
-                    retrytimes ++;
-                    if (retrytimes <= 10 ) {
+                    retrytimes++;
+                    if (retrytimes <= 10) {
                         Thread.sleep(10000);
                         processOneQueryRecord(cutpaydetl);
-                    }else{
+                    } else {
                         throw new RuntimeException(e);
                     }
                 }
             }
+*/
 
-            //parallelProcess(this.needQueryDetlList);
+            concurrentQuery(this.filteredNeedQueryDetlList);
 
-            MessageUtil.addInfo("查询交易发送结束！请查看处理结果明细。");
+            long end = System.currentTimeMillis();
+            MessageUtil.addInfo("查询交易发送结束！请查看处理结果明细。 " + "耗时:" + (end - start));
         } catch (Exception e) {
-            MessageUtil.addError("查询交易处理异常" + e.getMessage());
+            long end = System.currentTimeMillis();
+            MessageUtil.addError("查询交易处理异常" + e.getMessage() + "耗时:" + (end - start));
         }
+
         initList();
         return null;
     }
@@ -269,16 +287,22 @@ public class UnionpayDepAction implements Serializable {
             MessageUtil.addWarn("没有或未选中要发送的记录！");
             return null;
         }
+
+        long start = System.currentTimeMillis();
         try {
             for (FipCutpaydetl cutpaydetl : this.selectedNeedQryRecords) {
                 processOneQueryRecord(cutpaydetl);
             }
-            //List<FipCutpaydetl> qryList = Arrays.asList(this.selectedNeedQryRecords);
-            //parallelProcess(qryList);
+/*
+            List<FipCutpaydetl> qryList = Arrays.asList(this.selectedNeedQryRecords);
+            concurrentQuery(qryList);
+*/
 
-            MessageUtil.addInfo("查询交易发送结束！请查看处理结果明细。");
+            long end = System.currentTimeMillis();
+            MessageUtil.addInfo("查询交易发送结束！请查看处理结果明细。" + "耗时:" + (end - start));
         } catch (Exception e) {
-            MessageUtil.addError("查询交易处理异常" + e.getMessage());
+            long end = System.currentTimeMillis();
+            MessageUtil.addError("查询交易处理异常" + e.getMessage() + "耗时:" + (end - start));
         }
         initList();
         return null;
@@ -286,13 +310,44 @@ public class UnionpayDepAction implements Serializable {
 
 
     /**
-     * 并发处理请求
-     *
-     * @param qryList
+     * 并发处理请求  查询
      */
-    private void parallelProcess(List<FipCutpaydetl> qryList) throws InterruptedException {
-        final int threadNumber = 50;
+    private void concurrentQuery(List<FipCutpaydetl> qryList) throws InterruptedException {
+        int threadNumber = 5;
+        final ExecutorService executor = Executors.newFixedThreadPool(threadNumber);
+
+        for (final FipCutpaydetl cutpaydetl : qryList) {
+            Runnable task = new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        processOneQueryRecord(cutpaydetl);
+                    } catch (Exception e) {
+                        MessageUtil.addInfo("流水号:" + cutpaydetl.getBatchSn() +
+                                cutpaydetl.getBatchDetlSn() + "姓名:" +
+                                cutpaydetl.getClientname() + " 错误信息:" +
+                                e.getMessage());
+                    }
+                }
+            };
+            executor.execute(task);
+        }
+
+        executor.shutdown();
+        //等待处理结束
+        while (!executor.awaitTermination(3, TimeUnit.SECONDS)) {
+//            logger.info("线程池没有关闭");
+        }
+        logger.info("线程池已经关闭");
+    }
+
+    @Deprecated
+    private void parallelProcess4Query_old(List<FipCutpaydetl> qryList) throws InterruptedException {
+        int threadNumber = 10;
         int qryListSize = qryList.size();
+        if (qryListSize <= 50) {
+            threadNumber = 1;
+        }
 
         // 开始的倒计数锁
         final CountDownLatch begin = new CountDownLatch(1);
@@ -344,9 +399,13 @@ public class UnionpayDepAction implements Serializable {
         executor.shutdown();
     }
 
+    @Deprecated
     private void parallelProcessRecv(List<String> recvMsgIdList) throws InterruptedException {
-        final int threadNumber = 10;
+        int threadNumber = 10;
         int recvListSize = recvMsgIdList.size();
+        if (recvListSize <= 20) {
+            threadNumber = 1;
+        }
 
         // 开始的倒计数锁
         final CountDownLatch begin = new CountDownLatch(1);
@@ -411,13 +470,14 @@ public class UnionpayDepAction implements Serializable {
      */
     private void processOneCutpayRequestRecord(FipCutpaydetl record) {
         String pkid = record.getPkid();
+        long start = System.currentTimeMillis();
         try {
             unipayDepService.sendAndRecvT1001001Message(record);
-            appendNewJoblog(pkid, "发送扣款请求", "发送银联扣款请求报文完成。");
-
-            //
+            long end = System.currentTimeMillis();
+            appendNewJoblog(pkid, "发送扣款请求", "发送银联扣款请求报文完成。 " + " time:" + (end - start));
         } catch (Exception e) {
-            appendNewJoblog(pkid, "发送扣款请求", "发送银联扣款请求报文失败." + e.getMessage());
+            long end = System.currentTimeMillis();
+            appendNewJoblog(pkid, "发送扣款请求", "发送银联扣款请求报文失败." + e.getMessage() + " time:" + (end - start));
             throw new RuntimeException("数据发送异常，请检查系统线路重新发送！" + e.getMessage());
         }
     }
@@ -430,11 +490,16 @@ public class UnionpayDepAction implements Serializable {
      */
     private void processOneQueryRecord(FipCutpaydetl record) {
         String pkid = record.getPkid();
+        long start = System.currentTimeMillis();
         try {
+//            Thread.sleep(1000);
             unipayDepService.sendAndRecvCutpayT1003001Message(record);
-            appendNewJoblog(pkid, "发送查询请求", "发送银联查询请求报文完成。");
+            long end = System.currentTimeMillis();
+//            logger.info("发送银联查询请求报文完成。 time:" + (end - start) + " PID:" + Thread.currentThread().getId());
+            appendNewJoblog(pkid, "发送查询请求", "发送银联查询请求报文完成。 time:" + (end - start) + " PID:" + Thread.currentThread().getId());
         } catch (Exception e) {
-            appendNewJoblog(pkid, "发送查询请求", "发送银联查询请求报文失败." + e.getMessage());
+            long end = System.currentTimeMillis();
+            appendNewJoblog(pkid, "发送查询请求", "发送银联查询请求报文失败." + e.getMessage() + " time:" + (end - start) + " PID:" + Thread.currentThread().getId());
             throw new RuntimeException("数据发送异常，请检查系统线路重新发送！" + e.getMessage());
         }
     }
@@ -565,7 +630,7 @@ public class UnionpayDepAction implements Serializable {
             if (fipCutpaydetl.getBilltype().equals(BillType.OVERDUE.getCode())) {
                 if (cmsService.unlockIntr4Overdue(fipCutpaydetl)) {
                     MessageUtil.addInfo("利息解锁成功：" + fipCutpaydetl.getIouno() + fipCutpaydetl.getClientname());
-                }else{
+                } else {
                     MessageUtil.addError("利息解锁出错：" + fipCutpaydetl.getIouno() + fipCutpaydetl.getClientname());
                 }
             }
