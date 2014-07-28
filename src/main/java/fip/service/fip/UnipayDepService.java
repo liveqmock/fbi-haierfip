@@ -69,6 +69,7 @@ public class UnipayDepService {
 
     /**
      * 代扣交易 单笔处理  同步和异步
+     *
      * @param record
      */
     @Transactional
@@ -99,6 +100,16 @@ public class UnipayDepService {
         }
         String rtnCode = toa.header.RETURN_CODE;
         String log = "数据交换平台返回：[" + rtnCode + "] 银联返回结果：" + toa.header.RETURN_MSG + "";
+
+        //截取银联返回码
+        String unipayRtnCode = "";
+        String unipayRtnMsg = toa.header.RETURN_MSG;
+        Pattern p = Pattern.compile("\\[(.*)\\]");
+        Matcher m = p.matcher(unipayRtnMsg);
+        if (m.find()) {
+            unipayRtnCode = m.group(1);
+        }
+
         if ("0000".equals(rtnCode)) {//交易成功
             BigDecimal amt = toa.body.AMOUNT;
             if (toa.body.ACCOUNT_NO.equals(record.getBiBankactno()) && amt.compareTo(record.getPaybackamt()) == 0) {
@@ -112,12 +123,18 @@ public class UnipayDepService {
             }
         } else if ("1000".equals(rtnCode)) {  //交易失败
             record.setBillstatus(BillStatus.CUTPAY_FAILED.getCode());
+            record.setTxRetcode(unipayRtnCode);
+            record.setTxRetmsg(unipayRtnMsg);
             log = "银联返回：" + toa.header.RETURN_MSG;
         } else if ("2000".equals(rtnCode)) {  //交易不明
             record.setBillstatus(BillStatus.CUTPAY_QRY_PEND.getCode());
+            record.setTxRetcode(unipayRtnCode);
+            record.setTxRetmsg(unipayRtnMsg);
             log = "银联返回：" + toa.header.RETURN_MSG;
         } else { // TODO 应处理异常情况
             record.setBillstatus(BillStatus.CUTPAY_QRY_PEND.getCode());
+            record.setTxRetcode(unipayRtnCode);
+            record.setTxRetmsg(toa.header.RETURN_MSG);
             log = "银联返回：" + toa.header.RETURN_MSG;
         }
         cutpaydetlMapper.updateByPrimaryKey(record);
@@ -126,6 +143,7 @@ public class UnipayDepService {
 
     /**
      * 代付交易 单笔处理  同步和异步
+     *
      * @param record
      */
     @Transactional
@@ -224,6 +242,7 @@ public class UnipayDepService {
 
     /**
      * 查询交易结果 1003001
+     *
      * @param record
      */
     @Transactional
@@ -233,14 +252,17 @@ public class UnipayDepService {
             initTiaHeader(tia, record.getOriginBizid(), record.getBatchSn(), record.getBatchDetlSn(), "1003001");
             assembleCutpayTia1003001Body(tia, record);
             jobLogService.checkAndUpdateRecversion(record);
+
             //通过MQ发送信息到DEP
-            TOA1003001 toa = (TOA1003001) JmsManager.getInstance().sendAndRecv(tia);
+            //TOA1003001 toa = (TOA1003001) JmsManager.getInstance().sendAndRecv(tia);
+            TOA1003001 toa = (TOA1003001) JmsManager.getInstance().sendAndRecv(tia, 15000); //自定义超时时间 注意：可能造成mq队列中遗留大量消息
             processCutpayToa1003001(record, toa);
         } catch (Exception e) {
             logger.error("MQ消息发送失败", e);
             throw new RuntimeException("MQ消息发送失败", e);
         }
     }
+
     @Transactional
     public void sendAndRecvRefundT1003001Message(FipRefunddetl record) {
         try {
@@ -273,9 +295,9 @@ public class UnipayDepService {
         //截取银联返回码
         String unipayRtnCode = "";
         String unipayRtnMsg = toa.header.RETURN_MSG;
-        Pattern p = Pattern.compile("\\[(.*)\\]");
+        Pattern p = Pattern.compile("\\[(.*?)\\]");
         Matcher m = p.matcher(unipayRtnMsg);
-        if(m.find()){
+        if (m.find()) {
             unipayRtnCode = m.group(1);
         }
 
@@ -291,17 +313,17 @@ public class UnipayDepService {
                 logger.error("记录不匹配(帐号或金额)" + record.getClientname());
                 //throw new RuntimeException("记录不匹配(帐号或金额)" + record.getClientname());
             }
-        }else if ("1000".equals(rtnCode)) {  //交易失败
+        } else if ("1000".equals(rtnCode)) {  //交易失败
             record.setBillstatus(BillStatus.CUTPAY_FAILED.getCode());
             record.setTxRetcode(unipayRtnCode);
             record.setTxRetmsg(unipayRtnMsg);
             log = "银联返回：" + unipayRtnMsg;
-        }else if ("2000".equals(rtnCode)) {  //交易不明
+        } else if ("2000".equals(rtnCode)) {  //交易不明
             record.setBillstatus(BillStatus.CUTPAY_QRY_PEND.getCode());
             record.setTxRetcode(unipayRtnCode);
             record.setTxRetmsg(unipayRtnMsg);
             log = "银联返回：" + unipayRtnMsg;
-        }else{ // TODO 应处理异常情况
+        } else { // TODO 应处理异常情况
             record.setBillstatus(BillStatus.CUTPAY_QRY_PEND.getCode());
             record.setTxRetcode(unipayRtnCode);
             record.setTxRetmsg(toa.header.RETURN_MSG);
@@ -332,13 +354,13 @@ public class UnipayDepService {
                 log = "记录不匹配(帐号或金额)" + record.getClientname();
                 logger.error("记录不匹配(帐号或金额)" + record.getClientname());
             }
-        }else if ("1000".equals(rtnCode)) {  //交易失败
+        } else if ("1000".equals(rtnCode)) {  //交易失败
             record.setBillstatus(BillStatus.CUTPAY_FAILED.getCode());
             log = "银联返回：[" + toa.header.RETURN_MSG + "]";
-        }else if ("2000".equals(rtnCode)) {  //交易不明
+        } else if ("2000".equals(rtnCode)) {  //交易不明
             record.setBillstatus(BillStatus.CUTPAY_QRY_PEND.getCode());
             log = "银联返回：[" + toa.header.RETURN_MSG + "]";
-        }else{ // TODO 应处理异常情况
+        } else { // TODO 应处理异常情况
             record.setBillstatus(BillStatus.CUTPAY_QRY_PEND.getCode());
             log = "银联返回：[" + toa.header.RETURN_MSG + "]";
         }
@@ -358,7 +380,7 @@ public class UnipayDepService {
         tia.getHeader().TX_CODE = txnCode;
     }
     */
-    private void initTiaHeader(TIA tia, String bizId, String batchSn, String batchDetlSn, String txnCode){
+    private void initTiaHeader(TIA tia, String bizId, String batchSn, String batchDetlSn, String txnCode) {
         String app_id = APP_ID;
         tia.getHeader().APP_ID = app_id;
         tia.getHeader().BIZ_ID = bizId;
@@ -385,6 +407,7 @@ public class UnipayDepService {
         tia.body.REMARK = record.getClientid();
         //-------
     }
+
     private void assembleTia1001002Body(TIA1001002 tia, FipRefunddetl record) {
         tia.body.ACCOUNT_NO = record.getBiBankactno();
         tia.body.ACCOUNT_NAME = record.getBiBankactname();
@@ -423,11 +446,12 @@ public class UnipayDepService {
     }
 
     private void assembleCutpayTia1003001Body(TIA1003001 tia, FipCutpaydetl record) {
-        tia.body.QUERY_SN = APP_ID + record.getBatchSn()+record.getBatchDetlSn();
+        tia.body.QUERY_SN = APP_ID + record.getBatchSn() + record.getBatchDetlSn();
         tia.body.REMARK = "HAIERFIP";
     }
+
     private void assembleRefundTia1003001Body(TIA1003001 tia, FipRefunddetl record) {
-        tia.body.QUERY_SN = APP_ID + record.getBatchSn()+record.getBatchDetlSn();
+        tia.body.QUERY_SN = APP_ID + record.getBatchSn() + record.getBatchDetlSn();
         tia.body.REMARK = "HAIERFIP";
     }
 
