@@ -70,13 +70,24 @@ public class BatchPkgService {
             int poano = Integer.parseInt(detl.getPoano()) - 1;
             example.createCriteria().andIounoEqualTo(detl.getIouno())
                     .andPoanoEqualTo(String.valueOf(poano))
-                    //.andBiBankactnameEqualTo(detl.getBiBankactname())
                     .andBiBankactnoEqualTo(detl.getBiBankactno())
                     .andBiChannelEqualTo(detl.getBiChannel())
                     .andOriginBizidEqualTo(bizType.getCode())
                     .andBillstatusEqualTo(BillStatus.CMS_SUCCESS.getCode());
             if (fipCutpaydetlMapper.selectByExample(example).size() > 0) {
                 resultList.add(detl);
+            }else{
+                example.clear();
+                poano = Integer.parseInt(detl.getPoano()) - 2;
+                example.createCriteria().andIounoEqualTo(detl.getIouno())
+                        .andPoanoEqualTo(String.valueOf(poano))
+                        .andBiBankactnoEqualTo(detl.getBiBankactno())
+                        .andBiChannelEqualTo(detl.getBiChannel())
+                        .andOriginBizidEqualTo(bizType.getCode())
+                        .andBillstatusEqualTo(BillStatus.CMS_SUCCESS.getCode());
+                if (fipCutpaydetlMapper.selectByExample(example).size() > 0) {
+                    resultList.add(detl);
+                }
             }
         }
         return resultList;
