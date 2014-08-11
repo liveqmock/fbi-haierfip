@@ -1,14 +1,13 @@
 package fip.service.fip;
 
 import fip.common.constant.BillStatus;
+import fip.common.constant.TxSendFlag;
+import fip.common.constant.TxpkgStatus;
 import fip.gateway.JmsManager;
 import fip.repository.dao.FipCutpaybatMapper;
 import fip.repository.dao.FipCutpaydetlMapper;
 import fip.repository.dao.FipRefunddetlMapper;
-import fip.repository.model.FipCutpaydetl;
-import fip.repository.model.FipPayoutbat;
-import fip.repository.model.FipPayoutdetl;
-import fip.repository.model.FipRefunddetl;
+import fip.repository.model.*;
 import org.fbi.dep.model.base.TIA;
 import org.fbi.dep.model.txn.*;
 import org.slf4j.Logger;
@@ -24,6 +23,7 @@ import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -69,8 +69,6 @@ public class UnipayDepService {
 
     /**
      * 代扣交易 单笔处理  同步和异步
-     *
-     * @param record
      */
     @Transactional
     public void sendAndRecvT1001001Message(FipCutpaydetl record) {
@@ -143,8 +141,6 @@ public class UnipayDepService {
 
     /**
      * 代付交易 单笔处理  同步和异步
-     *
-     * @param record
      */
     @Transactional
     public void sendAndRecvT1001002Message(FipRefunddetl record) {
@@ -241,9 +237,7 @@ public class UnipayDepService {
     }
 
     /**
-     * 查询交易结果 1003001
-     *
-     * @param record
+     * 结果查询交易 1003001
      */
     @Transactional
     public void sendAndRecvCutpayT1003001Message(FipCutpaydetl record) {
@@ -459,4 +453,242 @@ public class UnipayDepService {
         tia.body.QUERY_SN = APP_ID + detl.getReqSn() + detl.getSn();
         tia.body.REMARK = "HAIERFIP";
     }
+
+
+    //=======================================================================================
+    //20140808  批量代扣交易 1001003   zhanrui
+    public void sendAndRecvT1001003Message(FipCutpaybat batchRecord) {
+        String txPkgSn = batchRecord.getTxpkgSn();
+        List<FipCutpaydetl> detailRecords = billManagerService.checkToMakeSendableRecords(txPkgSn);
+
+        TIA1001003 tia = new TIA1001003();
+        //报文头
+        tia.getHeader().APP_ID = APP_ID;
+
+        tia.getHeader().BIZ_ID = batchRecord.getChannelBizid();
+/*
+        tia.getHeader().BIZ_ID = batchRecord.getOriginBizid();
+        if ("HCCB".equals(tia.getHeader().BIZ_ID)) {
+            tia.getHeader().BIZ_ID = "XFNEW";
+        }
+*/
+
+        tia.getHeader().CHANNEL_ID = "100";
+        tia.getHeader().USER_ID = DEP_USERNAME;
+        tia.getHeader().PASSWORD = DEP_PWD;
+        tia.getHeader().REQ_SN = batchRecord.getOriginBizid() + "-B-" + batchRecord.getTxpkgSn();
+        tia.getHeader().TX_CODE = "1001003";
+
+        //报文体
+        BigDecimal totalAmt = new BigDecimal(0);
+        for (FipCutpaydetl detailRecord : detailRecords) {
+            TIA1001003.Body.BodyDetail item = new TIA1001003.Body.BodyDetail();
+            item.SN = detailRecord.getTxpkgDetlSn();
+            item.BANK_CODE = detailRecord.getBiActopeningbank();
+            item.ACCOUNT_TYPE = ""; //账号类型 银行卡或存折
+            item.ACCOUNT_NO = detailRecord.getBiBankactno();
+            item.ACCOUNT_NAME = detailRecord.getBiBankactname();
+            item.PROVINCE = detailRecord.getBiProvince();
+            item.CITY = detailRecord.getBiCity();
+            item.ACCOUNT_PROP = "0"; // 个人
+            item.AMOUNT = String.valueOf(detailRecord.getPaybackamt());
+            item.ID_TYPE = detailRecord.getClientidtype();
+            item.ID = detailRecord.getClientid();
+
+            tia.body.TRANS_DETAILS.add(item);
+            totalAmt = totalAmt.add(detailRecord.getPaybackamt());
+        }
+        tia.body.TRANS_SUM.TOTAL_ITEM = String.valueOf(detailRecords.size());
+        tia.body.TRANS_SUM.TOTAL_SUM = String.valueOf(totalAmt);
+
+
+        //处理batch记录的状态  设置为“待进行结果查询”
+        FipCutpaybat originBatRecord = cutpaybatMapper.selectByPrimaryKey(batchRecord.getTxpkgSn());
+        if (originBatRecord.getRecversion().compareTo(batchRecord.getRecversion()) != 0) {
+            throw new RuntimeException("并发更新冲突,批量序号=" + batchRecord.getTxpkgSn());
+        } else {
+            batchRecord.setRecversion(batchRecord.getRecversion() + 1);
+            batchRecord.setTxpkgStatus(TxpkgStatus.QRY_PEND.getCode());
+            cutpaybatMapper.updateByPrimaryKey(batchRecord);
+        }
+
+        TOA1001003 toa;
+        try {
+            //通过MQ发送信息到DEP
+            toa = (TOA1001003) JmsManager.getInstance().sendAndRecv(tia);
+        } catch (Exception e) {
+            logger.error("MQ处理失败", e);
+            throw new RuntimeException("MQ处理失败", e);
+        }
+
+        billManagerService.updateCutpaydetlListToSendflag(detailRecords, TxSendFlag.SENT.getCode());
+        billManagerService.updateCutpaybatToSendflag(txPkgSn, TxSendFlag.SENT.getCode());
+        processCutpayToa1001003(batchRecord, detailRecords, toa);
+    }
+
+    private void processCutpayToa1001003(FipCutpaybat batchRecord, List<FipCutpaydetl> detailRecords, TOA1001003 toa) {
+        //String batchSN = toa.header.REQ_SN;
+        String batchSN = batchRecord.getTxpkgSn();
+        if (!toa.header.REQ_SN.endsWith(batchSN)) {
+            throw new RuntimeException("乱包：响应报文与请求报文序列号不一致!");
+        }
+
+        String headRetCode = toa.header.RETURN_CODE;
+        String headRetMsg = toa.header.RETURN_MSG;
+        jobLogService.insertNewJoblog(batchRecord.getTxpkgSn(), "fip_cutpaybat", "银联返回", "[" + headRetCode + "]" + headRetMsg, "数据交换平台", "数据交换平台");
+        if (headRetCode.equals("0000")) {  //处理完成
+            setCutpaybatRecordStatus(batchSN, TxpkgStatus.QRY_PEND);
+        } else if (headRetCode.startsWith("1")) {   //整包失败  '1'开头表示请求报文有错误或者银联系统解释报文出错
+            //置批量表中的记录为 “处理失败”
+            setCutpaybatRecordStatus(batchSN, TxpkgStatus.DEAL_FAIL);
+            //重置对应的明细记录的标志为待发送
+            //resetDetailRecordStatusByBatchQueryResult(batchSN, headRetCode, headRetMsg);
+        } else { //整包状态不明， 待继续查询
+            //不做处理， 应继续查询。
+            setCutpaybatRecordStatus(batchSN, TxpkgStatus.QRY_PEND);
+        }
+        logger.debug(" ..........处理返回的消息结束........");
+
+
+        //TODO  处理明细记录的 银联相应信息
+    }
+
+    private void setCutpaybatRecordStatus(String headSn, TxpkgStatus status) {
+        FipCutpaybat fipCutpaybat = cutpaybatMapper.selectByPrimaryKey(headSn);
+        fipCutpaybat.setTxpkgStatus(status.getCode());
+        fipCutpaybat.setRecversion(fipCutpaybat.getRecversion() + 1);
+        cutpaybatMapper.updateByPrimaryKey(fipCutpaybat);
+    }
+
+
+    /**
+     * 批量结果查询交易 1003003
+     */
+    public void sendAndRecvCutpayT1003003Message(FipCutpaybat batchRecord) {
+        TOA1003003 toa;
+        try {
+            TIA1003003 tia = new TIA1003003();
+            //initTiaHeader(tia, record.getOriginBizid(), record.getBatchSn(), record.getBatchDetlSn(), "1003001");
+            //报文头
+            tia.getHeader().APP_ID = APP_ID;
+
+            tia.getHeader().BIZ_ID = batchRecord.getChannelBizid();
+/*
+            tia.getHeader().BIZ_ID = batchRecord.getOriginBizid();
+            if ("HCCB".equals(tia.getHeader().BIZ_ID)) {
+                tia.getHeader().BIZ_ID = "XFNEW";
+            }
+*/
+
+            tia.getHeader().CHANNEL_ID = "100";
+            tia.getHeader().USER_ID = DEP_USERNAME;
+            tia.getHeader().PASSWORD = DEP_PWD;
+            tia.getHeader().REQ_SN = batchRecord.getOriginBizid() + "-B-" + batchRecord.getTxpkgSn();
+            tia.getHeader().TX_CODE = "1003003";
+
+            //报文体
+            tia.body.QUERY_SN = batchRecord.getOriginBizid() + "-B-" + batchRecord.getTxpkgSn();
+            tia.body.REMARK = "";
+
+            // /TODO ？
+            // jobLogService.checkAndUpdateRecversion(batchRecord);
+
+            //通过MQ发送信息到DEP
+            //TOA1003001 toa = (TOA1003001) JmsManager.getInstance().sendAndRecv(tia);
+            jobLogService.insertNewJoblog(batchRecord.getTxpkgSn(), "fip_cutpaybat", "银联交易结果查询", "发起结果查询（DEP:1003003）请求", "数据交换平台", "数据交换平台");
+            toa = (TOA1003003) JmsManager.getInstance().sendAndRecv(tia, 15000);
+        } catch (Exception e) {
+            jobLogService.insertNewJoblog(batchRecord.getTxpkgSn(), "fip_cutpaybat", "银联交易结果查询", "发起请求，MQ处理失败, 请查看日志" + e.getMessage(), "数据交换平台", "数据交换平台");
+            logger.error("MQ消息处理失败", e);
+            throw new RuntimeException("MQ消息处理失败", e);
+        }
+        processCutpayToa1003003(batchRecord, toa);
+    }
+
+
+    private void processCutpayToa1003003(FipCutpaybat batchRecord, TOA1003003 toa) {
+        //检查响应报文是否与请求报文相对应
+        String reqSn = batchRecord.getOriginBizid() + "-B-" + batchRecord.getTxpkgSn();
+
+        if (!reqSn.equals(toa.getHeader().REQ_SN)) {
+            jobLogService.insertNewJoblog(batchRecord.getTxpkgSn(), "fip_cutpaybat", "银联交易结果查询", "响应报文乱包，响应报文与请求报文不对应！" , "数据交换平台", "数据交换平台");
+            throw new RuntimeException("乱包：响应报文与请求报文不对应！");
+        }
+
+        //检查查询SN的一致性
+        String querySn = reqSn;
+        if (!querySn.equals(toa.body.QUERY_SN)) {
+            jobLogService.insertNewJoblog(batchRecord.getTxpkgSn(), "fip_cutpaybat", "银联交易结果查询", "响应报文中的查询序列号错误！" , "数据交换平台", "数据交换平台");
+            throw new RuntimeException("响应报文中的查询序列号错误！");
+        }
+
+        //处理TOA头部返回码
+        String headRtnCode = toa.header.RETURN_CODE;
+        jobLogService.insertNewJoblog(batchRecord.getTxpkgSn(), "fip_cutpaybat", "银联交易结果查询", "响应报文：[" +  headRtnCode + "]" + toa.header.RETURN_MSG, "数据交换平台", "数据交换平台");
+        if ("0000".equals(headRtnCode)) {
+            setCutpaybatRecordStatus(batchRecord.getTxpkgSn(), TxpkgStatus.DEAL_SUCCESS);
+        } else if (headRtnCode.startsWith("1")) { //失败，可以重发或解包重发
+            /*
+            1000	报文内容检查错或者处理错（具体内容见返回错误信息）
+            1001	报文解释错
+            1002	无法查询到该交易，可以重发
+             */
+            setCutpaybatRecordStatus(batchRecord.getTxpkgSn(), TxpkgStatus.DEAL_FAIL);
+        } else if (headRtnCode.startsWith("2")) { //处理中
+            //
+        } else {
+           //
+        }
+
+        //处理报文体中的明细报文
+        FipCutpaydetlExample example = new FipCutpaydetlExample();
+        for (TOA1003003.Body.BodyDetail bodyDetail : toa.body.RET_DETAILS) {
+            String detailSn = bodyDetail.SN;
+
+            example.clear();
+            example.createCriteria().andTxpkgSnEqualTo(batchRecord.getTxpkgSn()).andTxpkgDetlSnEqualTo(detailSn);
+
+            List<FipCutpaydetl> cutpaydetlList = cutpaydetlMapper.selectByExample(example);
+            FipCutpaydetl record = cutpaydetlList.get(0);
+
+            String retCode = bodyDetail.RET_CODE;
+            String retMsg = bodyDetail.ERR_MSG;
+
+            record.setTxRetcode(retCode);
+            record.setTxRetmsg(retMsg);
+
+            String txRetMsg = "[返回码:" + retCode + "][返回信息:" + bodyDetail.ERR_MSG + "]";
+            record.setTxRetmsg(txRetMsg);
+            record.setTxRetcode(retCode);
+
+            if ("0000".equals(retCode)) { //业务成功
+                if (bodyDetail.ACCOUNT_NO.endsWith(record.getBiBankactno())
+                        && bodyDetail.AMOUNT.compareTo(record.getPaybackamt()) == 0) {
+                    record.setBillstatus(BillStatus.CUTPAY_SUCCESS.getCode());
+                    record.setDateBankCutpay(new Date());
+                } else {
+                    record.setBillstatus(BillStatus.CUTPAY_QRY_PEND.getCode());
+                    txRetMsg = "记录不匹配(帐号或金额)" + record.getClientname();
+                    record.setTxRetcode("XXXX");
+                    record.setTxRetmsg(txRetMsg);
+                    logger.error("记录不匹配(帐号或金额)" + record.getClientname());
+                }
+            } else if (retCode.startsWith("1")) { //1开头表示请求报文有错误或者我司系统解释报文出错（商户系统需要明确处理该）
+                record.setBillstatus(BillStatus.CUTPAY_FAILED.getCode());
+            } else if (retCode.startsWith("2")) { //2开头表示处于中间处理状态
+                record.setBillstatus(BillStatus.CUTPAY_QRY_PEND.getCode());
+            } else {
+                record.setBillstatus(BillStatus.CUTPAY_FAILED.getCode());
+            }
+
+            record.setRecversion(record.getRecversion() + 1);
+            String log = "[批量包号+序号:" + record.getTxpkgSn() + "_" + record.getTxpkgDetlSn() + "]" + record.getTxRetmsg();
+            //appendNewJoblog(record.getPkid(), "fip_cutpaydetl", "银联返回", log);
+            jobLogService.insertNewJoblog(record.getPkid(), "fip_cutpaydetl", "银联返回", log, "数据交换平台", "数据交换平台");
+
+            cutpaydetlMapper.updateByPrimaryKey(record);
+        }
+
+    }
+
 }

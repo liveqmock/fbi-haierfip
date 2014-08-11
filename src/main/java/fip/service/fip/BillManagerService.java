@@ -99,7 +99,7 @@ public class BillManagerService {
         FipCutpaydetl  dbrecord = fipCutpaydetlMapper.selectByPrimaryKey(cutpaydetl.getPkid());
         Long recversion = cutpaydetl.getRecversion();
 
-        if (dbrecord.getRecversion().equals(recversion)) {
+        if (dbrecord.getRecversion().compareTo(recversion) == 0) {
             String oldstatus = cutpaydetl.getBillstatus();
             cutpaydetl.setBillstatus(status.getCode());
             cutpaydetl.setRecversion(++recversion);
@@ -376,7 +376,7 @@ public class BillManagerService {
         int count = 0;
         for (FipCutpaydetl cutpaydetl : fipCutpaydetlList) {
             FipCutpaydetl record = fipCutpaydetlMapper.selectByPrimaryKey(cutpaydetl.getPkid());
-            if (record.getRecversion().equals(cutpaydetl.getRecversion())) {
+            if (record.getRecversion().compareTo(cutpaydetl.getRecversion()) == 0) {
                 cutpaydetl.setRecversion(cutpaydetl.getRecversion()+1);
                 cutpaydetl.setArchiveflag("1");
                 count += fipCutpaydetlMapper.updateByPrimaryKey(cutpaydetl);
@@ -397,7 +397,7 @@ public class BillManagerService {
         int count = 0;
         for (FipRefunddetl detl : detlList) {
             FipCutpaydetl record = fipCutpaydetlMapper.selectByPrimaryKey(detl.getPkid());
-            if (record.getRecversion().equals(detl.getRecversion())) {
+            if (record.getRecversion().compareTo(detl.getRecversion()) == 0) {
                 detl.setRecversion(detl.getRecversion()+1);
                 detl.setArchiveflag("1");
                 fipRefunddetlMapper.updateByPrimaryKey(detl);
@@ -413,7 +413,7 @@ public class BillManagerService {
         String userid = SystemService.getOperatorManager().getOperatorId();
         String username = SystemService.getOperatorManager().getOperatorName();
         for (FipCutpaydetl fipCutpaydetl : fipCutpaydetlList) {
-            if (fipCutpaydetl.getBillstatus().equals(BillStatus.INIT.getCode())) {
+            if (fipCutpaydetl.getBillstatus().compareTo(BillStatus.INIT.getCode()) == 0) {
                 //只是初始化状态的数据可以删除
                 fipCutpaydetl.setDeletedflag("1");
                 checkAndUpdateCutpaydetlRecordVersion(fipCutpaydetl);
@@ -438,7 +438,7 @@ public class BillManagerService {
         String userid = SystemService.getOperatorManager().getOperatorId();
         String username = SystemService.getOperatorManager().getOperatorName();
         for (FipRefunddetl detl : detlList) {
-            if (detl.getBillstatus().equals(BillStatus.INIT.getCode())) {
+            if (detl.getBillstatus().compareTo(BillStatus.INIT.getCode()) == 0) {
                 //只是初始化状态的数据可以删除
                 detl.setDeletedflag("1");
                 checkAndUpdateRefunddetlRecordVersion(detl);
@@ -655,7 +655,7 @@ public class BillManagerService {
      */
     public boolean isSameVersion(FipCutpaydetl record) {
         FipCutpaydetl originRecord = fipCutpaydetlMapper.selectByPrimaryKey(record.getPkid());
-        if (!originRecord.getRecversion().equals(record.getRecversion())) {
+        if (originRecord.getRecversion().compareTo(record.getRecversion()) != 0) {
             return false;
         } else {
             return true;
@@ -685,7 +685,7 @@ public class BillManagerService {
     @Transactional
     public FipCutpaydetl checkAndUpdateCutpaydetlRecordVersion(FipCutpaydetl record) {
         FipCutpaydetl originRecord = fipCutpaydetlMapper.selectByPrimaryKey(record.getPkid());
-        if (!originRecord.getRecversion().equals(record.getRecversion())) {
+        if (originRecord.getRecversion().compareTo(record.getRecversion()) != 0) {
             throw new RuntimeException("并发更新冲突,UUID=" + record.getPkid());
         } else {
             record.setRecversion(record.getRecversion() + 1);
@@ -696,7 +696,7 @@ public class BillManagerService {
     @Transactional
     public FipRefunddetl checkAndUpdateRefunddetlRecordVersion(FipRefunddetl record) {
         FipRefunddetl originRecord = fipRefunddetlMapper.selectByPrimaryKey(record.getPkid());
-        if (!originRecord.getRecversion().equals(record.getRecversion())) {
+        if (originRecord.getRecversion().compareTo(record.getRecversion()) != 0) {
             throw new RuntimeException("并发更新冲突,UUID=" + record.getPkid());
         } else {
             record.setRecversion(record.getRecversion() + 1);

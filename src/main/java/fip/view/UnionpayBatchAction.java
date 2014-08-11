@@ -40,6 +40,7 @@ public class UnionpayBatchAction implements Serializable {
 
     private List<FipCutpaydetl> detlList;
     private List<FipCutpaybat> needQueryBatlList;
+    private List<FipCutpaybat> historyBatList;
     private List<FipCutpaydetl> failureDetlList;
     private List<FipCutpaydetl> successDetlList;
     private List<FipCutpaydetl> actDetlList;
@@ -51,7 +52,9 @@ public class UnionpayBatchAction implements Serializable {
     private FipCutpaybat selectedSendableRecord;
     private FipCutpaybat[] selectedSendableRecords;
     private FipCutpaybat[] selectedQueryRecords;
+    private FipCutpaybat[] selectedHistoryRecords;
     private FipCutpaybat selectedQueryRecord;
+    private FipCutpaybat selectedHistoryRecord;
 
     private FipCutpaydetl[] selectedFailRecords;
     private FipCutpaydetl[] selectedAccountRecords;
@@ -79,12 +82,15 @@ public class UnionpayBatchAction implements Serializable {
     private BatchPkgService batchPkgService;
     @ManagedProperty(value = "#{unipayService}")
     private UnipayService unipayService;
+    @ManagedProperty(value = "#{unipayDepService}")
+    private UnipayDepService unipayDepService;
     @ManagedProperty(value = "#{cmsService}")
     private CmsService cmsService;
 
     private String bizid;
     private String pkid;
     private BizType bizType;
+    private String channelBizId;   //银联代扣时所使用的商户号对应的bizid，用户复用商户号进行代扣
 
     private String userid, username;
 
@@ -99,6 +105,11 @@ public class UnionpayBatchAction implements Serializable {
             this.username = om.getOperatorName();
 
             this.bizid = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap().get("bizid");
+
+            this.channelBizId = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap().get("channel_bizid");
+            if (StringUtils.isEmpty(this.channelBizId)) {
+                this.channelBizId = this.bizid;
+            }
 
             if (!StringUtils.isEmpty(this.bizid)) {
                 this.bizType = BizType.valueOf(this.bizid);
@@ -118,7 +129,10 @@ public class UnionpayBatchAction implements Serializable {
         //detlList.addAll(billManagerService.selectRecords4UnipayBatch(this.bizType, BillStatus.RESEND_PEND));
 
         sendablePkgList = batchPkgService.selectSendableBatchs(bizType, CutpayChannel.UNIPAY, TxSendFlag.UNSEND);
+
         needQueryBatlList = batchPkgService.selectNeedConfirmBatchRecords(bizType, CutpayChannel.UNIPAY);
+        historyBatList = batchPkgService.selectHistoryBatchRecordList(bizType, CutpayChannel.UNIPAY, TxpkgStatus.DEAL_SUCCESS);
+
         failureDetlList = billManagerService.selectRecords4UnipayBatch(bizType, BillStatus.CUTPAY_FAILED);
         successDetlList = billManagerService.selectRecords4UnipayBatch(bizType, BillStatus.CUTPAY_SUCCESS);
         actDetlList = billManagerService.selectRecords4UnipayBatch(bizType, BillStatus.ACCOUNT_PEND);
@@ -148,7 +162,7 @@ public class UnionpayBatchAction implements Serializable {
             return null;
         }
         try {
-            batchPkgService.packUnipayBatchPkg(bizType, detlList);
+            batchPkgService.packUnipayBatchPkg(bizType, detlList, channelBizId);
             initDataList();
             MessageUtil.addInfo("数据批量打包完成！");
         } catch (Exception e) {
@@ -164,7 +178,7 @@ public class UnionpayBatchAction implements Serializable {
             return null;
         }
         try {
-            batchPkgService.packUnipayBatchPkg(bizType, Arrays.asList(selectedRecords));
+            batchPkgService.packUnipayBatchPkg(bizType, Arrays.asList(selectedRecords),channelBizId);
             initDataList();
             MessageUtil.addInfo("数据批量打包完成！");
         } catch (Exception e) {
@@ -241,7 +255,8 @@ public class UnionpayBatchAction implements Serializable {
     private void processOneBatchRequestRecord(FipCutpaybat batpkg) {
         String pkid = batpkg.getTxpkgSn();
         try {
-            unipayService.sendAndRecvBatchTxnMessage(batpkg);
+            //unipayService.sendAndRecvBatchTxnMessage(batpkg);
+            unipayDepService.sendAndRecvT1001003Message(batpkg);
             appendNewJoblog(pkid, "发送扣款请求", "发送银联扣款请求报文完成。");
         } catch (Exception e) {
             MessageUtil.addError("数据发送异常，请检查系统线路重新发送！");
@@ -288,12 +303,11 @@ public class UnionpayBatchAction implements Serializable {
     private void processOneQueryRecord(FipCutpaybat record) {
         String txPkgSn = record.getTxpkgSn();
         try {
-            unipayService.sendAndRecvBatchDatagramQueryMessage(record);
-            appendNewJoblog(txPkgSn, "发起银联查询交易", "银联查询交易号：200001");
+            //unipayService.sendAndRecvBatchDatagramQueryMessage(record);
+            unipayDepService.sendAndRecvCutpayT1003003Message(record);
         } catch (Exception e) {
             MessageUtil.addError("数据发送异常，请检查系统线路重新发送！");
-            appendNewJoblog(txPkgSn, "发起银联查询交易", "银联交易号200001: 发送失败." + e.getMessage());
-            throw new RuntimeException("数据发送异常，请检查系统线路重新发送！");
+            appendNewJoblog(txPkgSn, "发起银联交易结果查询", "处理失败." + e.getMessage());
         }
     }
 
@@ -735,4 +749,37 @@ public class UnionpayBatchAction implements Serializable {
     public void setTxnType(UnipayPkgType txnType) {
         this.txnType = txnType;
     }
+
+    public UnipayDepService getUnipayDepService() {
+        return unipayDepService;
+    }
+
+    public void setUnipayDepService(UnipayDepService unipayDepService) {
+        this.unipayDepService = unipayDepService;
+    }
+
+    public List<FipCutpaybat> getHistoryBatList() {
+        return historyBatList;
+    }
+
+    public void setHistoryBatList(List<FipCutpaybat> historyBatList) {
+        this.historyBatList = historyBatList;
+    }
+
+    public FipCutpaybat[] getSelectedHistoryRecords() {
+        return selectedHistoryRecords;
+    }
+
+    public void setSelectedHistoryRecords(FipCutpaybat[] selectedHistoryRecords) {
+        this.selectedHistoryRecords = selectedHistoryRecords;
+    }
+
+    public FipCutpaybat getSelectedHistoryRecord() {
+        return selectedHistoryRecord;
+    }
+
+    public void setSelectedHistoryRecord(FipCutpaybat selectedHistoryRecord) {
+        this.selectedHistoryRecord = selectedHistoryRecord;
+    }
 }
+

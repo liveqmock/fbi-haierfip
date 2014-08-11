@@ -4,7 +4,7 @@
         "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
 
 <generatorConfiguration>
-    <classPathEntry location="/src-psisvn/haierfip/lib/ojdbc6.jar"/>
+    <classPathEntry location="/WorkSpace/git-haierfip/lib/ojdbc6.jar"/>
 
     <!--信息-->
     <context id="AllInfo" targetRuntime="MyBatis3">
@@ -18,16 +18,16 @@
             <property name="forceBigDecimals" value="false"/>
         </javaTypeResolver>
 
-        <javaModelGenerator targetPackage="fip.repository.model" targetProject="src/main/java">
+        <javaModelGenerator targetPackage="fip.repository.model" targetProject="main/java">
             <property name="enableSubPackages" value="true"/>
             <property name="trimStrings" value="true"/>
         </javaModelGenerator>
 
-        <sqlMapGenerator targetPackage="fip.repository.mapper" targetProject="src/main/java">
+        <sqlMapGenerator targetPackage="fip.repository.mapper" targetProject="main/java">
             <property name="enableSubPackages" value="true"/>
         </sqlMapGenerator>
 
-        <javaClientGenerator type="XMLMAPPER" targetPackage="fip.repository.dao" targetProject="src/main/java">
+        <javaClientGenerator type="XMLMAPPER" targetPackage="fip.repository.dao" targetProject="main/java">
             <property name="enableSubPackages" value="true"/>
         </javaClientGenerator>
 
@@ -147,11 +147,14 @@
       <!--  <table schema="fip" tableName="FIP_PAYOUTBAT">
             <property name="ignoreQualifiersAtRuntime" value="true" />
             <generatedKey column="pkid" sqlStatement="select sys_guid() from dual" identity="false"/>
-        </table>-->
+        </table>
         <table schema="fip" tableName="FIP_PAYOUT_SBSACTS">
             <property name="ignoreQualifiersAtRuntime" value="true" />
             <generatedKey column="pkid" sqlStatement="select sys_guid() from dual" identity="false"/>
         </table>
+        -->
+
+
     </context>
 
 </generatorConfiguration>

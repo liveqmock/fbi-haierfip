@@ -101,7 +101,7 @@ public class BatchPkgService {
         int batPkgCount = 2000;
 
         List<FipCutpaybat> cutpaybatList = new ArrayList<FipCutpaybat>();
-        processBatchPkg(firstBatchSn, 0, bizType, CutpayChannel.NONE, cutpaydetlList, cutpaybatList, batPkgCount, "BAW");
+        processBatchPkg(firstBatchSn, 0, bizType, CutpayChannel.NONE, cutpaydetlList, cutpaybatList, batPkgCount, "BAW", "");
         insertFipCutpaybatList(cutpaybatList);
     }
 
@@ -112,8 +112,13 @@ public class BatchPkgService {
      * @param cutpaydetlList
      */
     @Transactional
-    public void packUnipayBatchPkg(BizType bizType, List<FipCutpaydetl> cutpaydetlList) {
+    public void packUnipayBatchPkg(BizType bizType, List<FipCutpaydetl> cutpaydetlList, String channelBizId) {
         List<String> syncBankcodes = toolsService.selectEnuItemValue("UnipayRealTxnBank");
+
+        doPackUnipayBatchPkg(bizType, cutpaydetlList, "ASYNC", channelBizId);
+
+/*
+
         List<FipCutpaydetl> syncTxnList = new ArrayList<FipCutpaydetl>();
         List<FipCutpaydetl> asyncTxnList = new ArrayList<FipCutpaydetl>();
         for (FipCutpaydetl fipCutpaydetl : cutpaydetlList) {
@@ -125,6 +130,7 @@ public class BatchPkgService {
         }
         doPackUnipayBatchPkg(bizType, asyncTxnList, "ASYNC");
         doPackUnipayBatchPkg(bizType, syncTxnList, "SYNC");
+*/
     }
 
     private boolean isSyncTxnType(List<String> syncBankcodes, FipCutpaydetl fipCutpaydetl) {
@@ -141,7 +147,7 @@ public class BatchPkgService {
      * @param cutpaydetlList
      * @param txnType        同步100004交易：“SYNC”  异步同步100001交易：“ASYNC”
      */
-    private void doPackUnipayBatchPkg(BizType bizType, List<FipCutpaydetl> cutpaydetlList, String txnType) {
+    private void doPackUnipayBatchPkg(BizType bizType, List<FipCutpaydetl> cutpaydetlList, String txnType, String channelBizId) {
         long firstBatchSn = generateTxpkgSn();
 
         int batPkgCount = 1; //同步交易默认每包为一笔
@@ -150,7 +156,7 @@ public class BatchPkgService {
         }
 
         List<FipCutpaybat> cutpaybatList = new ArrayList<FipCutpaybat>();
-        processBatchPkg(firstBatchSn, 0, bizType, CutpayChannel.UNIPAY, cutpaydetlList, cutpaybatList, batPkgCount, txnType);
+        processBatchPkg(firstBatchSn, 0, bizType, CutpayChannel.UNIPAY, cutpaydetlList, cutpaybatList, batPkgCount, txnType, channelBizId);
         insertFipCutpaybatList(cutpaybatList);
     }
 
@@ -164,12 +170,14 @@ public class BatchPkgService {
      * @param cutpaydetlList 待处理的明细记录
      * @param cutpaybatList  存放生成的批量包
      * @param batPkgCount    自定义的批量报文最大明细笔数
+     * @param channelBizId   用于银联  不同业务可复用一个银联商户号
      */
     private void processBatchPkg(long txpkgSn, int txpkgDetlSn,
                                  BizType bizType, CutpayChannel cutpayChannel,
                                  final List<FipCutpaydetl> cutpaydetlList,
                                  List<FipCutpaybat> cutpaybatList, int batPkgCount,
-                                 String txnType) {
+                                 String txnType,
+                                 String channelBizId) {
         int listSize = cutpaydetlList.size();
         if (txpkgDetlSn >= listSize) return;
         int count = 0;
@@ -182,9 +190,9 @@ public class BatchPkgService {
             totalamt = totalamt.add(cutpaydetl.getPaybackamt());
         } while ((txpkgDetlSn < listSize) && (txpkgDetlSn % batPkgCount != 0));
 
-        cutpaybatList.add(initNewBaseCutpaybatBean(bizType, txpkgSn, count, totalamt, cutpayChannel, txnType));
+        cutpaybatList.add(initNewBaseCutpaybatBean(bizType, txpkgSn, count, totalamt, cutpayChannel, txnType, channelBizId));
         txpkgSn++;
-        processBatchPkg(txpkgSn, txpkgDetlSn, bizType, cutpayChannel, cutpaydetlList, cutpaybatList, batPkgCount, txnType);
+        processBatchPkg(txpkgSn, txpkgDetlSn, bizType, cutpayChannel, cutpaydetlList, cutpaybatList, batPkgCount, txnType, channelBizId);
     }
 
     /**
@@ -211,7 +219,7 @@ public class BatchPkgService {
     private void updateBillBatchSn(FipCutpaydetl cutpaydetl, long txpkgSn, int txpkgDetlSn) {
         FipCutpaydetl cutpaydetl_db = fipCutpaydetlMapper.selectByPrimaryKey(cutpaydetl.getPkid());
         Long recversion = cutpaydetl.getRecversion();
-        if (!cutpaydetl_db.getRecversion().equals(recversion)) {
+        if (cutpaydetl_db.getRecversion().compareTo(recversion) != 0) {
             logger.error("记录版本冲突:" + cutpaydetl.getClientname());
             throw new RuntimeException("记录版本冲突:" + cutpaydetl.getClientname());
         }
@@ -240,7 +248,7 @@ public class BatchPkgService {
 
     private FipCutpaybat initNewBaseCutpaybatBean(BizType bizType, long txPkgSn,
                                                   int batPkgCount, BigDecimal totalamt,
-                                                  CutpayChannel channel, String txnType) {
+                                                  CutpayChannel channel, String txnType, String channelBizId) {
         FipCutpaybat fipCutpaybat = new FipCutpaybat();
         fipCutpaybat.setTxpkgSn(String.valueOf(txPkgSn));
         String bizTypeCode = bizType.getCode();
@@ -255,7 +263,7 @@ public class BatchPkgService {
         fipCutpaybat.setTxntype(txnType);
 
         fipCutpaybat.setTxntype(txnType);
-        BigDecimal count = new BigDecimal(batPkgCount);
+        short count = (short)batPkgCount;
 
         //不区分后续包
         fipCutpaybat.setTotalcount(count); //总笔数
@@ -265,7 +273,7 @@ public class BatchPkgService {
 
         fipCutpaybat.setTotalamt(totalamt);
         fipCutpaybat.setFailamt(new BigDecimal(0));
-        fipCutpaybat.setFailcount(new BigDecimal(0));
+        fipCutpaybat.setFailcount((short)0);
 
         fipCutpaybat.setUsage("99999999    "); //用途
         fipCutpaybat.setRemark("");
@@ -285,6 +293,7 @@ public class BatchPkgService {
         fipCutpaybat.setSendflag(TxSendFlag.UNSEND.getCode());
 
         fipCutpaybat.setChannel(channel.getCode());
+        fipCutpaybat.setChannelBizid(channelBizId);
         return fipCutpaybat;
     }
 

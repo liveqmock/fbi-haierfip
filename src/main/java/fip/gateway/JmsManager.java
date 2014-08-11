@@ -54,7 +54,7 @@ public final class JmsManager {
         try {
             session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         } catch (JMSException e) {
-            logger.info("MQ连接错误，重新连接中...");
+            logger.info("MQ连接错误，重新连接中...", e);
             if (connection != null) {
                 connection.close();
             }
@@ -102,6 +102,7 @@ public final class JmsManager {
     }
 
     //zhanrui 20120730 直接走core接口 主要用于与sbs直连
+    //处理完成后 直接关闭 connection
     public byte[] sendAndRecvForDepCoreInterface(byte[] msgbuf) throws JMSException {
         String requestQueueName = PropertyManager.getProperty("queue.fip.to.dep");
         String responseQueueName = PropertyManager.getProperty("queue.fip.from.dep");
@@ -110,7 +111,7 @@ public final class JmsManager {
         try {
             session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         } catch (JMSException e) {
-            logger.info("MQ连接错误，重新连接中...");
+            logger.info("MQ连接错误，重新连接中...", e);
             if (connection != null) {
                 connection.close();
             }

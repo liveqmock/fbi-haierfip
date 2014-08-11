@@ -189,7 +189,7 @@ public class UnipayService {
             }
 
             FipCutpaybat originBatRecord = cutpaybatMapper.selectByPrimaryKey(batchRecord.getTxpkgSn());
-            if (!originBatRecord.getRecversion().equals(batchRecord.getRecversion())) {
+            if (originBatRecord.getRecversion().compareTo(batchRecord.getRecversion())!=0) {
                 throw new RuntimeException("并发更新冲突,批量序号=" + batchRecord.getTxpkgSn());
             } else {
                 batchRecord.setRecversion(batchRecord.getRecversion() + 1);
