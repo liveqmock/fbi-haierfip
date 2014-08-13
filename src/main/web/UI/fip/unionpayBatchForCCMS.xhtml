@@ -103,12 +103,12 @@
                         <p:messages id="qrymsgs" showDetail="false"/>
                         <p:menubar>
                             <p:menuitem type="push" value="全部查询" icon="ui-icon ui-icon-document"
-                                        action="#{unionpayBatchDepCCMSAction.onQueryAll}" update="qrymsgs,qrypdt,hisbatpdt"/>
+                                        action="#{unionpayBatchDepCCMSAction.onQueryAll}" update="qrymsgs,qrypdt,qry2pdt,hisbatpdt"/>
                             <p:menuitem type="push" value="多笔查询" icon="ui-icon ui-icon-disk"
-                                        action="#{unionpayBatchDepCCMSAction.onQueryMulti}" update="qrymsgs,qrypdt, hisbatpdt"/>
+                                        action="#{unionpayBatchDepCCMSAction.onQueryMulti}" update="qrymsgs,qrypdt,qry2bat,hisbatpdt"/>
                             <p:menuitem type="push" value="报文解包"  style="float:right;" icon="ui-icon ui-icon-disk"
                                         action="#{unionpayBatchDepCCMSAction.onUnpackMultiForQryList}"
-                                        update="qrymsgs,qrypdt,hisbatpdt, :tabview:form:pdt"/>
+                                        update="qrymsgs,qrypdt, qry2pdt, hisbatpdt, :tabview:form:pdt"/>
                         </p:menubar>
                         <p:ajaxStatus style="height:18px;text-align:center">
                             <f:facet name="start">
@@ -119,7 +119,7 @@
                             </f:facet>
                         </p:ajaxStatus>
                         <p:dataTable id="qrypdt" dynamic="true" style="width:100%;"
-                                     value="#{unionpayBatchDepCCMSAction.needQueryBatlList}" var="record"
+                                     value="#{unionpayBatchDepCCMSAction.needQueryBatList}" var="record"
                                      rowKey="#{record.txpkgSn}"
                                      selection="#{unionpayBatchDepCCMSAction.selectedQueryRecords}"
                                      paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
@@ -151,6 +151,43 @@
                     </h:form>
                 </div>
             </p:tab>
+            <p:tab title="结果不确定记录清单">
+                <div id="qry2table">
+                    <h:form id="qry2form">
+                        <p:messages id="qry2msgs" showDetail="false"/>
+                        <p:menubar>
+                            <p:menuitem type="push" value="回写全部记录" icon="ui-icon ui-icon-disk" ajax="true"
+                                        action="#{unionpayBatchDepCCMSAction.onWriteBackAllUncertainlyRecords}"
+                                        update="qry2msgs,qry2pdt"/>
+                            <p:menuitem type="push" value="回写所选记录" icon="ui-icon ui-icon-disk" ajax="true"
+                                        action="#{unionpayBatchDepCCMSAction.onWriteBackSelectedUncertainlyRecords}"
+                                        update="qry2msgs,qry2pdt"/>
+                        </p:menubar>
+                        <p:ajaxStatus style="height:18px;text-align:center">
+                            <f:facet name="start">
+                                <h:graphicImage value="/images/ajaxloadingbar.gif"/>
+                            </f:facet>
+                            <f:facet name="complete">
+                                <h:outputText value=""/>
+                            </f:facet>
+                        </p:ajaxStatus>
+                        <p:dataTable id="qry2pdt" dynamic="true" style="width:100%;"
+                                     value="#{unionpayBatchDepCCMSAction.needQueryDetlList}" var="record"
+                                     rowKey="#{record.pkid}"
+                                     filteredValue="#{unionpayBatchDepCCMSAction.filteredNeedQueryDetlList}"
+                                     selection="#{unionpayBatchDepCCMSAction.selectedNeedQryRecords}"
+                                     paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                                     paginator="true" rows="15" paginatorPosition="bottom"
+                                     rowsPerPageTemplate="100,50,30,15,5"
+                                     emptyMessage="数据记录为空...">
+                            <p:column selectionMode="multiple" style="width:18px"/>
+                            <ui:include src="common/cutpayListFields.xhtml">
+                                <ui:param name="backBean" value="#{unionpayBatchDepCCMSAction}"/>
+                            </ui:include>
+                        </p:dataTable>
+                    </h:form>
+                </div>
+            </p:tab>
             <p:tab title="代扣失败记录清单">
                 <div id="failListTable">
                     <h:form id="failListform">
@@ -159,11 +196,11 @@
                             <p:menuitem type="push" value="EXCEL导出" icon="ui-icon ui-icon-disk" ajax="false"
                                         action="#{unionpayBatchDepCCMSAction.onExportFailureList}"
                                         update="failmsgs,failpdt"/>
-                            <p:menuitem type="push" value="全部记录存档" icon="ui-icon ui-icon-disk" ajax="true"
-                                        action="#{unionpayBatchDepCCMSAction.onArchiveAllFailureRecord}"
+                            <p:menuitem type="push" value="回写全部记录" icon="ui-icon ui-icon-disk" ajax="true"
+                                        action="#{unionpayBatchDepCCMSAction.onWriteBackAllFailCutpayRecords}"
                                         update="failmsgs,failpdt"/>
-                            <p:menuitem type="push" value="多笔记录存档" icon="ui-icon ui-icon-disk" ajax="true"
-                                        action="#{unionpayBatchDepCCMSAction.onArchiveMultiFailureRecord}"
+                            <p:menuitem type="push" value="回写所选记录" icon="ui-icon ui-icon-disk" ajax="true"
+                                        action="#{unionpayBatchDepCCMSAction.onWriteBackSelectedFailCutpayRecords}"
                                         update="failmsgs,failpdt"/>
                         </p:menubar>
                         <p:ajaxStatus style="height:18px;text-align:center">
@@ -195,15 +232,15 @@
                     <h:form id="succListform">
                         <p:messages id="succmsgs" showDetail="false"/>
                         <p:menubar>
-                            <p:menuitem type="push" value="全部确认入帐" icon="ui-icon ui-icon-document"
-                                        action="#{unionpayBatchDepCCMSAction.onConfirmAccountAll}"
-                                        update="succmsgs,succpdt,:tabview:actListform:actpdt"/>
-                            <p:menuitem type="push" value="多笔确认入帐" icon="ui-icon ui-icon-disk"
-                                        action="#{unionpayBatchDepCCMSAction.onConfirmAccountMulti}"
-                                        update="succmsgs,succpdt,:tabview:actListform:actpdt"/>
                             <p:menuitem type="push" value="EXCEL导出" icon="ui-icon ui-icon-disk"
                                         action="#{unionpayBatchDepCCMSAction.onExportSuccessList}" ajax="false"
-                                        update="succmsgs,succpdt,:tabview:actListform:actpdt"/>
+                                        update="succmsgs,succpdt"/>
+                            <p:menuitem type="push" value="回写全部记录" icon="ui-icon ui-icon-disk"
+                                        action="#{unionpayBatchDepCCMSAction.onWriteBackAllSuccessCutpayRecords}"
+                                        update="succmsgs,succpdt"/>
+                            <p:menuitem type="push" value="回写所选记录" icon="ui-icon ui-icon-disk"
+                                        action="#{unionpayBatchDepCCMSAction.onWriteBackSelectedSuccessCutpayRecords}"
+                                        update="succmsgs,succpdt"/>
                         </p:menubar>
                         <p:ajaxStatus style="height:18px;text-align:center">
                             <f:facet name="start">
@@ -228,26 +265,6 @@
                         </p:dataTable>
                     </h:form>
                 </div>
-            </p:tab>
-            <p:tab title="待入帐记录清单" id="acttab">
-                <div id="actListTable">
-                    <h:form id="actListform">
-                        <p:dataTable id="actpdt" dynamic="true" style="width:100%;"
-                                     value="#{unionpayBatchDepCCMSAction.actDetlList}" var="record"
-                                     rowKey="#{record.pkid}"
-                                     selection="#{unionpayBatchDepCCMSAction.selectedAccountRecords}"
-                                     paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown} 【总笔数:#{unionpayBatchDepCCMSAction.totalAccountCount}】【总金额:#{unionpayBatchDepCCMSAction.totalAccountAmt}】"
-                                     paginator="true" rows="15" paginatorPosition="bottom"
-                                     rowsPerPageTemplate="100,50,30,15,5"
-                                     emptyMessage="数据记录为空...">
-                            <p:column selectionMode="multiple"/>
-                            <ui:include src="common/cutpayListFields.xhtml">
-                                <ui:param name="backBean" value="#{unionpayBatchDepCCMSAction}"/>
-                            </ui:include>
-                        </p:dataTable>
-                    </h:form>
-                </div>
-
             </p:tab>
         </p:tabView>
     </div>

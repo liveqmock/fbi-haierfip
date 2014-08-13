@@ -8,6 +8,7 @@ import fip.repository.dao.FipCutpaybatMapper;
 import fip.repository.dao.FipCutpaydetlMapper;
 import fip.repository.dao.FipRefunddetlMapper;
 import fip.repository.model.*;
+import org.apache.commons.lang.StringUtils;
 import org.fbi.dep.model.base.TIA;
 import org.fbi.dep.model.txn.*;
 import org.slf4j.Logger;
@@ -568,18 +569,9 @@ public class UnipayDepService {
         TOA1003003 toa;
         try {
             TIA1003003 tia = new TIA1003003();
-            //initTiaHeader(tia, record.getOriginBizid(), record.getBatchSn(), record.getBatchDetlSn(), "1003001");
             //报文头
             tia.getHeader().APP_ID = APP_ID;
-
             tia.getHeader().BIZ_ID = batchRecord.getChannelBizid();
-/*
-            tia.getHeader().BIZ_ID = batchRecord.getOriginBizid();
-            if ("HCCB".equals(tia.getHeader().BIZ_ID)) {
-                tia.getHeader().BIZ_ID = "XFNEW";
-            }
-*/
-
             tia.getHeader().CHANNEL_ID = "100";
             tia.getHeader().USER_ID = DEP_USERNAME;
             tia.getHeader().PASSWORD = DEP_PWD;
@@ -598,11 +590,18 @@ public class UnipayDepService {
             jobLogService.insertNewJoblog(batchRecord.getTxpkgSn(), "fip_cutpaybat", "银联交易结果查询", "发起结果查询（DEP:1003003）请求", "数据交换平台", "数据交换平台");
             toa = (TOA1003003) JmsManager.getInstance().sendAndRecv(tia, 15000);
         } catch (Exception e) {
-            jobLogService.insertNewJoblog(batchRecord.getTxpkgSn(), "fip_cutpaybat", "银联交易结果查询", "发起请求，MQ处理失败, 请查看日志" + e.getMessage(), "数据交换平台", "数据交换平台");
+            jobLogService.insertNewJoblog(batchRecord.getTxpkgSn(), "fip_cutpaybat", "银联交易结果查询", "发起请求，MQ处理失败, 请查看日志", "数据交换平台", "数据交换平台");
             logger.error("MQ消息处理失败", e);
-            throw new RuntimeException("MQ消息处理失败", e);
+            throw new RuntimeException("MQ消息处理失败" + e.getMessage(), e);
         }
-        processCutpayToa1003003(batchRecord, toa);
+
+        try {
+            processCutpayToa1003003(batchRecord, toa);
+        } catch (Exception e) {
+            jobLogService.insertNewJoblog(batchRecord.getTxpkgSn(), "fip_cutpaybat", "银联交易结果查询", "批量结果查询T1003003响应报文处理失败", "数据交换平台", "数据交换平台");
+            logger.error("批量结果查询T1003003响应报文处理失败", e);
+            throw new RuntimeException("批量结果查询T1003003响应报文处理失败" + e.getMessage(), e);
+        }
     }
 
 
@@ -625,6 +624,11 @@ public class UnipayDepService {
         //处理TOA头部返回码
         String headRtnCode = toa.header.RETURN_CODE;
         jobLogService.insertNewJoblog(batchRecord.getTxpkgSn(), "fip_cutpaybat", "银联交易结果查询", "响应报文：[" +  headRtnCode + "]" + toa.header.RETURN_MSG, "数据交换平台", "数据交换平台");
+
+        //先处理报文体中的明细报文
+        processTOA1003003Body(batchRecord, toa);
+
+        //再处理报文头对应的 cutpaybat表状态
         if ("0000".equals(headRtnCode)) {
             setCutpaybatRecordStatus(batchRecord.getTxpkgSn(), TxpkgStatus.DEAL_SUCCESS);
         } else if (headRtnCode.startsWith("1")) { //失败，可以重发或解包重发
@@ -640,19 +644,27 @@ public class UnipayDepService {
            //
         }
 
-        //处理报文体中的明细报文
+    }
+
+    private void processTOA1003003Body(FipCutpaybat batchRecord, TOA1003003 toa) {
         FipCutpaydetlExample example = new FipCutpaydetlExample();
         for (TOA1003003.Body.BodyDetail bodyDetail : toa.body.RET_DETAILS) {
             String detailSn = bodyDetail.SN;
 
             example.clear();
             example.createCriteria().andTxpkgSnEqualTo(batchRecord.getTxpkgSn()).andTxpkgDetlSnEqualTo(detailSn);
-
             List<FipCutpaydetl> cutpaydetlList = cutpaydetlMapper.selectByExample(example);
             FipCutpaydetl record = cutpaydetlList.get(0);
 
             String retCode = bodyDetail.RET_CODE;
             String retMsg = bodyDetail.ERR_MSG;
+
+            //检查是否已经查询过
+            if (!StringUtils.isEmpty(record.getTxRetcode())) {
+                if (record.getTxRetcode().equals(retCode)) {
+                    continue; //略过
+                }
+            }
 
             record.setTxRetcode(retCode);
             record.setTxRetmsg(retMsg);
@@ -688,7 +700,6 @@ public class UnipayDepService {
 
             cutpaydetlMapper.updateByPrimaryKey(record);
         }
-
     }
 
 }

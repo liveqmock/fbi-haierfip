@@ -38,64 +38,62 @@ import java.util.List;
 public class UnionpayBatchAction implements Serializable {
     private static final Logger logger = LoggerFactory.getLogger(UnionpayBatchAction.class);
 
-    private List<FipCutpaydetl> detlList;
-    private List<FipCutpaybat> needQueryBatlList;
-    private List<FipCutpaybat> historyBatList;
-    private List<FipCutpaydetl> failureDetlList;
-    private List<FipCutpaydetl> successDetlList;
-    private List<FipCutpaydetl> actDetlList;
+    protected List<FipCutpaydetl> detlList;
+    protected List<FipCutpaybat> needQueryBatList;
+    protected List<FipCutpaybat> historyBatList;
+    protected List<FipCutpaydetl> failureDetlList;
+    protected List<FipCutpaydetl> successDetlList;
+    protected List<FipCutpaydetl> actDetlList;
 
-    private FipCutpaydetl detlRecord = new FipCutpaydetl();
-    private FipCutpaydetl[] selectedRecords;
-    private FipCutpaydetl selectedRecord;
+    protected FipCutpaydetl detlRecord = new FipCutpaydetl();
+    protected FipCutpaydetl[] selectedRecords;
+    protected FipCutpaydetl selectedRecord;
 
-    private FipCutpaybat selectedSendableRecord;
-    private FipCutpaybat[] selectedSendableRecords;
-    private FipCutpaybat[] selectedQueryRecords;
-    private FipCutpaybat[] selectedHistoryRecords;
-    private FipCutpaybat selectedQueryRecord;
-    private FipCutpaybat selectedHistoryRecord;
+    protected FipCutpaybat selectedSendableRecord;
+    protected FipCutpaybat[] selectedSendableRecords;
+    protected FipCutpaybat[] selectedQueryRecords;
+    protected FipCutpaybat[] selectedHistoryRecords;
+    protected FipCutpaybat selectedQueryRecord;
+    protected FipCutpaybat selectedHistoryRecord;
 
-    private FipCutpaydetl[] selectedFailRecords;
-    private FipCutpaydetl[] selectedAccountRecords;
-    private FipCutpaydetl[] selectedConfirmAccountRecords;
+    protected FipCutpaydetl[] selectedFailRecords;
+    protected FipCutpaydetl[] selectedAccountRecords;
+    protected FipCutpaydetl[] selectedConfirmAccountRecords;
 
-    private int totalcount;
-    private String totalamt;
-    private int totalFailureCount;
-    private String totalFailureAmt;
-    private int totalSuccessCount;
-    private String totalSuccessAmt;
-    private int totalAccountCount;
-    private String totalAccountAmt;
+    protected int totalcount;
+    protected String totalamt;
+    protected int totalFailureCount;
+    protected String totalFailureAmt;
+    protected int totalSuccessCount;
+    protected String totalSuccessAmt;
+    protected int totalAccountCount;
+    protected String totalAccountAmt;
 
-    private BillStatus status = BillStatus.CUTPAY_FAILED;
-    private TxpkgStatus batchStatus = TxpkgStatus.QRY_PEND;
-    private UnipayPkgType txnType = UnipayPkgType.SYNC;
+    protected BillStatus status = BillStatus.CUTPAY_FAILED;
+    protected TxpkgStatus batchStatus = TxpkgStatus.QRY_PEND;
+    protected UnipayPkgType txnType = UnipayPkgType.SYNC;
 
     @ManagedProperty(value = "#{billManagerService}")
-    private BillManagerService billManagerService;
+    protected BillManagerService billManagerService;
     @ManagedProperty(value = "#{jobLogService}")
-    private JobLogService jobLogService;
+    protected JobLogService jobLogService;
 
     @ManagedProperty(value = "#{batchPkgService}")
-    private BatchPkgService batchPkgService;
+    protected BatchPkgService batchPkgService;
     @ManagedProperty(value = "#{unipayService}")
-    private UnipayService unipayService;
+    protected UnipayService unipayService;
     @ManagedProperty(value = "#{unipayDepService}")
-    private UnipayDepService unipayDepService;
-    @ManagedProperty(value = "#{cmsService}")
-    private CmsService cmsService;
+    protected UnipayDepService unipayDepService;
 
-    private String bizid;
-    private String pkid;
-    private BizType bizType;
-    private String channelBizId;   //银联代扣时所使用的商户号对应的bizid，用户复用商户号进行代扣
+    protected String bizid;
+    protected String pkid;
+    protected BizType bizType;
+    protected String channelBizId;   //银联代扣时所使用的商户号对应的bizid，用户复用商户号进行代扣
 
-    private String userid, username;
+    protected String userid, username;
 
-    private List<FipCutpaybat> sendablePkgList;
-    private List<FipCutpaydetl> batchInfoList;
+    protected List<FipCutpaybat> sendablePkgList;
+    protected List<FipCutpaydetl> batchInfoList;
 
     @PostConstruct
     public void init() {
@@ -124,13 +122,13 @@ public class UnionpayBatchAction implements Serializable {
 
     }
 
-    private void initDataList() {
+    protected void initDataList() {
         detlList = billManagerService.selectRecords4UnipayBatch(bizType, BillStatus.INIT);
         //detlList.addAll(billManagerService.selectRecords4UnipayBatch(this.bizType, BillStatus.RESEND_PEND));
 
         sendablePkgList = batchPkgService.selectSendableBatchs(bizType, CutpayChannel.UNIPAY, TxSendFlag.UNSEND);
 
-        needQueryBatlList = batchPkgService.selectNeedConfirmBatchRecords(bizType, CutpayChannel.UNIPAY);
+        needQueryBatList = batchPkgService.selectNeedConfirmBatchRecords(bizType, CutpayChannel.UNIPAY);
         historyBatList = batchPkgService.selectHistoryBatchRecordList(bizType, CutpayChannel.UNIPAY, TxpkgStatus.DEAL_SUCCESS);
 
         failureDetlList = billManagerService.selectRecords4UnipayBatch(bizType, BillStatus.CUTPAY_FAILED);
@@ -267,12 +265,12 @@ public class UnionpayBatchAction implements Serializable {
 
 
     public String onQueryAll() {
-        if (needQueryBatlList.isEmpty()) {
+        if (needQueryBatList.isEmpty()) {
             MessageUtil.addWarn("没有可查询批量代扣数据包！");
             return null;
         }
         try {
-            for (FipCutpaybat xfactcutpaybat : needQueryBatlList) {
+            for (FipCutpaybat xfactcutpaybat : needQueryBatList) {
                 processOneQueryRecord(xfactcutpaybat);
             }
             MessageUtil.addInfo("查询交易请求处理完成！请查看返回的处理结果。");
@@ -306,48 +304,11 @@ public class UnionpayBatchAction implements Serializable {
             //unipayService.sendAndRecvBatchDatagramQueryMessage(record);
             unipayDepService.sendAndRecvCutpayT1003003Message(record);
         } catch (Exception e) {
-            MessageUtil.addError("数据发送异常，请检查系统线路重新发送！");
+            MessageUtil.addError("数据发送异常，请检查系统线路重新发送！" + e.getMessage());
             appendNewJoblog(txPkgSn, "发起银联交易结果查询", "处理失败." + e.getMessage());
         }
     }
 
-
-    public String onConfirmAccountAll() {
-        if (successDetlList.isEmpty()) {
-            MessageUtil.addWarn("记录为空！");
-            return null;
-        }
-        try {
-            if (this.bizType.equals(BizType.XFSF)) {
-                cmsService.obtainMerchantActnoFromCms(this.successDetlList);
-            }
-            billManagerService.updateCutpaydetlBillStatus(this.successDetlList, BillStatus.ACCOUNT_PEND);
-            initDataList();
-            MessageUtil.addInfo("确认完成！");
-        } catch (Exception e) {
-            MessageUtil.addError("数据确认出现错误！" + e.getMessage());
-        }
-
-        return null;
-    }
-
-    public String onConfirmAccountMulti() {
-        if (this.selectedConfirmAccountRecords.length == 0) {
-            MessageUtil.addWarn("请选择记录.");
-            return null;
-        }
-        try {
-            if (this.bizType.equals(BizType.XFSF)) {
-                cmsService.obtainMerchantActnoFromCms(Arrays.asList(this.selectedConfirmAccountRecords));
-            }
-            billManagerService.updateCutpaydetlBillStatus(Arrays.asList(this.selectedConfirmAccountRecords), BillStatus.ACCOUNT_PEND);
-            initDataList();
-            MessageUtil.addInfo("确认完成！");
-        } catch (Exception e) {
-            MessageUtil.addError("数据确认出现错误！" + e.getMessage());
-        }
-        return null;
-    }
 
 
     public String onExportFailureList() {
@@ -443,12 +404,12 @@ public class UnionpayBatchAction implements Serializable {
         this.detlList = detlList;
     }
 
-    public List<FipCutpaybat> getNeedQueryBatlList() {
-        return needQueryBatlList;
+    public List<FipCutpaybat> getNeedQueryBatList() {
+        return needQueryBatList;
     }
 
-    public void setNeedQueryBatlList(List<FipCutpaybat> needQueryBatlList) {
-        this.needQueryBatlList = needQueryBatlList;
+    public void setNeedQueryBatList(List<FipCutpaybat> needQueryBatList) {
+        this.needQueryBatList = needQueryBatList;
     }
 
     public List<FipCutpaydetl> getFailureDetlList() {
@@ -646,14 +607,6 @@ public class UnionpayBatchAction implements Serializable {
         this.selectedConfirmAccountRecords = selectedConfirmAccountRecords;
     }
 
-    public CmsService getCmsService() {
-        return cmsService;
-    }
-
-    public void setCmsService(CmsService cmsService) {
-        this.cmsService = cmsService;
-    }
-
     public String getTotalamt() {
         return totalamt;
     }
@@ -781,5 +734,6 @@ public class UnionpayBatchAction implements Serializable {
     public void setSelectedHistoryRecord(FipCutpaybat selectedHistoryRecord) {
         this.selectedHistoryRecord = selectedHistoryRecord;
     }
+
 }
 
