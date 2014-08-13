@@ -36,6 +36,7 @@ public class UnionpayBatchDepCCMSAction extends UnionpayBatchAction implements S
     @PostConstruct
     public void init() {
         super.init();
+        needQueryDetlList = billManagerService.selectRecords4UnipayOnline(this.bizType, BillStatus.CUTPAY_QRY_PEND);
     }
 
     private void initList(){
