@@ -39,9 +39,9 @@ public class UnionpayBatchDepCCMSAction extends UnionpayBatchAction implements S
         needQueryDetlList = billManagerService.selectRecords4UnipayOnline(this.bizType, BillStatus.CUTPAY_QRY_PEND);
     }
 
-    private void initList(){
+    protected void initDataList(){
         needQueryDetlList = billManagerService.selectRecords4UnipayOnline(this.bizType, BillStatus.CUTPAY_QRY_PEND);
-        super.initDataList();
+        super.initBaseDataList();
     }
     //回写全部不明记录，不存档
     public String onWriteBackAllUncertainlyRecords() {
@@ -57,7 +57,7 @@ public class UnionpayBatchDepCCMSAction extends UnionpayBatchAction implements S
                 MessageUtil.addError("数据处理错误！" + e.getMessage());
             }
         }
-        initList();
+        initDataList();
         return null;
     }
     public String onWriteBackSelectedUncertainlyRecords() {
@@ -74,7 +74,7 @@ public class UnionpayBatchDepCCMSAction extends UnionpayBatchAction implements S
                 MessageUtil.addError("数据处理错误！" + e.getMessage());
             }
         }
-        initList();
+        initDataList();
         return null;
     }
 
@@ -94,7 +94,7 @@ public class UnionpayBatchDepCCMSAction extends UnionpayBatchAction implements S
                 MessageUtil.addError("数据处理错误！" + e.getMessage());
             }
         }
-        initList();
+        initDataList();
         return null;
     }
 
@@ -111,7 +111,7 @@ public class UnionpayBatchDepCCMSAction extends UnionpayBatchAction implements S
                 MessageUtil.addError("数据处理错误！" + e.getMessage());
             }
         }
-        initList();
+        initDataList();
         return null;
     }
 
@@ -130,7 +130,7 @@ public class UnionpayBatchDepCCMSAction extends UnionpayBatchAction implements S
                 MessageUtil.addError("数据处理错误！" + e.getMessage());
             }
         }
-        initList();
+        initDataList();
         return null;
     }
 
@@ -148,7 +148,7 @@ public class UnionpayBatchDepCCMSAction extends UnionpayBatchAction implements S
                 MessageUtil.addError("数据处理错误！" + e.getMessage());
             }
         }
-        initList();
+        initDataList();
         return null;
     }
 

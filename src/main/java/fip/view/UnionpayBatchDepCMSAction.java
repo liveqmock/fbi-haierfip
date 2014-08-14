@@ -34,6 +34,10 @@ public class UnionpayBatchDepCMSAction extends UnionpayBatchAction implements Se
         super.init();
     }
 
+    protected void initDataList(){
+        super.initBaseDataList();
+    }
+
     public String onConfirmAccountAll() {
         if (successDetlList.isEmpty()) {
             MessageUtil.addWarn("¼ÇÂ¼Îª¿Õ£¡");

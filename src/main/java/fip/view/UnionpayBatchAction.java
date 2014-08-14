@@ -12,11 +12,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pub.platform.security.OperatorManager;
 
-import javax.annotation.PostConstruct;
 import javax.faces.application.FacesMessage;
-import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
-import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -30,12 +27,8 @@ import java.util.List;
  * Created by IntelliJ IDEA.
  * User: zhanrui
  * Date: 2010-11-18
- * Time: 12:52:46
- * To change this template use File | Settings | File Templates.
  */
-@ManagedBean
-@ViewScoped
-public class UnionpayBatchAction implements Serializable {
+public abstract class UnionpayBatchAction implements Serializable {
     private static final Logger logger = LoggerFactory.getLogger(UnionpayBatchAction.class);
 
     protected List<FipCutpaydetl> detlList;
@@ -95,7 +88,7 @@ public class UnionpayBatchAction implements Serializable {
     protected List<FipCutpaybat> sendablePkgList;
     protected List<FipCutpaydetl> batchInfoList;
 
-    @PostConstruct
+//    @PostConstruct
     public void init() {
         try {
             OperatorManager om = SystemService.getOperatorManager();
@@ -122,7 +115,8 @@ public class UnionpayBatchAction implements Serializable {
 
     }
 
-    protected void initDataList() {
+    protected abstract  void initDataList();
+    protected void initBaseDataList() {
         detlList = billManagerService.selectRecords4UnipayBatch(bizType, BillStatus.INIT);
         //detlList.addAll(billManagerService.selectRecords4UnipayBatch(this.bizType, BillStatus.RESEND_PEND));
 

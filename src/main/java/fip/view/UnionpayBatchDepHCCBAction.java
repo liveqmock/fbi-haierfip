@@ -24,6 +24,9 @@ public class UnionpayBatchDepHCCBAction extends UnionpayBatchAction implements S
     public void init() {
         super.init();
     }
+    protected void initDataList(){
+        super.initBaseDataList();
+    }
 
 }
 
