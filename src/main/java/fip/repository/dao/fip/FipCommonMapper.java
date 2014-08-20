@@ -94,6 +94,15 @@ public interface FipCommonMapper {
             , @Param("billtype") String billtype
             , @Param("billstatus") String billstatus);
 
+    //检查代扣记录重复 HCCB
+    @Select("select count(*) from fip_cutpaydetl " +
+            "where iouno=#{iouno} and poano=#{poano} " +
+            " and billstatus != #{billstatus} " +
+            " and deletedflag='0' ")
+    int countRepeatedBizkeyRecordsNumber4Hccb(@Param("iouno") String iouno
+            , @Param("poano") String poano
+            , @Param("billstatus") String billstatus);
+
 
     //检查代付记录重复
     @Select("select count(*) from fip_refunddetl " +

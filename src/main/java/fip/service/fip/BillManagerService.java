@@ -325,6 +325,13 @@ public class BillManagerService {
         }
         return true;
     }
+    public boolean checkNoRepeatedBizkeyRecords4Hccb(String iouno, String poano) {
+        int count = fipCommonMapper.countRepeatedBizkeyRecordsNumber4Hccb(iouno, poano, BillStatus.CUTPAY_FAILED.getCode());
+        if (count > 0) {
+            return false;
+        }
+        return true;
+    }
 
     //检查代付记录是否重复
     public boolean checkNoRepeatedBizkeyRecords4CcmsRefund(String iouno, String poano) {
@@ -545,9 +552,6 @@ public class BillManagerService {
 
     /**
      * 重要  (银联渠道：根据状态选择实时交易的银行的代扣记录)  不处理send_flag
-     * @param bizType
-     * @param billstatus
-     * @return
      */
     public List<FipCutpaydetl> selectRecords4UnipayOnline(BizType bizType, BillStatus billstatus) {
         //List<String> bankcodes = toolsService.selectEnuItemValue("UnipayRealTxnBank");
@@ -556,8 +560,23 @@ public class BillManagerService {
         example.createCriteria().andBiChannelEqualTo(CutpayChannel.UNIPAY.getCode())
                 .andBillstatusEqualTo(billstatus.getCode())
                 .andArchiveflagEqualTo("0").andDeletedflagEqualTo("0")
+                .andTxpkgSnIsNull() //非批量报文中的明细记录！！
                 .andOriginBizidEqualTo(bizType.getCode());
                 //.andBiActopeningbankIn(bankcodes);
+        example.setOrderByClause("batch_sn,batch_detl_sn");
+        return fipCutpaydetlMapper.selectByExample(example);
+    }
+
+    /**
+     * 重要  (银联渠道：根据状态选择异步交易（批量）的银行的代扣明细记录)  不处理send_flag
+     */
+    public List<FipCutpaydetl> selectRecords4UnipayBatchDetail(BizType bizType, BillStatus billstatus) {
+        FipCutpaydetlExample example = new FipCutpaydetlExample();
+        example.createCriteria().andBiChannelEqualTo(CutpayChannel.UNIPAY.getCode())
+                .andBillstatusEqualTo(billstatus.getCode())
+                .andArchiveflagEqualTo("0").andDeletedflagEqualTo("0")
+                .andTxpkgSnIsNotNull() //批量报文中的明细记录！！
+                .andOriginBizidEqualTo(bizType.getCode());
         example.setOrderByClause("batch_sn,batch_detl_sn");
         return fipCutpaydetlMapper.selectByExample(example);
     }

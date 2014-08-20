@@ -13,6 +13,7 @@ public enum BizType implements EnumApp {
     XF("XF", "消费信贷"),
     XFNEW("XFNEW", "新消费信贷"),
     XFSF("XFSF", "消费信贷首付款"),
+    XFDAIFU("XFDAIFU", "消费信贷代付"),
     FD("FD", "住房按揭"),
     FDC("FDC", "房地产分期"),
     HCSP("HCSP", "售后"),
