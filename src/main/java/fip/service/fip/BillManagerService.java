@@ -560,7 +560,8 @@ public class BillManagerService {
         example.createCriteria().andBiChannelEqualTo(CutpayChannel.UNIPAY.getCode())
                 .andBillstatusEqualTo(billstatus.getCode())
                 .andArchiveflagEqualTo("0").andDeletedflagEqualTo("0")
-                .andTxpkgSnIsNull() //非批量报文中的明细记录！！
+                //.andTxpkgSnIsNull() //非批量报文中的明细记录！！
+                .andSendflagEqualTo("0") //非批量报文中的明细记录！！
                 .andOriginBizidEqualTo(bizType.getCode());
                 //.andBiActopeningbankIn(bankcodes);
         example.setOrderByClause("batch_sn,batch_detl_sn");
@@ -575,7 +576,8 @@ public class BillManagerService {
         example.createCriteria().andBiChannelEqualTo(CutpayChannel.UNIPAY.getCode())
                 .andBillstatusEqualTo(billstatus.getCode())
                 .andArchiveflagEqualTo("0").andDeletedflagEqualTo("0")
-                .andTxpkgSnIsNotNull() //批量报文中的明细记录！！
+                //.andTxpkgSnIsNotNull() //批量报文中的明细记录！！
+                .andSendflagEqualTo("1") //批量报文中的明细记录！！
                 .andOriginBizidEqualTo(bizType.getCode());
         example.setOrderByClause("batch_sn,batch_detl_sn");
         return fipCutpaydetlMapper.selectByExample(example);
