@@ -624,27 +624,29 @@ public class CcmsService {
                 if (!detl.getRecversion().equals(dbRecord.getRecversion())) {
                     throw new RuntimeException("并发错误：版本号不同 " + detl.getClientname() + detl.getPkid());
                 }
-                T100102Request recordT102 = new T100102Request();
-                recordT102.setStdjjh(detl.getIouno());
-                recordT102.setStdjyrq(detl.getPaybackdate());//TODO
-                recordT102.setStdjhkkr(detl.getPaybackdate());
-                recordT102.setStdcgkkje(detl.getPaybackamt().toString());//TODO bigdecimal
-                recordT102.setStddkzh(detl.getClientact());
-                recordT102.setStdhth(detl.getContractno());
+                T100102Request record = new T100102Request();
+                record.setStdjjh(detl.getIouno());
+                record.setStdjyrq(detl.getPaybackdate());//TODO
+                record.setStdjhkkr(detl.getPaybackdate());
+                record.setStdcgkkje(detl.getPaybackamt().toString());//TODO bigdecimal
+                record.setStddkzh(detl.getClientact());
+                record.setStdhth(detl.getContractno());
+                record.setStdrtncode(detl.getTxRetcode());
+                record.setStdrtnmsg(detl.getTxRetmsg());
 
                 String billStatus = detl.getBillstatus();
                 if (BillStatus.CUTPAY_SUCCESS.getCode().equals(billStatus)) {
-                    recordT102.setStdkkjg("1");   //银行处理成功
+                    record.setStdkkjg("1");   //银行处理成功
                 } else if (BillStatus.CUTPAY_FAILED.getCode().equals(billStatus)) {
-                    recordT102.setStdkkjg("2");   //银行处理失败
+                    record.setStdkkjg("2");   //银行处理失败
                 } else if (BillStatus.CUTPAY_QRY_PEND.getCode().equals(billStatus)) {
-                    recordT102.setStdkkjg("3");   //状态不明
+                    record.setStdkkjg("3");   //状态不明
                 } else {
                     logger.error("回写记录时出现错误记录。");
                 }
 
                 //单笔发送处理
-                txResult = t100102ctl.start(recordT102);
+                txResult = t100102ctl.start(record);
             } else {
                 logger.error("回写新消费信贷系统出错，帐单类型不支持");
                 throw new RuntimeException("回写新消费信贷系统出错，帐单类型不支持");
@@ -700,13 +702,17 @@ public class CcmsService {
                 throw new RuntimeException("并发错误：版本号不同" + detl.getPkid());
             }
 
-            T200102Request recordT102 = new T200102Request();
-            recordT102.setStdjjh(detl.getIouno());
-            recordT102.setStdjyrq(new SimpleDateFormat("yyyy-MM-dd").format(detl.getDateBankPay()));//TODO
-            recordT102.setStdjhkkr(detl.getStartdate());
-            recordT102.setStdcgkkje(detl.getPayamt().toString());
-            recordT102.setStddkzh("");
-            recordT102.setStdhth(detl.getContractno());
+            T200102Request record = new T200102Request();
+            record.setStdjjh(detl.getIouno());
+            record.setStdjyrq(new SimpleDateFormat("yyyy-MM-dd").format(detl.getDateBankPay()));//TODO
+            record.setStdjhkkr(detl.getStartdate());
+            record.setStdcgkkje(detl.getPayamt().toString());
+            record.setStddkzh("");
+            record.setStdhth(detl.getContractno());
+            record.setStdrtncode(detl.getTxRetcode());
+            record.setStdrtnmsg(detl.getTxRetmsg());
+
+
             //1-成功 2-失败
             //回写失败记录时，要注意此时cutpaydetlList中可能含有信贷系统中的记录
             //if (isSuccess) {
@@ -717,17 +723,17 @@ public class CcmsService {
 
             String billStatus = detl.getBillstatus();
             if (BillStatus.CUTPAY_SUCCESS.getCode().equals(billStatus)) {
-                recordT102.setStdkkjg("1");   //银行处理成功
+                record.setStdkkjg("1");   //银行处理成功
             } else if (BillStatus.CUTPAY_FAILED.getCode().equals(billStatus)) {
-                recordT102.setStdkkjg("2");   //银行处理失败
+                record.setStdkkjg("2");   //银行处理失败
             } else if (BillStatus.CUTPAY_QRY_PEND.getCode().equals(billStatus)) {
-                recordT102.setStdkkjg("3");   //状态不明
+                record.setStdkkjg("3");   //状态不明
             } else {
                 logger.error("回写记录时出现错误记录。");
             }
 
             //单笔发送处理
-            txResult = ctl.start(recordT102);
+            txResult = ctl.start(record);
 
             Date date = new Date();
             OperatorManager operatorManager = SystemService.getOperatorManager();

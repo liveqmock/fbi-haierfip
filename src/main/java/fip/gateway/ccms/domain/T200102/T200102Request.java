@@ -20,6 +20,8 @@ public class T200102Request extends MsgHeader {
     private String stdjhkkr;
     private String stdcgkkje;
     private String stdkkjg;
+    private String stdrtncode;
+    private String stdrtnmsg;
 
     public String getStdjjh() {
         return stdjjh;
@@ -75,5 +77,21 @@ public class T200102Request extends MsgHeader {
 
     public void setStdkkjg(String stdkkjg) {
         this.stdkkjg = stdkkjg;
+    }
+
+    public String getStdrtnmsg() {
+        return stdrtnmsg;
+    }
+
+    public void setStdrtnmsg(String stdrtnmsg) {
+        this.stdrtnmsg = stdrtnmsg;
+    }
+
+    public String getStdrtncode() {
+        return stdrtncode;
+    }
+
+    public void setStdrtncode(String stdrtncode) {
+        this.stdrtncode = stdrtncode;
     }
 }
