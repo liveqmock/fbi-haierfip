@@ -25,19 +25,21 @@ class ZongFenHandler {
 
         ZongFenHandler handler = new ZongFenHandler()
 //        handler.processCCBMsg_test()
-        handler.startActChk(false)
+        handler.startActChk(false, "CCB")
         //handler.notifyResult()
     }
 
     //WEB层调用接口
     public void startActChk4Web(String yyyymmdd) {
+/*
         if (!isCronTaskOpen()) {
             logger.info("自动批量处理开关已关闭。");
             return;
         }
+*/
 
         this.txn_date = yyyymmdd;
-        startActChk(false)
+        startActChk(false, "CCB")
     }
     //定时任务调用接口
     public void startActChk4Cron() {
@@ -47,11 +49,11 @@ class ZongFenHandler {
         }
 
         txn_date = (new Date() - 1).format('yyyyMMdd');
-        startActChk(true)
+        startActChk(true, "CCB")
     }
 
     // isCheckSuccessFlag  true:进行对账前先检查已成功标志 false:进行对账前不检查已成功标志
-    private void startActChk(boolean isCheckSuccessFlag) {
+    private void startActChk(boolean isCheckSuccessFlag, bankCode) {
         //1.初始化环境
         try {
             println "=============" + txn_date
@@ -60,6 +62,10 @@ class ZongFenHandler {
             logger.error("对账时出现系统错误！", e)
             return
         }
+
+        def sbsCode = 'SBS_' + bankCode
+        def delSql = "delete from chk_zongfen_txn where txn_date = ${txn_date} and send_sys_id in ('${bankCode}' ,'${sbsCode}')"
+        logger.info(delSql)
 
         try {
             def db_txn_date = db.firstRow("select txn_date  from EVT_MAININFO where evt_id = ${this.eventId}").txn_date
@@ -71,11 +77,12 @@ class ZongFenHandler {
                         return
                     }
                 }
-                db.execute("delete from chk_zongfen_txn where txn_date = ${txn_date}")
+//                db.execute("delete from chk_zongfen_txn where txn_date = ${txn_date} and send_sys_id in ('SBS','CCB')")
+                db.execute(delSql)
             } else {
                 updateOperationEventMainInfo(this.eventId, false, "开始处理", "开始处理")
                 db.execute("update EVT_MAININFO set evt_msg_code= '1000' where evt_id = ${eventId}")
-                db.execute("delete from chk_zongfen_txn where txn_date = ${txn_date}")
+                //db.execute("delete from chk_zongfen_txn where txn_date = ${txn_date} and send_sys_id in ('SBS','CCB')")
             }
         } catch (Exception e) {
             logger.error("对账时出现系统错误！", e)
@@ -97,7 +104,7 @@ class ZongFenHandler {
 
         //3.获取SBS对账数据
         try {
-            processSBSMsg()
+            processSBSMsg(bankCode)
         } catch (Exception sbsex) {
             logger.error("获取SBS对账数据错误。", sbsex)
             def msg = "总分账户对账异常, 业务日期:${txn_date}, 错误信息:" + sbsex.getMessage()
@@ -109,7 +116,7 @@ class ZongFenHandler {
         updateOperationEventMainInfo(this.eventId, true, "获取对账数据完成.", "获取对账数据完成.")
 
         //4.开始校验
-        verifyData()
+        verifyData(bankCode)
 
         def end = System.currentTimeMillis()
 
@@ -117,26 +124,29 @@ class ZongFenHandler {
 //        db.close()
     }
 
-    public void verifyData() {
+    public void verifyData(bankCode) {
         //查看事件处理状态，
         def succ_flag = db.firstRow("select succ_flag  from EVT_MAININFO where evt_id = ${this.eventId}").succ_flag
         if (succ_flag == '0') {  //操作失败
             return
         }
 
+        //VerifyDataHelper.verify(db, txn_date, "SBS", "CCB")
+
+        def sbs_bank = "SBS_" + bankCode;
         //校验对账结果
-        VerifyDataHelper.verify(db, txn_date, "SBS", "CCB")
+        VerifyDataHelper.verify(db, txn_date, sbs_bank, bankCode)
 
         def ccbCount = db.firstRow("select count(*) as cnt from CHK_ZONGFEN_TXN where txn_date = ${this.txn_date} and send_sys_id = 'CCB'").cnt
         def sbsCount = db.firstRow("select count(*) as cnt from CHK_ZONGFEN_TXN where txn_date = ${this.txn_date} and send_sys_id = 'SBS'").cnt
-        def totalCount = db.firstRow("select count(*) as cnt from CHK_ZONGFEN_TXN where txn_date = ${this.txn_date}").cnt
-        def totalFailCount = db.firstRow("select count(*) as cnt from CHK_ZONGFEN_TXN where txn_date = ${this.txn_date} and (chksts is null or chksts != '0')").cnt
+        def totalCount = db.firstRow("select count(*) as cnt from CHK_ZONGFEN_TXN where txn_date = ${this.txn_date} and send_sys_id in ('${sbs_bank}','${bankCode}')").cnt
+        def totalFailCount = db.firstRow("select count(*) as cnt from CHK_ZONGFEN_TXN where txn_date = ${this.txn_date} and (chksts is null or chksts != '0') and send_sys_id in ('${sbs_bank}','${bankCode}')").cnt
 
         if (totalFailCount == 0) {
-            def msg = "总分账户对账结果:平帐, 业务日期:${txn_date}, CCB:${ccbCount}笔,SBS:${sbsCount}笔."
+            def msg = "总分账户对账结果:平帐,业务日期:${txn_date},CCB:${ccbCount}笔,SBS:${sbsCount}笔."
             updateTxnEventMainInfo(this.eventId, "0000", msg, msg)
         } else {
-            def errmsg = "总分账户对账结果:不平, 业务日期:${txn_date}, CCB:${ccbCount}笔,SBS:${sbsCount}笔, 不平笔数:${totalFailCount}笔."
+            def errmsg = "总分账户对账结果:不平,业务日期:${txn_date},CCB:${ccbCount}笔,SBS:${sbsCount}笔,不平:${totalFailCount}笔."
             updateTxnEventMainInfo(this.eventId, "1000", errmsg, errmsg)
         }
     }
@@ -324,7 +334,7 @@ class ZongFenHandler {
         }
     }
 
-    void processSBSMsg() {
+    void processSBSMsg(bankCode) {
         def lines = []
 
         //processOneSbsMsg(lines, 1)
@@ -348,7 +358,7 @@ class ZongFenHandler {
                 String outAcctId = fields[8].trim()
                 ps.addBatch(pkid: UUID.randomUUID().toString(),
                         txn_date: txdate,
-                        send_sys_id: "SBS",
+                        send_sys_id: "SBS_" + bankCode,
                         actno_in: inAcctId,
                         actno_out: outAcctId,
                         txnamt: amt,

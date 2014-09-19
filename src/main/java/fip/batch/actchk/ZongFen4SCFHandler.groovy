@@ -5,11 +5,9 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import pub.platform.advance.utils.PropertyManager
 /**
- * 总分账户对帐 （供应链融资平台SCF）.
+ * 到账通知对帐 （供应链融资平台SCF）.
  * User: zhanrui
- * Date: 12-7-26
- * Time: 下午5:06
- * To change this template use File | Settings | File Templates.
+ * Date: 2014-8-26
  */
 class ZongFen4SCFHandler {
     private static final Logger logger = LoggerFactory.getLogger(ZongFen4SCFHandler.class)
@@ -32,14 +30,15 @@ class ZongFen4SCFHandler {
     }
 
     //WEB层调用接口
-    public void startActChk4Web(String yyyymmdd) {
+    public void startActChk4Web(String yyyymmdd, String bankcode) {
+/*
         if (!isCronTaskOpen()) {
             logger.info("自动批量处理开关已关闭。");
             return;
         }
+*/
 
-        this.txn_date = yyyymmdd;
-        startActChk(false)
+        startActChk(false, "SCF1", bankcode, yyyymmdd, "scf")
     }
     //定时任务调用接口
     public void startActChk4Cron() {
@@ -50,12 +49,20 @@ class ZongFen4SCFHandler {
 
         def txnDate = (new Date() - 1).format('yyyyMMdd');
 
-        //平安 313
-        startActChk(true, "SCF1", "313", txnDate, "ZF002001", "scf")
+        //平安
+        startActChk(true, "SCF1", "307452004818", txnDate, "scf")
+        //中信
+        startActChk(true, "SCF1", "302452036174", txnDate, "scf")
     }
 
-    // isCheckSuccessFlag  true:进行对账前先检查已成功标志 false:进行对账前不检查已成功标志
-    private void startActChk(boolean isCheckSuccessFlag, String channelId, String bankCode, String txnDate, String eventId, String ftpUserName) {
+    /**
+     * @param isCheckSuccessFlag   true:进行对账前先检查已成功标志 false:进行对账前不检查已成功标志
+     * @param channelId    用来填写 SBS交易的报文头
+     * @param bankCode
+     * @param txnDate
+     * @param ftpUserName
+     */
+    private void startActChk(boolean isCheckSuccessFlag, String channelId, String bankCode, String txnDate, String ftpUserName) {
         //1.初始化环境
         try {
             println "=============" + txnDate
@@ -64,6 +71,8 @@ class ZongFen4SCFHandler {
             logger.error("对账时出现系统错误！", e)
             return
         }
+
+        String eventId = "ZF" + bankCode;
 
         try {
             def db_txn_date = db.firstRow("select txn_date  from EVT_MAININFO where evt_id = ${eventId}").txn_date
@@ -75,7 +84,7 @@ class ZongFen4SCFHandler {
             if (db_txn_date == txnDate) {
                 if (isCheckSuccessFlag) {
                     if (succ_flag == '1') { //已操作成功（包括获取数据和校验数据）
-                        logger.info("总分账户对账已成功。")
+                        logger.info("到账通知对账已成功。")
                         return
                     }
                 }
@@ -103,9 +112,10 @@ class ZongFen4SCFHandler {
             processBankMsg(bankCode, txnDate, txnFileName)
         } catch (Exception e) {
             logger.error("银行相关处理错误", e)
-            def msg = "总分账户对账异常, 业务日期:${txnDate}, 错误信息:" + e.getMessage()
-            msg = msg.size() <= 70 ? msg : msg.substring(0, 70)
-            updateOperationEventMainInfo(eventId,  txnDate, false, msg, msg)
+            def msg = "到账通知对账异常:日期[${txnDate}] " + e.getMessage()
+            def smsmsg = msg.size() <= 200 ? msg : msg.substring(0, 200)
+            def mailmsg = msg.size() <= 2000 ? msg : msg.substring(0, 2000)
+            updateOperationEventMainInfo(eventId,  txnDate, false, smsmsg, mailmsg)
             return
         }
 
@@ -114,16 +124,17 @@ class ZongFen4SCFHandler {
             processSBSMsg(channelId, bankCode, txnDate)
         } catch (Exception sbsex) {
             logger.error("获取SBS对账数据错误。", sbsex)
-            def msg = "总分账户对账异常, 业务日期:${txnDate}, 错误信息:" + sbsex.getMessage()
-            msg = msg.size() <= 70 ? msg : msg.substring(0, 70)
-            updateOperationEventMainInfo(eventId,  txnDate, false, msg, msg)
+            def msg = "到账通知对账异常:日期[${txnDate}] 错误信息:" + sbsex.getMessage()
+            def smsmsg = msg.size() <= 200 ? msg : msg.substring(0, 200)
+            def mailmsg = msg.size() <= 2000 ? msg : msg.substring(0, 2000)
+            updateOperationEventMainInfo(eventId,  txnDate, false, smsmsg, mailmsg)
             return
         }
 
         updateOperationEventMainInfo(eventId,  txnDate, true, "获取对账数据完成.", "获取对账数据完成.")
 
         //4.开始校验
-        verifyData()
+        verifyData(bankCode, txnDate)
 
         def end = System.currentTimeMillis()
 
@@ -131,7 +142,9 @@ class ZongFen4SCFHandler {
 //        db.close()
     }
 
-    public void verifyData(String bankCode, String txnDate, String eventId) {
+    public void verifyData(String bankCode, String txnDate) {
+        String eventId = "ZF" + bankCode;
+
         //查看事件处理状态，
         def succ_flag = db.firstRow("select succ_flag  from EVT_MAININFO where evt_id = ${eventId}").succ_flag
         if (succ_flag == '0') {  //操作失败
@@ -145,28 +158,30 @@ class ZongFen4SCFHandler {
 
         def bankCount = db.firstRow("select count(*) as cnt from CHK_ZONGFEN_TXN where txn_date = ${txnDate} and send_sys_id = '${bankCode}'").cnt
         def sbsCount = db.firstRow("select count(*) as cnt from CHK_ZONGFEN_TXN where txn_date = ${txnDate} and send_sys_id = '${sbs_bank}'").cnt
-        def totalCount = db.firstRow("select count(*) as cnt from CHK_ZONGFEN_TXN where txn_date = ${txnDate}").cnt
-        def totalFailCount = db.firstRow("select count(*) as cnt from CHK_ZONGFEN_TXN where txn_date = ${txnDate} and (chksts is null or chksts != '0')").cnt
+        def totalCount = db.firstRow("select count(*) as cnt from CHK_ZONGFEN_TXN where txn_date = ${txnDate} and send_sys_id in ('${sbs_bank}','${bankCode}')").cnt
+        def totalFailCount = db.firstRow("select count(*) as cnt from CHK_ZONGFEN_TXN where txn_date = ${txnDate} and (chksts is null or chksts != '0') and send_sys_id in ('${sbs_bank}','${bankCode}') ").cnt
 
         if (totalFailCount == 0) {
-            def msg = "银行[${bankCode}]总分账户对账结果:平帐, 业务日期:${txnDate}, ${bankCode}:${bankCount}笔,SBS:${sbsCount}笔."
+            def msg = "银行[${bankCode}]到账通知对账:平帐,日期:${txnDate},银行:${bankCount}笔,SBS:${sbsCount}笔"
             updateTxnEventMainInfo(eventId, "0000", msg, msg)
         } else {
-            def errmsg = "银行[${bankCode}]总分账户对账结果:不平, 业务日期:${txnDate}, ${bankCode}:${bankCount}笔,SBS:${sbsCount}笔, 不平笔数:${totalFailCount}笔."
+            def errmsg = "银行[${bankCode}]到账通知对账:不平,日期:${txnDate},银行:${bankCount}笔,SBS:${sbsCount}笔,不平:${totalFailCount}笔"
             updateTxnEventMainInfo(eventId, "1000", errmsg, errmsg)
         }
     }
 
     //=============
     //WEB层调用接口
-    public void notifyResult4Web(String yyyymmdd) {
+    public void notifyResult4Web(String yyyymmdd, String bankcode) {
+/*
         if (!isCronTaskOpen()) {
             logger.info("自动批量处理开关已关闭。");
             return;
         }
+*/
 
-        this.txn_date = yyyymmdd;
-        notifyResult()
+        initDB()
+        notifyInfo("ZF" + bankcode)
     }
     //定时任务调用接口
     public void notifyResult4Cron() {
@@ -174,16 +189,11 @@ class ZongFen4SCFHandler {
             logger.info("自动批量处理开关已关闭。");
             return;
         }
-
-        txn_date = (new Date() - 1).format('yyyyMMdd');
-        notifyResult()
-    }
-
-    private void notifyResult() {
         initDB()
-        //查看事件处理状态，
-        notifyInfo()
+        notifyInfo("ZF307452004818")
+        notifyInfo("ZF302452036174")
     }
+
 
     //================================================================================================
     private void initDB() {
@@ -202,7 +212,7 @@ class ZongFen4SCFHandler {
     }
 
     //更新操作事件信息
-    private void updateOperationEventMainInfo(String txnDate, String evt_id, boolean isSuccess, String sms_info, String mail_info) {
+    private void updateOperationEventMainInfo(String evt_id, String txnDate,  boolean isSuccess, String sms_info, String mail_info) {
         def evt_date = new Date().format('yyyyMMdd')
         def evt_time = new Date().format('HH:mm:ss')
         def evt_succ_flag
@@ -230,8 +240,8 @@ class ZongFen4SCFHandler {
     }
 
 
-    private void notifyInfo() {
-        def row = db.firstRow("select * from EVT_MAININFO where evt_id = ${this.eventId}")
+    private void notifyInfo(String eventId) {
+        def row = db.firstRow("select * from EVT_MAININFO where evt_id = ${eventId}")
         def smsList = row.sms_list
         def smsInfo = row.sms_info
 
@@ -242,16 +252,16 @@ class ZongFen4SCFHandler {
         switch (row.notify_type) {
             case "1":  //失败时通知
                 if (!isTxnSucc) {
-                    notifySms(smsList, smsInfo)
+                    notifySms(smsList, smsInfo, eventId)
                 }
                 break
             case "2":  //成功时通知
                 if (isTxnSucc) {
-                    notifySms(smsList, smsInfo)
+                    notifySms(smsList, smsInfo, eventId)
                 }
                 break
             case "3":  //全部通知
-                notifySms(smsList, smsInfo)
+                notifySms(smsList, smsInfo, eventId)
                 break
             case "0":  //不通知
             default:
@@ -259,10 +269,15 @@ class ZongFen4SCFHandler {
         }
     }
 
-    private void notifySms(String receivers, String msg) {
+    private void notifySms(String receivers, String msg, String eventId) {
         try {
             receivers.split(";").each {
-                SmsTool.sendMessage(it, msg)
+                def fields = it.split(":")
+                if (fields.length == 2) {
+                    SmsTool.sendMessage(fields[1], msg)
+                } else {
+                    SmsTool.sendMessage(fields[0], msg)
+                }
             }
         } catch (Exception e) {
             db.execute("update EVT_MAININFO set sms_err_msg = '与海尔短信网关连接失败.' where evt_id = ${eventId}")
@@ -278,24 +293,14 @@ class ZongFen4SCFHandler {
         try {
             file = new File(txnFileName)
         } catch (Exception e) {
-            def errmsg = "银行对账文件:${txnFileName}不存在。"
+            def errmsg = "银行对账文件:${txnFileName}处理错误。"
             throw new RuntimeException(errmsg, e)
         }
 
-        //20130819 zr
-        println("====" + file.length())
-        boolean isNullFile = false;
-
-        //TODO
-        if (file.length() < 100) {
-            file.eachLine {
-                if (it.contains("MADE BY MBP")) {  //空文件 表示银行发来的对账文件为空
-                    logger.info("银行发来的对账文件为空.")
-                    isNullFile = true
-                }
-            }
+        if (file.length() == 0) {
+            def errmsg = "银行[${bankCode}]对账文件不存在。"
+            throw new RuntimeException(errmsg)
         }
-        if (isNullFile) return;
 
         StringBuffer sb = new StringBuffer();
         file.eachLine {
@@ -358,9 +363,10 @@ class ZongFen4SCFHandler {
                 String msgsn = fields[5].trim()
                 String inAcctId = fields[1].trim()
                 String outAcctId = fields[8].trim()
+                String sendSysId = "SBS_" + bankCode
                 ps.addBatch(pkid: UUID.randomUUID().toString(),
                         txn_date: txnDate,
-                        send_sys_id: "SBS_${bankCode}",
+                        send_sys_id: sendSysId,
                         actno_in: inAcctId,
                         actno_out: outAcctId,
                         txnamt: amt,

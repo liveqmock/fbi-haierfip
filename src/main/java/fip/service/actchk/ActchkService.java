@@ -7,6 +7,7 @@ import fip.repository.model.actchk.ActchkVO;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -24,9 +25,14 @@ public class ActchkService {
     private ActchkCmnMapper actchkCmnMapper;
 
     //按日期统计流水对帐表数据
-    public int countActchkRecord(String txnDate){
+    public int countActchkRecord(String txnDate, String bankCode){
         ChkZongfenTxnExample example = new ChkZongfenTxnExample();
-        example.createCriteria().andTxnDateEqualTo(txnDate);
+
+        List<String> paras = new ArrayList<String>();
+        paras.add(bankCode);
+        paras.add("SBS_"+bankCode);
+
+        example.createCriteria().andTxnDateEqualTo(txnDate).andSendSysIdIn(paras);
         return  chkZongfenTxnMapper.countByExample(example);
     }
 

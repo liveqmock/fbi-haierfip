@@ -123,7 +123,7 @@
 
 
     <!--定时任务定义 -->
-    <!-- 总分账户对账 cronTrigger -->
+    <!-- 总分账户对账 建行直连 cronTrigger -->
     <bean id="actchkZongFenHandler" class="fip.batch.actchk.ZongFenHandler"/>
     <bean id="actchkZongFenJobDetailBean"
           class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
@@ -136,7 +136,21 @@
         <property name="cronExpression" value="0 50 7,8 * * ?"/>
     </bean>
 
-    <!-- 总分账户对账校验结果通知 cronTrigger -->
+    <!-- 总分账户对账 SCF供应链融资（平安 中信） cronTrigger -->
+    <bean id="actchkZongFen4SCFHandler" class="fip.batch.actchk.ZongFen4SCFHandler"/>
+    <bean id="actchkZongFen4SCFJobDetailBean"
+          class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <property name="targetObject" ref="actchkZongFen4SCFHandler"/>
+        <property name="targetMethod" value="startActChk4Cron"/>
+        <property name="concurrent" value="false"/>
+    </bean>
+    <bean id="zongfen4SCFCronTriggerBean" class="org.springframework.scheduling.quartz.CronTriggerBean">
+    <property name="jobDetail" ref="actchkZongFen4SCFJobDetailBean"/>
+        <property name="cronExpression" value="0 40 7,8 * * ?"/>
+    </bean>
+
+
+    <!-- 总分账户对账校验结果通知 建行直连 cronTrigger -->
     <bean id="zongfenNotifyJobDetailBean"
           class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
         <property name="targetObject" ref="actchkZongFenHandler"/>
@@ -146,6 +160,18 @@
     <bean id="zongfenNotifyCronTriggerBean" class="org.springframework.scheduling.quartz.CronTriggerBean">
         <property name="jobDetail" ref="zongfenNotifyJobDetailBean"/>
         <property name="cronExpression" value="0 0 9 * * ?"/>
+    </bean>
+
+    <!-- 总分账户对账校验结果通知 SCF供应链融资（平安 中信） cronTrigger -->
+    <bean id="zongfen4SCFNotifyJobDetailBean"
+          class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <property name="targetObject" ref="actchkZongFen4SCFHandler"/>
+        <property name="targetMethod" value="notifyResult4Cron"/>
+        <property name="concurrent" value="false"/>
+    </bean>
+    <bean id="zongfen4SCFNotifyCronTriggerBean" class="org.springframework.scheduling.quartz.CronTriggerBean">
+        <property name="jobDetail" ref="zongfen4SCFNotifyJobDetailBean"/>
+        <property name="cronExpression" value="5 0 9 * * ?"/>
     </bean>
 
 
@@ -190,7 +216,9 @@
         <property name="triggers">
             <list>
                 <ref bean="zongfenCronTriggerBean"/>
+                <ref bean="zongfen4SCFCronTriggerBean"/>
                 <ref bean="zongfenNotifyCronTriggerBean"/>
+                <ref bean="zongfen4SCFNotifyCronTriggerBean"/>
                 <ref bean="ccmsCutpayCronTriggerBean_1"/>
                 <ref bean="ccmsCutpayCronTriggerBean_2"/>
                 <ref bean="autoSendSbsZfqsRecordsCronTriggerBean"/>

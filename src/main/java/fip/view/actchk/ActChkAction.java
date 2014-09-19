@@ -1,9 +1,11 @@
 package fip.view.actchk;
 
+import fip.batch.actchk.ZongFen4SCFHandler;
 import fip.batch.actchk.ZongFenHandler;
 import fip.common.utils.MessageUtil;
 import fip.repository.model.actchk.ActchkVO;
 import fip.service.actchk.ActchkService;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,11 +13,10 @@ import javax.annotation.PostConstruct;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
+import javax.faces.context.FacesContext;
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -48,18 +49,24 @@ public class ActChkAction implements Serializable {
 
     @PostConstruct
     public void init() {
-        this.txnDate = new SimpleDateFormat("yyyyMMdd").format(new Date());
+        DateTime dt = new DateTime();
+        this.txnDate = dt.minusDays(1).toString("yyyyMMdd");
+//        this.txnDate = new SimpleDateFormat("yyyyMMdd").format(new Date());
+        bankId = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap().get("bankid");
+        if (bankId == null || bankId.equals("")) {
+            throw new RuntimeException("银行代码不能为空!");
+        }
     }
 
     public String onQueryFail() {
         try {
-            this.totalCount = actchkService.countActchkRecord(this.txnDate);
+            this.totalCount = actchkService.countActchkRecord(this.txnDate, this.bankId);
             if (totalCount == 0) {
                 MessageUtil.addError("本日无对帐数据。");
                 this.detlList = new ArrayList<ActchkVO>();
                 return null;
             }
-            this.detlList = actchkService.selectChkTxnFailResult("SBS", "CCB", this.txnDate);
+            this.detlList = actchkService.selectChkTxnFailResult("SBS_" + this.bankId, this.bankId, this.txnDate);
             this.totalErrorCount = this.detlList.size();
             if (this.totalErrorCount == 0) {
                 MessageUtil.addError("无不平账数据。");
@@ -71,15 +78,16 @@ public class ActChkAction implements Serializable {
         }
         return null;
     }
+
     public String onQuerySucc() {
         try {
-            this.totalCount = actchkService.countActchkRecord(this.txnDate);
+            this.totalCount = actchkService.countActchkRecord(this.txnDate, this.bankId);
             if (totalCount == 0) {
                 MessageUtil.addError("本日无对帐数据。");
                 this.detlList = new ArrayList<ActchkVO>();
                 return null;
             }
-            this.detlList = actchkService.selectChkTxnSuccResult("SBS", "CCB", this.txnDate);
+            this.detlList = actchkService.selectChkTxnSuccResult("SBS_" + this.bankId, this.bankId, this.txnDate);
             this.totalSuccessCount = this.detlList.size();
             if (this.totalSuccessCount == 0) {
                 MessageUtil.addError("无平账数据。");
@@ -91,13 +99,16 @@ public class ActChkAction implements Serializable {
         }
         return null;
     }
+
     public String onStartActchk() {
         try {
-            ZongFenHandler handler = new ZongFenHandler();
-//            Date txndate = new SimpleDateFormat("yyyy年MM月dd日").parse(this.txnDate);
-//            handler.setTxn_date(new SimpleDateFormat("yyyyMMdd").format(txndate));
-            //handler.setTxn_date(this.txnDate);
-            handler.startActChk4Web(this.txnDate);
+            if ("CCB".equals(this.bankId)) {
+                ZongFenHandler handler = new ZongFenHandler();
+                handler.startActChk4Web(this.txnDate);
+            } else {
+                ZongFen4SCFHandler handler = new ZongFen4SCFHandler();
+                handler.startActChk4Web(this.txnDate, this.bankId);
+            }
             this.detlList = new ArrayList<ActchkVO>();
             MessageUtil.addInfo("对账处理已开始。");
         } catch (Exception e) {
@@ -106,13 +117,16 @@ public class ActChkAction implements Serializable {
         }
         return null;
     }
+
     public String onStartNotify() {
         try {
-            ZongFenHandler handler = new ZongFenHandler();
-//            Date txndate = new SimpleDateFormat("yyyy年MM月dd日").parse(this.txnDate);
-//            handler.setTxn_date(new SimpleDateFormat("yyyyMMdd").format(txndate));
-            //handler.setTxn_date(this.txnDate);
-            handler.notifyResult4Web(this.txnDate);
+            if ("CCB".equals(this.bankId)) {
+                ZongFenHandler handler = new ZongFenHandler();
+                handler.notifyResult4Web(this.txnDate);
+            } else {
+                ZongFen4SCFHandler handler = new ZongFen4SCFHandler();
+                handler.notifyResult4Web(this.txnDate, this.bankId);
+            }
             MessageUtil.addInfo("结果通知已完成。");
         } catch (Exception e) {
             logger.error("处理失败。", e);
