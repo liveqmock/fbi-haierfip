@@ -137,8 +137,8 @@ class ZongFenHandler {
         //校验对账结果
         VerifyDataHelper.verify(db, txn_date, sbs_bank, bankCode)
 
-        def ccbCount = db.firstRow("select count(*) as cnt from CHK_ZONGFEN_TXN where txn_date = ${this.txn_date} and send_sys_id = 'CCB'").cnt
-        def sbsCount = db.firstRow("select count(*) as cnt from CHK_ZONGFEN_TXN where txn_date = ${this.txn_date} and send_sys_id = 'SBS'").cnt
+        def ccbCount = db.firstRow("select count(*) as cnt from CHK_ZONGFEN_TXN where txn_date = ${this.txn_date} and send_sys_id = '${bankCode}'").cnt
+        def sbsCount = db.firstRow("select count(*) as cnt from CHK_ZONGFEN_TXN where txn_date = ${this.txn_date} and send_sys_id = '${sbs_bank}'").cnt
         def totalCount = db.firstRow("select count(*) as cnt from CHK_ZONGFEN_TXN where txn_date = ${this.txn_date} and send_sys_id in ('${sbs_bank}','${bankCode}')").cnt
         def totalFailCount = db.firstRow("select count(*) as cnt from CHK_ZONGFEN_TXN where txn_date = ${this.txn_date} and (chksts is null or chksts != '0') and send_sys_id in ('${sbs_bank}','${bankCode}')").cnt
 

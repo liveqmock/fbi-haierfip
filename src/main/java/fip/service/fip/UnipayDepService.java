@@ -669,7 +669,7 @@ public class UnipayDepService {
             record.setTxRetcode(retCode);
             record.setTxRetmsg(retMsg);
 
-            String txRetMsg = "[返回码:" + retCode + "][返回信息:" + bodyDetail.ERR_MSG + "]";
+            String txRetMsg = "[" + bodyDetail.ERR_MSG + "]";
             record.setTxRetmsg(txRetMsg);
             record.setTxRetcode(retCode);
 
