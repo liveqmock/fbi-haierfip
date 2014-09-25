@@ -332,8 +332,6 @@ public abstract class UnionpayBatchAction implements Serializable {
 
     /**
      * 存档失败记录请当
-     *
-     * @return
      */
     public String onArchiveAllFailureRecord() {
         if (this.failureDetlList.size() == 0) {
@@ -358,6 +356,22 @@ public abstract class UnionpayBatchAction implements Serializable {
         }
         return null;
     }
+
+    /**
+     * 存档成功记录
+     */
+    public String onArchiveAllSuccessRecord() {
+        if (this.successDetlList.size() == 0) {
+            MessageUtil.addWarn("记录集为空。");
+            return null;
+        } else {
+            int count = billManagerService.archiveBills(this.successDetlList);
+            initDataList();
+            MessageUtil.addWarn("更新记录条数：" + count);
+        }
+        return null;
+    }
+
 
     public String reset() {
         this.detlRecord = new FipCutpaydetl();

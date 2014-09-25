@@ -156,14 +156,14 @@
         <h:form id="failListform">
             <p:messages id="failmsgs" showDetail="false"/>
             <p:menubar>
-                <p:menuitem type="push" value="EXCEL导出" icon="ui-icon ui-icon-disk" ajax="false"
-                            action="#{unionpayBatchDepHCCBAction.onExportFailureList}"
-                            update="failmsgs,failpdt"/>
                 <p:menuitem type="push" value="全部记录存档" icon="ui-icon ui-icon-disk" ajax="true"
                             action="#{unionpayBatchDepHCCBAction.onArchiveAllFailureRecord}"
                             update="failmsgs,failpdt"/>
                 <p:menuitem type="push" value="多笔记录存档" icon="ui-icon ui-icon-disk" ajax="true"
                             action="#{unionpayBatchDepHCCBAction.onArchiveMultiFailureRecord}"
+                            update="failmsgs,failpdt"/>
+                <p:menuitem type="push" value="EXCEL导出" icon="ui-icon ui-icon-disk" ajax="false"
+                            action="#{unionpayBatchDepHCCBAction.onExportFailureList}"
                             update="failmsgs,failpdt"/>
             </p:menubar>
             <p:ajaxStatus style="height:18px;text-align:center">
@@ -195,15 +195,12 @@
         <h:form id="succListform">
             <p:messages id="succmsgs" showDetail="false"/>
             <p:menubar>
-                <p:menuitem type="push" value="全部确认入帐" icon="ui-icon ui-icon-document"
-                            action="#{unionpayBatchDepHCCBAction.onConfirmAccountAll}"
-                            update="succmsgs,succpdt,:tabview:actListform:actpdt"/>
-                <p:menuitem type="push" value="多笔确认入帐" icon="ui-icon ui-icon-disk"
-                            action="#{unionpayBatchDepHCCBAction.onConfirmAccountMulti}"
-                            update="succmsgs,succpdt,:tabview:actListform:actpdt"/>
+                <p:menuitem type="push" value="全部记录存档" icon="ui-icon ui-icon-document"
+                            action="#{unionpayBatchDepHCCBAction.onArchiveAllSuccessRecord}"
+                            update="succmsgs,succpdt"/>
                 <p:menuitem type="push" value="EXCEL导出" icon="ui-icon ui-icon-disk"
                             action="#{unionpayBatchDepHCCBAction.onExportSuccessList}" ajax="false"
-                            update="succmsgs,succpdt,:tabview:actListform:actpdt"/>
+                            update="succmsgs,succpdt"/>
             </p:menubar>
             <p:ajaxStatus style="height:18px;text-align:center">
                 <f:facet name="start">
@@ -228,26 +225,6 @@
             </p:dataTable>
         </h:form>
     </div>
-</p:tab>
-<p:tab title="待入帐记录清单" id="acttab">
-    <div id="actListTable">
-        <h:form id="actListform">
-            <p:dataTable id="actpdt" dynamic="true" style="width:100%;"
-                         value="#{unionpayBatchDepHCCBAction.actDetlList}" var="record"
-                         rowKey="#{record.pkid}"
-                         selection="#{unionpayBatchDepHCCBAction.selectedAccountRecords}"
-                         paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown} 【总笔数:#{unionpayBatchDepHCCBAction.totalAccountCount}】【总金额:#{unionpayBatchDepHCCBAction.totalAccountAmt}】"
-                         paginator="true" rows="15" paginatorPosition="bottom"
-                         rowsPerPageTemplate="100,50,30,15,5"
-                         emptyMessage="数据记录为空...">
-                <p:column selectionMode="multiple"/>
-                <ui:include src="../common/cutpayListFields.xhtml">
-                    <ui:param name="backBean" value="#{unionpayBatchDepHCCBAction}"/>
-                </ui:include>
-            </p:dataTable>
-        </h:form>
-    </div>
-
 </p:tab>
 </p:tabView>
 </div>
