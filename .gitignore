@@ -17,6 +17,13 @@ local.properties
 .classpath
 .settings/
 .loadpath
+.idea
+lib/
+*.iml
+src/main/pub/
+src/main/skyline/
+src/main/resources/
+src/main/web/WEB-INF/
 
 # External tool builders
 .externalToolBuilders/

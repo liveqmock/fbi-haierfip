@@ -18,7 +18,7 @@ public class AdminServlet extends HttpServlet {
     public void doGet(HttpServletRequest request, HttpServletResponse response)
             throws IOException, ServletException {
         String contextPath = request.getContextPath();
-        //response.sendRedirect(contextPath + "/pages/security/loginPage.jsp");
-        response.sendRedirect(contextPath + "/system/login");
+        response.sendRedirect(contextPath + "/pages/security/loginPage.jsp");
+//        response.sendRedirect(contextPath + "/system/login");
     }
 }

@@ -56,6 +56,7 @@ public class LoginCheckFilter extends HttpServlet implements Filter {
 
     public void init(FilterConfig filterConfig) throws ServletException {
         this.loginPage = filterConfig.getInitParameter("loginPage");
+        logger.info(this.loginPage);
     }
 
     public void destroy() {
