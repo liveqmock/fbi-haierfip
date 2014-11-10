@@ -9,7 +9,7 @@
     <!--信息-->
     <context id="AllInfo" targetRuntime="MyBatis3">
         <jdbcConnection driverClass="oracle.jdbc.driver.OracleDriver"
-                        connectionURL="jdbc:oracle:thin:@10.143.18.20:1521:orcl"
+                        connectionURL="jdbc:oracle:thin:@10.143.20.15:1521:orcl"
                         userId="fip"
                         password="fip">
         </jdbcConnection>
@@ -18,84 +18,35 @@
             <property name="forceBigDecimals" value="false"/>
         </javaTypeResolver>
 
-        <javaModelGenerator targetPackage="fip.repository.model" targetProject="main/java">
+        <javaModelGenerator targetPackage="ibp.repository.model" targetProject="src/main/java">
             <property name="enableSubPackages" value="true"/>
             <property name="trimStrings" value="true"/>
         </javaModelGenerator>
 
-        <sqlMapGenerator targetPackage="fip.repository.mapper" targetProject="main/java">
+        <sqlMapGenerator targetPackage="ibp.repository.mapper" targetProject="src/main/java">
             <property name="enableSubPackages" value="true"/>
         </sqlMapGenerator>
 
-        <javaClientGenerator type="XMLMAPPER" targetPackage="fip.repository.dao" targetProject="main/java">
+        <javaClientGenerator type="XMLMAPPER" targetPackage="ibp.repository.dao" targetProject="src/main/java">
             <property name="enableSubPackages" value="true"/>
         </javaClientGenerator>
 
 
-        <!--住房按揭 代扣业务类 -->
-        <!--
-        <table tableName="fdactnoinfo" />
-        <table tableName="fdcutpaydetl" />
-        -->
-        <!--<table tableName="fdcutpaydetl" />-->
+        <!-- -->
+       <!-- <table schema="fip" tableName="IBP_IF_CCB_TXN">
+            <property name="ignoreQualifiersAtRuntime" value="true" />
+            <generatedKey column="pkid" sqlStatement="select sys_guid() from dual" identity="false"/>
+        </table>
+-->
+        <table schema="fip" tableName="IBP_SBS_TRANSTXN">
+            <property name="ignoreQualifiersAtRuntime" value="true" />
+            <generatedKey column="pkid" sqlStatement="select sys_guid() from dual" identity="false"/>
+        </table>
 
-        <!--消费分期 代扣业务类 -->
-        <!--
-        <table  tableName="cmindvclient"/>
-        <table  tableName="xfactcutpaydetl"/>
-        <table  tableName="xfactcutpaymain"/>
-        <table  tableName="xfactpaydetl"/>
-        <table schema="fip" tableName="xfapp">
+       <!-- <table schema="fip" tableName="IBP_SBSACT">
             <property name="ignoreQualifiersAtRuntime" value="true" />
-        </table>
-        <table schema="fip" tableName="xfappadd">
-            <property name="ignoreQualifiersAtRuntime" value="true" />
-        </table>
-        <table schema="fip" tableName="xfappcomm">
-            <property name="ignoreQualifiersAtRuntime" value="true" />
-        </table>
-        <table schema="fip" tableName="xfappcommbatch">
-            <property name="ignoreQualifiersAtRuntime" value="true" />
-        </table>
-        <table schema="fip" tableName="xfappgrade">
-            <property name="ignoreQualifiersAtRuntime" value="true" />
-        </table>
-        <table schema="fip" tableName="xfapprepayment">
-            <property name="ignoreQualifiersAtRuntime" value="true" />
-        </table>
-        <table schema="fip" tableName="xfapprepayment_h">
-            <property name="ignoreQualifiersAtRuntime" value="true" />
-        </table>
-        <table schema="fip" tableName="xfclient">
-            <property name="ignoreQualifiersAtRuntime" value="true" />
-        </table>
-        <table schema="fip" tableName="xfcreditinfo">
-            <property name="ignoreQualifiersAtRuntime" value="true" />
-        </table>
-        <table schema="fip" tableName="xfcreditinfobatch">
-            <property name="ignoreQualifiersAtRuntime" value="true" />
-        </table>
-        <table  tableName="xfcontract"/>
-        <table  tableName="xfcontractpays"/>
-        <table  tableName="xffeeinfo"/>
-        <table  tableName="xfgrademark"/>
-        <table  tableName="xfifbankdetl"/>
-        <table  tableName="xfopinion"/>
-        <table  tableName="xfproduct"/>
-        <table  tableName="xfwriteoffinfo"/>
-        -->
-
-        <!--消费分期新表 -->
-        <!--
-        <table schema="fip" tableName="xf_cutpaydetl">
-            <property name="ignoreQualifiersAtRuntime" value="true" />
-            <generatedKey column="uuid" sqlStatement="select sys_guid() from dual" identity="false"/>
-        </table>
-        <table schema="fip" tableName="xf_cutpaydetl_his">
-            <property name="ignoreQualifiersAtRuntime" value="true" />
-        </table>
-        -->
-
+            <generatedKey column="pkid" sqlStatement="select sys_guid() from dual" identity="false"/>
+        </table>-->
         <!--自动对帐业务-->
         <!--
         <table schema="fip" tableName="chk_zhongfen_txn">

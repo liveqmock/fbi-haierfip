@@ -1,4 +1,5 @@
 <%@ page contentType="text/html; charset=GBK" %>
+<%@ include file="/pages/security/loginassistor.jsp" %>
 <%
     String contextPath = request.getContextPath();
     /*2011-4-7 Cookie设置添加到loginassistor.jsp中*/

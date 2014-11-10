@@ -35,7 +35,7 @@
 
 
     <!-- enable component scanning (beware that this does not enable mapper scanning!) -->
-    <context:component-scan base-package="fip,hfc,skyline.service"/>
+    <context:component-scan base-package="fip,hfc,ibp,skyline.service"/>
 
     <!-- enable autowire -->
     <context:annotation-config/>
@@ -54,6 +54,9 @@
                 <value>
                     classpath:fip/repository/mapper/**/*.xml
                 </value>
+                <value>
+                    classpath:ibp/repository/mapper/**/*.xml
+                </value>
             </list>
         </property>
     </bean>
@@ -61,7 +64,7 @@
     <!-- scan for mappers and let them be autowired -->
     <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
         <property name="basePackage"
-                  value="fip.repository.dao,pams.repository.dao.telemarketing"/>
+                  value="fip.repository.dao,ibp.repository.dao"/>
     </bean>
 
     <!--viewscope-->
