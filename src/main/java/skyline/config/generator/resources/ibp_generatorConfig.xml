@@ -33,16 +33,16 @@
 
 
         <!-- -->
-       <!-- <table schema="fip" tableName="IBP_IF_CCB_TXN">
-            <property name="ignoreQualifiersAtRuntime" value="true" />
-            <generatedKey column="pkid" sqlStatement="select sys_guid() from dual" identity="false"/>
-        </table>
--->
-        <table schema="fip" tableName="IBP_SBS_TRANSTXN">
+        <table schema="fip" tableName="IBP_IF_CCB_TXN">
             <property name="ignoreQualifiersAtRuntime" value="true" />
             <generatedKey column="pkid" sqlStatement="select sys_guid() from dual" identity="false"/>
         </table>
 
+      <!--  <table schema="fip" tableName="IBP_SBS_TRANSTXN">
+            <property name="ignoreQualifiersAtRuntime" value="true" />
+            <generatedKey column="pkid" sqlStatement="select sys_guid() from dual" identity="false"/>
+        </table>
+-->
        <!-- <table schema="fip" tableName="IBP_SBSACT">
             <property name="ignoreQualifiersAtRuntime" value="true" />
             <generatedKey column="pkid" sqlStatement="select sys_guid() from dual" identity="false"/>

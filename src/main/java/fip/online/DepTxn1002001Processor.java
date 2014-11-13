@@ -27,8 +27,8 @@ import java.util.List;
  * User: zhangxiaobo
  * Date: 13-4-11
  * Time: ионГ10:13
- * To change this template use File | Settings | File Templates.
  */
+@Deprecated
 @Component
 public class DepTxn1002001Processor extends DepAbstractTxnProcessor {
 

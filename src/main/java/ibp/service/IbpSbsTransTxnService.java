@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
@@ -39,8 +40,9 @@ public class IbpSbsTransTxnService {
     }
 
     // 执行SBS交易 返回Form号
-    public String executeSBSTxn(IbpSbsTranstxn txn) {
-        List<String> paramList = assembleTaa41Param(txn.getSerialno(), txn.getOutAct(), txn.getInAct(), txn.getTxnamt(), txn.getOperid());
+    public String executeSBSTxn(IbpSbsTranstxn txn, String remark) {
+        List<String> paramList = assembleTaa41Param(txn.getSerialno(), txn.getOutAct(), txn.getInAct(), txn.getTxnamt(), remark);
+        logger.info(paramList.toString());
         byte[] sbsResBytes = DepCtgManager.processSingleResponsePkg("aa41", paramList);
         return new String(sbsResBytes, 21, 4);
     }
@@ -55,7 +57,7 @@ public class IbpSbsTransTxnService {
         DecimalFormat df = new DecimalFormat("#############0.00");
         List<String> txnparamList = new ArrayList<String>();
         String txndate = new SimpleDateFormat("yyyyMMdd").format(new Date());
-//        String txndate = "20141103";
+//        String txndate = "20141106";
 
         //转出帐户类型
         txnparamList.add("01");
@@ -103,15 +105,44 @@ public class IbpSbsTransTxnService {
         //交易日期
         txnparamList.add(txndate);
         //摘要
-        txnparamList.add(remark == null ? "" : remark);
+        txnparamList.add(remark == null ? "" : rightPad4ChineseToByteLength(remark, 25, " "));
         //产品码
-        txnparamList.add(StringUtils.leftPad("", 4, ' '));
+        txnparamList.add("N101");
         //MAGFL1
         txnparamList.add(" ");
         //MAGFL2
         txnparamList.add(" ");
 
         return txnparamList;
+    }
+
+    public static String rightPad4ChineseToByteLength(String srcStr, int totalByteLength, String padStr) {
+        if (srcStr == null) {
+            return null;
+        }
+        int srcByteLength = srcStr.getBytes().length;
+
+        if (padStr == null || "".equals(padStr)) {
+            padStr = " ";
+        } else if (padStr.getBytes().length > 1 || totalByteLength <= 0) {
+            throw new RuntimeException("参数错误");
+        }
+        StringBuilder rtnStrBuilder = new StringBuilder();
+        if (totalByteLength >= srcByteLength) {
+            rtnStrBuilder.append(srcStr);
+            for (int i = 0; i < totalByteLength - srcByteLength; i++) {
+                rtnStrBuilder.append(padStr);
+            }
+        } else {
+            byte[] rtnBytes = new byte[totalByteLength];
+            try {
+                System.arraycopy(srcStr.getBytes("GBK"), 0, rtnBytes, 0, totalByteLength);
+                rtnStrBuilder.append(new String(rtnBytes, "GBK"));
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }
+        return rtnStrBuilder.toString();
     }
 
 }

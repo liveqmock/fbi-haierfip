@@ -7,7 +7,7 @@ import fip.common.utils.MessageUtil;
 import fip.service.fip.JobLogService;
 import ibp.repository.model.IbpIfCcbTxn;
 import ibp.repository.model.IbpSbsTranstxn;
-import ibp.repository.model.IbpSbsact;
+import ibp.repository.model.IbpSbsAct;
 import ibp.service.IbpIfCcbTxnService;
 import ibp.service.IbpSbsActService;
 import ibp.service.IbpSbsTransTxnService;
@@ -47,8 +47,6 @@ public class IfCcbTxnAction implements Serializable {
     private String sbsOutAct = "801000026131041001";
     // 2017 2301 2033
 
-    @ManagedProperty(value = "#{jobLogService}")
-    private JobLogService jobLogService;
     @ManagedProperty(value = "#{ibpIfCcbTxnService}")
     private IbpIfCcbTxnService ibpIfCcbTxnService;
     @ManagedProperty(value = "#{ibpSbsTransTxnService}")
@@ -115,7 +113,7 @@ public class IfCcbTxnAction implements Serializable {
             txn.setTxntime(sdf.format(new Date()));
             txn.setTxncode("aa41");
             txn.setOperid(SystemService.getOperatorManager().getOperatorId());
-            String formCode = ibpSbsTransTxnService.executeSBSTxn(txn);
+            String formCode = ibpSbsTransTxnService.executeSBSTxn(txn, selectedRecord.getOutacctname() + "&" + selectedRecord.getAbstractstr());
             logger.info("SBS返回码:" + formCode);
             if ("T531".equals(formCode) || "T999".equals(formCode)) {
                 txn.setFormcode(formCode);
@@ -129,8 +127,10 @@ public class IfCcbTxnAction implements Serializable {
                 detlList = ibpIfCcbTxnService.qryCcbTxnsByBookFlag(BillStatus.INIT);
                 sbsTxnList = ibpSbsTransTxnService.qryTodayTrans();
                 selectedRecord = null;
-            }else {
-                MessageUtil.addError("入账失败：SBS返回码 " + formCode );
+                actMap.clear();
+                sbsActList.clear();
+            } else {
+                MessageUtil.addError("入账失败：SBS返回码 " + formCode);
             }
             //
         } catch (Exception e) {
@@ -143,15 +143,22 @@ public class IfCcbTxnAction implements Serializable {
 
     public void qryActs() {
 
+
         if (StringUtils.isEmpty(sbsActName)) {
-            MessageUtil.addError("必须输入SBS转入账户名！");
+            MessageUtil.addWarn("必须输入SBS转入账户名！");
             return;
         }
 
-        List<IbpSbsact> acts = ibpSbsActService.qrySbsActByName(sbsActName);
-        actMap.clear();
+        if (sbsActName.trim().length() < 2) {
+            return;
+        }
 
-        for (IbpSbsact act : acts) {
+        sbsActName = sbsActName.trim();
+        List<IbpSbsAct> acts = ibpSbsActService.qrySbsActByName(sbsActName);
+        actMap.clear();
+        sbsActList.clear();
+
+        for (IbpSbsAct act : acts) {
             SelectItem item = new SelectItem(act.getActnum(), act.getActnam() + act.getActnum());
             sbsActList.add(item);
             actMap.put(act.getActnum(), act.getActnam());
@@ -198,13 +205,6 @@ public class IfCcbTxnAction implements Serializable {
         this.status = status;
     }
 
-    public JobLogService getJobLogService() {
-        return jobLogService;
-    }
-
-    public void setJobLogService(JobLogService jobLogService) {
-        this.jobLogService = jobLogService;
-    }
 
     public IbpIfCcbTxnService getIbpIfCcbTxnService() {
         return ibpIfCcbTxnService;
@@ -234,8 +234,8 @@ public class IfCcbTxnAction implements Serializable {
         return ibpSbsActService;
     }
 
-    public void setIbpSbsActService(IbpSbsActService ibpSbsActService) {
-        this.ibpSbsActService = ibpSbsActService;
+    public void setIbpSbsActService(IbpSbsActService IbpSbsActService) {
+        this.ibpSbsActService = IbpSbsActService;
     }
 
     public String getSbsAct() {

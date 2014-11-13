@@ -117,12 +117,12 @@
         <property name="defaultDestinationName" value="${queue.dep.core.fip.out}"/>
         <property name="timeToLive" value="${jms.timeToLive}"/>
     </bean>
-<!--
-    <jms:listener-container connection-factory="jmsConnectionFactory" concurrency="5">
-        <jms:listener destination="${queue.dep.core.fip.in}" ref="depPayoutMessageListener"
-                      selector="JMSX_BIZID='1002001' or JMSX_BIZID='1003001'"/>
-    </jms:listener-container>
--->
+    <!--
+        <jms:listener-container connection-factory="jmsConnectionFactory" concurrency="5">
+            <jms:listener destination="${queue.dep.core.fip.in}" ref="depPayoutMessageListener"
+                          selector="JMSX_BIZID='1002001' or JMSX_BIZID='1003001'"/>
+        </jms:listener-container>
+    -->
 
 
     <!--定时任务定义 -->
@@ -135,7 +135,7 @@
         <property name="concurrent" value="false"/>
     </bean>
     <bean id="zongfenCronTriggerBean" class="org.springframework.scheduling.quartz.CronTriggerBean">
-    <property name="jobDetail" ref="actchkZongFenJobDetailBean"/>
+        <property name="jobDetail" ref="actchkZongFenJobDetailBean"/>
         <property name="cronExpression" value="0 50 7,8 * * ?"/>
     </bean>
 
@@ -148,7 +148,7 @@
         <property name="concurrent" value="false"/>
     </bean>
     <bean id="zongfen4SCFCronTriggerBean" class="org.springframework.scheduling.quartz.CronTriggerBean">
-    <property name="jobDetail" ref="actchkZongFen4SCFJobDetailBean"/>
+        <property name="jobDetail" ref="actchkZongFen4SCFJobDetailBean"/>
         <property name="cronExpression" value="0 40 7,8 * * ?"/>
     </bean>
 

@@ -5,209 +5,210 @@
                 xmlns:ui="http://java.sun.com/jsf/facelets"
                 xmlns:p="http://primefaces.org/ui" xmlns:P="http://java.sun.com/jsf/html"
                 template="/templates/ui.xhtml">
-<ui:define name="head">
-    <script type="text/javascript">
-        function doPopupWindow(obj) {
-            var pkid = obj.parentNode.parentNode.parentNode.getAttribute("data-rk");
-            var popupwindow = window.open("common/cutpayDetlFields.xhtml?pkid=" + pkid, "", "height=600,width=800,left=200,top=100,toolbar=no,menubar=no,scrollbars=yes,location=no");
-            popupwindow.focus;
-        }
-    </script>
-</ui:define>
-<ui:define name="content">
-    <div style="margin:5px">
-        <p:tabView id="tabview" dynamic="true" cache="false" style="font-weight:normal;font-style:normal">
-            <p:tab title="建行到账明细（#{ifCcbTxnAction.detlList.size()}）" id="toActTab">
-                <div id="table">
-                    <h:form id="form">
-                        <p:focus for="sbsActName"/>
-                        <p:dataTable id="pdt" dynamic="true" style="width:100%;"
-                                     value="#{ifCcbTxnAction.detlList}" var="record"
-                                     rowKey="#{record.pkid}"
-                                     filteredValue="#{ifCcbTxnAction.filteredDetlList}"
-                                     selection="#{ifCcbTxnAction.selectedRecord}"
-                                     selectionMode="single"
-                                     paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
-                                     paginator="true" rows="8" paginatorPosition="bottom"
-                                     rowsPerPageTemplate="30,15,10,8,5"
-                                     emptyMessage="数据记录为空...">
-                            <p:ajax event="rowSelect" update=":tabview:form:bookpanel"/>
-                            <p:ajax event="rowUnselect" update=":tabview:form:bookpanel"/>
-                            <p:column headerText="付款账号" style="text-align: center">
-                                <h:outputText value="#{record.outacctid}"/>
-                            </p:column>
+    <ui:define name="head">
+        <script type="text/javascript">
+            function doPopupWindow(obj) {
+                var pkid = obj.parentNode.parentNode.parentNode.getAttribute("data-rk");
+                var popupwindow = window.open("common/cutpayDetlFields.xhtml?pkid=" + pkid, "", "height=600,width=800,left=200,top=100,toolbar=no,menubar=no,scrollbars=yes,location=no");
+                popupwindow.focus;
+            }
+        </script>
+    </ui:define>
+    <ui:define name="content">
+        <div style="margin:5px">
+            <p:tabView id="tabview" dynamic="true" cache="false" style="font-weight:normal;font-style:normal">
+                <p:tab title="建行到账明细（#{ifCcbTxnAction.detlList.size()}）" id="toActTab">
+                    <div id="table">
+                        <h:form id="form">
+                            <p:focus for="sbsActName"/>
+                            <p:dataTable id="pdt" dynamic="true" style="width:100%;"
+                                         value="#{ifCcbTxnAction.detlList}" var="record"
+                                         rowKey="#{record.pkid}"
+                                         filteredValue="#{ifCcbTxnAction.filteredDetlList}"
+                                         selection="#{ifCcbTxnAction.selectedRecord}"
+                                         selectionMode="single"
+                                         paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                                         paginator="true" rows="8" paginatorPosition="bottom"
+                                         rowsPerPageTemplate="30,15,10,8,5"
+                                         emptyMessage="数据记录为空...">
+                                <p:ajax event="rowSelect" update=":tabview:form:bookpanel"/>
+                                <p:ajax event="rowUnselect" update=":tabview:form:bookpanel"/>
+                                <p:column headerText="付款账号" style="text-align: center">
+                                    <h:outputText value="#{record.outacctid}"/>
+                                </p:column>
 
-                            <p:column headerText="付款户名" style="text-align: left">
-                                <h:outputText value="#{record.outacctname}"/>
-                            </p:column>
+                                <p:column headerText="付款户名" style="text-align: left">
+                                    <h:outputText value="#{record.outacctname}"/>
+                                </p:column>
 
-                            <p:column headerText="收款账号" style="text-align: center">
-                                <h:outputText value="#{record.inacctid}"/>
-                            </p:column>
+                                <p:column headerText="收款账号" style="text-align: center">
+                                    <h:outputText value="#{record.inacctid}"/>
+                                </p:column>
 
-                            <p:column headerText="收款户名" style="text-align: left">
-                                <h:outputText value="#{record.inacctname}"/>
-                            </p:column>
-                            <p:column headerText="交易金额" sortBy="#{record.txamount}">
-                                <h:outputText value="#{record.txamount}" style="float: right">
-                                    <f:convertNumber type="number" pattern="#,###,###,###,##0.00"/>
-                                </h:outputText>
-                            </p:column>
-                            <p:column headerText="凭证种类" style="text-align: center">
-                                <h:outputText value="#{record.vouchertype}">
-                                </h:outputText>
-                            </p:column>
-                            <p:column headerText="凭证号" style="text-align: center">
-                                <h:outputText value="#{record.voucherid}">
-                                </h:outputText>
-                            </p:column>
-                            <p:column headerText="日期" sortBy="#{record.txdate}" style="text-align: center">
-                                <h:outputText value="#{record.txdate}">
-                                </h:outputText>
-                            </p:column>
-
-                            <p:column headerText="用途" style="text-align: left">
-                                <h:outputText value="#{record.abstractstr}">
-                                </h:outputText>
-                            </p:column>
-
-                            <p:column headerText="状态" style="text-align: center">
-                                <h:outputText value="#{ifCcbTxnAction.status.valueOfAlias(record.bookflag).title}"/>
-                            </p:column>
-
-                        </p:dataTable>
-                        <p:ajaxStatus style="height:18px;text-align:center">
-                            <f:facet name="start">
-                                <h:graphicImage value="/images/ajaxloadingbar.gif"/>
-                            </f:facet>
-                            <f:facet name="complete">
-                                <h:outputText value=""/>
-                            </f:facet>
-                        </p:ajaxStatus>
-                        <p:growl id="msgs" showDetail="false"/>
-
-                        <div id="header">
-                            <p:fieldset legend="待入账明细" id="bookpanel">
-                                <h:panelGrid columns="8" cellspacing="5" style="text-align: right">
-                                    <h:outputLabel value="付款账号:" style="margin-left: 40px;"/>
-                                    <p:inputText id="outAct" disabled="true"
-                                                 value="#{ifCcbTxnAction.selectedRecord.outacctid}"/>
-
-                                    <h:outputLabel value="付款户名:"/>
-                                    <p:inputText id="outActName" disabled="true"
-                                                 value="#{ifCcbTxnAction.selectedRecord.outacctname}"/>
-
-                                    <h:outputLabel value="收款账号:"/>
-                                    <p:inputText id="inAct" disabled="true"
-                                                 value="#{ifCcbTxnAction.selectedRecord.inacctid}"/>
-
-                                    <h:outputLabel value="收款户名:"/>
-                                    <p:inputText id="inActName" disabled="true" style="width: 250px;"
-                                                 value="#{ifCcbTxnAction.selectedRecord.inacctname}"/>
-
-
-                                    <h:outputLabel value="交易金额:"/>
-                                    <p:inputText id="amt" disabled="true"
-                                                 value="#{ifCcbTxnAction.selectedRecord.txamount}">
+                                <p:column headerText="收款户名" style="text-align: left">
+                                    <h:outputText value="#{record.inacctname}"/>
+                                </p:column>
+                                <p:column headerText="交易金额" sortBy="#{record.txamount}">
+                                    <h:outputText value="#{record.txamount}" style="float: right">
                                         <f:convertNumber type="number" pattern="#,###,###,###,##0.00"/>
-                                    </p:inputText>
+                                    </h:outputText>
+                                </p:column>
+                                <p:column headerText="凭证种类" style="text-align: center">
+                                    <h:outputText value="#{record.vouchertype}">
+                                    </h:outputText>
+                                </p:column>
+                                <p:column headerText="凭证号" style="text-align: center">
+                                    <h:outputText value="#{record.voucherid}">
+                                    </h:outputText>
+                                </p:column>
+                                <p:column headerText="日期" sortBy="#{record.txdate}" style="text-align: center">
+                                    <h:outputText value="#{record.txdate}">
+                                    </h:outputText>
+                                </p:column>
 
-                                    <h:outputLabel value="凭证号:"/>
-                                    <p:inputText id="voucher" disabled="true"
-                                                 value="#{ifCcbTxnAction.selectedRecord.voucherid}"/>
+                                <p:column headerText="用途" style="text-align: left">
+                                    <h:outputText value="#{record.abstractstr}">
+                                    </h:outputText>
+                                </p:column>
 
-                                    <h:outputLabel value="日期:"/>
-                                    <p:inputText id="txndate" disabled="true"
-                                                 value="#{ifCcbTxnAction.selectedRecord.txdate}"/>
+                                <p:column headerText="状态" style="text-align: center">
+                                    <h:outputText value="#{ifCcbTxnAction.status.valueOfAlias(record.bookflag).title}"/>
+                                </p:column>
 
-                                    <h:outputLabel value="用途:"/>
-                                    <p:inputText id="abstractstr" disabled="true" style="width: 250px;"
-                                                 value="#{ifCcbTxnAction.selectedRecord.abstractstr}"/>
+                            </p:dataTable>
+                            <p:ajaxStatus style="height:18px;text-align:center">
+                                <f:facet name="start">
+                                    <h:graphicImage value="/images/ajaxloadingbar.gif"/>
+                                </f:facet>
+                                <f:facet name="complete">
+                                    <h:outputText value=""/>
+                                </f:facet>
+                            </p:ajaxStatus>
+                            <p:growl id="msgs" showDetail="false"/>
 
-                                </h:panelGrid>
-                                <p:separator/>
-                                <h:panelGrid columns="2" cellspacing="5" style="text-align: right">
-                                    <h:panelGrid columns="4" cellspacing="5" style="text-align: right">
-                                        <h:outputLabel value="SBS 转入账户:" style="margin-left: 9px;"/>
-                                        <p:inputText id="sbsActName" value="#{ifCcbTxnAction.sbsActName}"
-                                                     required="true">
-                                            <p:ajax event="blur" update="sbsAct,msgs"
-                                                    listener="#{ifCcbTxnAction.qryActs}"/>
+                            <div id="header">
+                                <p:fieldset legend="待入账明细" id="bookpanel">
+                                    <h:panelGrid columns="8" cellspacing="5" style="text-align: right">
+                                        <h:outputLabel value="付款账号:" style="margin-left: 40px;"/>
+                                        <p:inputText id="outAct" disabled="true"
+                                                     value="#{ifCcbTxnAction.selectedRecord.outacctid}"/>
+
+                                        <h:outputLabel value="付款户名:"/>
+                                        <p:inputText id="outActName" disabled="true"
+                                                     value="#{ifCcbTxnAction.selectedRecord.outacctname}"/>
+
+                                        <h:outputLabel value="收款账号:"/>
+                                        <p:inputText id="inAct" disabled="true"
+                                                     value="#{ifCcbTxnAction.selectedRecord.inacctid}"/>
+
+                                        <h:outputLabel value="收款户名:"/>
+                                        <p:inputText id="inActName" disabled="true" style="width: 250px;"
+                                                     value="#{ifCcbTxnAction.selectedRecord.inacctname}"/>
+
+
+                                        <h:outputLabel value="交易金额:"/>
+                                        <p:inputText id="amt" disabled="true"
+                                                     value="#{ifCcbTxnAction.selectedRecord.txamount}">
+                                            <f:convertNumber type="number" pattern="#,###,###,###,##0.00"/>
                                         </p:inputText>
-                                        <h:outputLabel value="转入账号:"/>
-                                        <h:selectOneMenu id="sbsAct" value="#{ifCcbTxnAction.sbsAct}"
-                                                         required="true" style="width: 320px;">
-                                            <f:selectItems value="#{ifCcbTxnAction.sbsActList}"/>
-                                        </h:selectOneMenu>
+
+                                        <h:outputLabel value="凭证号:"/>
+                                        <p:inputText id="voucher" disabled="true"
+                                                     value="#{ifCcbTxnAction.selectedRecord.voucherid}"/>
+
+                                        <h:outputLabel value="日期:"/>
+                                        <p:inputText id="txndate" disabled="true"
+                                                     value="#{ifCcbTxnAction.selectedRecord.txdate}"/>
+
+                                        <h:outputLabel value="用途:"/>
+                                        <p:inputText id="abstractstr" disabled="true" style="width: 250px;"
+                                                     value="#{ifCcbTxnAction.selectedRecord.abstractstr}"/>
 
                                     </h:panelGrid>
-                                    <p:commandButton id="btn"
-                                                     style="width:137px;text-align: center;margin-left: 56px;"
-                                                     value="确认入账"
-                                                     action="#{ifCcbTxnAction.onBook}"
-                                                     update=":tabview">
-                                    </p:commandButton>
-                                </h:panelGrid>
-                            </p:fieldset>
-                            <p:outputLabel value="SBS 转出账号（建行同业）：#{ifCcbTxnAction.sbsOutAct}"
-                                           style="margin-left: 36px;"/>
-                        </div>
+                                    <p:separator/>
+                                    <h:panelGrid columns="2" cellspacing="5" style="text-align: right">
+                                        <h:panelGrid columns="4" cellspacing="5" style="text-align: right">
+                                            <h:outputLabel value="SBS 转入账户:" style="margin-left: 9px;"/>
+                                            <p:inputText id="sbsActName" value="#{ifCcbTxnAction.sbsActName}"
+                                                    >
+                                                <p:ajax event="keyup" update="sbsAct,msgs"
+                                                        listener="#{ifCcbTxnAction.qryActs}"/>
+                                            </p:inputText>
+                                            <h:outputLabel value="转入账号:"/>
+                                            <h:selectOneMenu id="sbsAct" value="#{ifCcbTxnAction.sbsAct}"
+                                                             style="width: 320px;">
+                                                <f:selectItems value="#{ifCcbTxnAction.sbsActList}"/>
+                                            </h:selectOneMenu>
 
-                    </h:form>
-                </div>
-                <div>
+                                        </h:panelGrid>
+                                        <p:commandButton id="btn"
+                                                         style="width:137px;text-align: center;margin-left: 56px;"
+                                                         value="确认入账"
+                                                         action="#{ifCcbTxnAction.onBook}"
+                                                         update=":tabview">
+                                        </p:commandButton>
+                                    </h:panelGrid>
+                                </p:fieldset>
+                                <br/>
+                                <p:outputLabel value="SBS 转出账号（建行同业）：#{ifCcbTxnAction.sbsOutAct}"
+                                               style="margin-left: 36px;"/>
+                            </div>
 
-                </div>
-            </p:tab>
-            <p:tab title="SBS 已入账明细（#{ifCcbTxnAction.sbsTxnList.size()}）" id="sbsActList">
-                <div id="qrytable">
-                    <h:form id="qryform">
-                        <p:dataTable id="qrypdt" dynamic="true" style="width:100%;"
-                                     value="#{ifCcbTxnAction.sbsTxnList}" var="sbs"
-                                     rowKey="#{record.pkid}"
-                                     paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
-                                     paginator="true" rows="15" paginatorPosition="bottom"
-                                     rowsPerPageTemplate="100,50,30,15,5"
-                                     emptyMessage="数据记录为空...">
+                        </h:form>
+                    </div>
+                    <div>
 
-                            <p:column headerText="流水号" style="text-align: center">
-                                <h:outputText value="#{sbs.serialno}"/>
-                            </p:column>
+                    </div>
+                </p:tab>
+                <p:tab title="SBS 已入账明细（#{ifCcbTxnAction.sbsTxnList.size()}）" id="sbsActList">
+                    <div id="qrytable">
+                        <h:form id="qryform">
+                            <p:dataTable id="qrypdt" dynamic="true" style="width:100%;"
+                                         value="#{ifCcbTxnAction.sbsTxnList}" var="sbs"
+                                         rowKey="#{record.pkid}"
+                                         paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                                         paginator="true" rows="15" paginatorPosition="bottom"
+                                         rowsPerPageTemplate="100,50,30,15,5"
+                                         emptyMessage="数据记录为空...">
 
-                            <p:column headerText="转出账户" style="text-align: left">
-                                <h:outputText value="#{sbs.outAct}"/>
-                            </p:column>
+                                <p:column headerText="流水号" style="text-align: center">
+                                    <h:outputText value="#{sbs.serialno}"/>
+                                </p:column>
 
-                            <p:column headerText="转入账号" style="text-align: center">
-                                <h:outputText value="#{sbs.inAct}"/>
-                            </p:column>
+                                <p:column headerText="转出账户" style="text-align: left">
+                                    <h:outputText value="#{sbs.outAct}"/>
+                                </p:column>
 
-                            <p:column headerText="转入账户名" style="text-align: left">
-                                <h:outputText value="#{sbs.inActnam}"/>
-                            </p:column>
+                                <p:column headerText="转入账号" style="text-align: center">
+                                    <h:outputText value="#{sbs.inAct}"/>
+                                </p:column>
 
-                            <p:column headerText="交易金额" sortBy="#{sbs.txnamt}">
-                                <h:outputText value="#{sbs.txnamt}" style="float: right">
-                                    <f:convertNumber type="number" pattern="#,###,###,###,##0.00"/>
-                                </h:outputText>
-                            </p:column>
+                                <p:column headerText="转入账户名" style="text-align: left">
+                                    <h:outputText value="#{sbs.inActnam}"/>
+                                </p:column>
 
-                            <p:column headerText="交易时间" style="text-align: center">
-                                <h:outputText value="#{sbs.txntime}">
-                                </h:outputText>
-                            </p:column>
+                                <p:column headerText="交易金额" sortBy="#{sbs.txnamt}">
+                                    <h:outputText value="#{sbs.txnamt}" style="float: right">
+                                        <f:convertNumber type="number" pattern="#,###,###,###,##0.00"/>
+                                    </h:outputText>
+                                </p:column>
 
-                            <p:column headerText="操作员" style="text-align: center">
-                                <h:outputText value="#{sbs.operid}">
-                                </h:outputText>
-                            </p:column>
-                        </p:dataTable>
-                    </h:form>
-                </div>
-            </p:tab>
-        </p:tabView>
-    </div>
+                                <p:column headerText="交易时间" style="text-align: center">
+                                    <h:outputText value="#{sbs.txntime}">
+                                    </h:outputText>
+                                </p:column>
 
-</ui:define>
+                                <p:column headerText="操作员" style="text-align: center">
+                                    <h:outputText value="#{sbs.operid}">
+                                    </h:outputText>
+                                </p:column>
+                            </p:dataTable>
+                        </h:form>
+                    </div>
+                </p:tab>
+            </p:tabView>
+        </div>
+
+    </ui:define>
 
 </ui:composition>

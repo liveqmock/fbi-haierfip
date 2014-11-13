@@ -37,11 +37,11 @@ public class IbpIfCcbTxnService {
 
     // ²¢·¢³åÍ»
     public boolean isConflict(IbpIfCcbTxn txn) {
-        return txn.getModificationNum() != ibpIfCcbTxnMapper.selectByPrimaryKey(txn.getPkid()).getModificationNum();
+        return txn.getRecversion() != ibpIfCcbTxnMapper.selectByPrimaryKey(txn.getPkid()).getRecversion();
     }
 
     public int update(IbpIfCcbTxn txn) {
-        txn.setModificationNum(txn.getModificationNum() + 1);
+        txn.setRecversion(txn.getRecversion() + 1);
         return ibpIfCcbTxnMapper.updateByPrimaryKey(txn);
     }
 

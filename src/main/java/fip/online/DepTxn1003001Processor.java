@@ -29,6 +29,7 @@ import java.util.List;
  * To change this template use File | Settings | File Templates.
  */
 @Component
+@Deprecated
 public class DepTxn1003001Processor extends DepAbstractTxnProcessor {
 
     private static final Logger logger = LoggerFactory.getLogger(DepTxn1003001Processor.class);

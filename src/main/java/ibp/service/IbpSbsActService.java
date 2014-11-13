@@ -1,8 +1,7 @@
 package ibp.service;
 
-import ibp.repository.dao.IbpSbsactMapper;
-import ibp.repository.model.IbpSbsact;
-import ibp.repository.model.IbpSbsactExample;
+import ibp.repository.dao.IbpSbsActMapper;
+import ibp.repository.model.IbpSbsAct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,10 +17,10 @@ public class IbpSbsActService {
     private static final Logger logger = LoggerFactory.getLogger(IbpSbsActService.class);
 
     @Autowired
-    private IbpSbsactMapper ibpSbsactMapper;
+    private IbpSbsActMapper ibpSbsActMapper;
 
-    public List<IbpSbsact> qrySbsActByName(String actnam) {
-        return ibpSbsactMapper.qrySbsactToTrans("%" + actnam + "%");
+    public List<IbpSbsAct> qrySbsActByName(String actnam) {
+        return ibpSbsActMapper.qrySbsActToTrans("%" + actnam + "%");
     }
 
 }
