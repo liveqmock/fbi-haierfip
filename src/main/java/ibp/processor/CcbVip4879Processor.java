@@ -59,14 +59,14 @@ public class CcbVip4879Processor extends HttpServlet {
             logger.info(">>>>TIA:" + tia);
 
             //check
-            if (!"37101985510051003497".equals(tia.Body.AcctId)) {
+            if (!"37101985510051003497".equals(tia.Body.AcctId.trim())) {
                 out.println("[1001]acctno != 37101985510051003497");
                 return;
             }
 
             if (isDuplicateMsg(tia)) {
                 logger.info(">>>>duplicate msg:" + tia);
-                out.println("[1002]duplicate msg");
+                out.println("[1002]duplicated msg");
                 return;
             }
 
@@ -98,7 +98,7 @@ public class CcbVip4879Processor extends HttpServlet {
     //
     private boolean isDuplicateMsg(T4879Bean tia) {
         IbpIfCcbTxnExample example = new IbpIfCcbTxnExample();
-        example.createCriteria().andMsgtxdateEqualTo(tia.Head.TxDate).andTxseqidEqualTo(tia.Head.TxSeqId);
+        example.createCriteria().andMsgtxdateEqualTo(tia.Head.TxDate.trim()).andTxseqidEqualTo(tia.Head.TxSeqId.trim());
         List<IbpIfCcbTxn> txnList = txnMapper.selectByExample(example);
         if (txnList.size() == 0) {
             return false;
@@ -112,7 +112,7 @@ public class CcbVip4879Processor extends HttpServlet {
         IbpIfCcbTxnExample example = new IbpIfCcbTxnExample();
         for (T4879Bean.Body.BodyRecord record : tia.Body.Records) {
             example.clear();
-            example.createCriteria().andAccthostseqidEqualTo(record.AcctHostSeqId);
+            example.createCriteria().andAccthostseqidEqualTo(record.AcctHostSeqId.trim());
             List<IbpIfCcbTxn> txnList = txnMapper.selectByExample(example);
             if (txnList.size() == 0) {
                 IbpIfCcbTxn txn = new IbpIfCcbTxn();
@@ -131,7 +131,7 @@ public class CcbVip4879Processor extends HttpServlet {
                 txn.setTxdate(record.TxDate);
                 txn.setTxtime(record.TxTime);
 
-                txn.setAccthostseqid(record.AcctHostSeqId);
+                txn.setAccthostseqid(record.AcctHostSeqId.trim());
 
                 txn.setCoseqid(record.CoSeqId);
                 txn.setBanknodeid(record.BankNodeId);
@@ -141,11 +141,11 @@ public class CcbVip4879Processor extends HttpServlet {
                 txn.setReserve1(record.Reserve1);
                 txn.setReserve2(record.Reserve2);
                 txn.setBankindex(record.BankIndex);
-                txn.setAcctbal(new BigDecimal(record.AcctBal));
-                txn.setAvbal(new BigDecimal(record.AvBal));
-                txn.setCacctbal(new BigDecimal(record.CAcctBal));
-                txn.setTxamount(new BigDecimal(record.TxAmount));
-                txn.setCtxamount(new BigDecimal(record.CTxAmount));
+                txn.setAcctbal(new BigDecimal(record.AcctBal.trim()));
+                txn.setAvbal(new BigDecimal(record.AvBal.trim()));
+                txn.setCacctbal(new BigDecimal(record.CAcctBal.trim()));
+                txn.setTxamount(new BigDecimal(record.TxAmount.trim()));
+                txn.setCtxamount(new BigDecimal(record.CTxAmount.trim()));
 
 
                 txn.setAcctid(tia.Body.AcctId);
