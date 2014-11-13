@@ -156,7 +156,7 @@ public class SmsTool {
 
     public static void main(String[] args) {
         try {
-            sendMessage("13905320231", "海尔短信平台测试短信");
+            sendMessage("13905320001", "海尔短信平台测试短信");
         } catch (Exception e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
