@@ -9,8 +9,10 @@ import ibp.repository.model.IbpIfCcbTxn;
 import ibp.repository.model.IbpIfCcbTxnExample;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.context.support.WebApplicationContextUtils;
 
+import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -33,8 +35,13 @@ import java.util.List;
 public class CcbVip4879Processor extends HttpServlet {
     private static final Logger logger = LoggerFactory.getLogger(CcbVip4879Processor.class);
 
-    @Autowired
     private IbpIfCcbTxnMapper txnMapper;
+
+    public void init(ServletConfig servletConfig) throws ServletException {
+        super.init(servletConfig);
+        WebApplicationContext wac = WebApplicationContextUtils.getRequiredWebApplicationContext(this.getServletContext());
+        this.txnMapper = ((IbpIfCcbTxnMapper) wac.getBean("ibpIfCcbTxnMapper"));
+    }
 
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         response.setCharacterEncoding("GBK");
@@ -65,7 +72,8 @@ public class CcbVip4879Processor extends HttpServlet {
 
             processRecord(tia);
             out.println("[0000] successed.");
-        } catch (IOException e) {
+        } catch (Exception e) {
+            logger.error("txn error.", e);
             out.println("error" + e.getMessage());
         } finally {
             out.flush();
@@ -89,8 +97,6 @@ public class CcbVip4879Processor extends HttpServlet {
 
     //
     private boolean isDuplicateMsg(T4879Bean tia) {
-        String txnDate = tia.Head.TxDate;
-        String txnSn = tia.Head.TxSeqId;
         IbpIfCcbTxnExample example = new IbpIfCcbTxnExample();
         example.createCriteria().andMsgtxdateEqualTo(tia.Head.TxDate).andTxseqidEqualTo(tia.Head.TxSeqId);
         List<IbpIfCcbTxn> txnList = txnMapper.selectByExample(example);
@@ -149,7 +155,7 @@ public class CcbVip4879Processor extends HttpServlet {
                 txn.setCreatetime(new SimpleDateFormat("yyyyMMdd HHmmss").format(new Date()));
                 txn.setOperid("MBP");
 
-                txn.setBusinessType("CCB_MBP_0001");
+                txn.setBusinessType("CCBMBP0001");
                 txn.setTxcode(tia.Head.TxCode);
                 txn.setBookflag("00");
                 txn.setRecversion(0);
@@ -271,6 +277,16 @@ public class CcbVip4879Processor extends HttpServlet {
                             ", CTxAmount='" + CTxAmount + '\'' +
                             '}';
                 }
+            }
+
+            @Override
+            public String toString() {
+                return "Body{" +
+                        "Records=" + Records +
+                        ", AcctId='" + AcctId + '\'' +
+                        ", OperatorUserId='" + OperatorUserId + '\'' +
+                        ", RecCount='" + RecCount + '\'' +
+                        '}';
             }
         }
 
