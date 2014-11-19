@@ -85,7 +85,7 @@ public class CmsPreCutpayService {
      * @return
      */
     @Transactional
-    public int doObtainCmsBills(BizType bizType) {
+    public synchronized int doObtainCmsBills(BizType bizType) {
         //TODO
         //String billType = "0";
 
@@ -130,7 +130,7 @@ public class CmsPreCutpayService {
     }
 
     @Transactional
-    public int doMultiObtainCmsBills(BizType bizType, FipCutpaydetl[] selectedCutpaydetls) {
+    public synchronized int doMultiObtainCmsBills(BizType bizType, FipCutpaydetl[] selectedCutpaydetls) {
         //TODO
         //String billType = "0";
 
@@ -398,7 +398,7 @@ public class CmsPreCutpayService {
     /**
      * 加锁解锁提前还款利息
      */
-    public boolean lockOrUnlockIntr4PreCutpay(FipCutpaydetl detl, String option) {
+    public synchronized boolean lockOrUnlockIntr4PreCutpay(FipCutpaydetl detl, String option) {
         if ((!"1".equals(option))
                 && (!"2".equals(option))
                 && (!"3".equals(option))

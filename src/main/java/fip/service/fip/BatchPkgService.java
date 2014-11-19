@@ -112,7 +112,7 @@ public class BatchPkgService {
      * @param cutpaydetlList
      */
     @Transactional
-    public void packUnipayBatchPkg(BizType bizType, List<FipCutpaydetl> cutpaydetlList, String channelBizId) {
+    public synchronized void packUnipayBatchPkg(BizType bizType, List<FipCutpaydetl> cutpaydetlList, String channelBizId) {
         List<String> syncBankcodes = toolsService.selectEnuItemValue("UnipayRealTxnBank");
 
         doPackUnipayBatchPkg(bizType, cutpaydetlList, "ASYNC", channelBizId);

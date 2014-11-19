@@ -19,6 +19,8 @@ import java.util.List;
  * Time: обнГ4:14
  * To change this template use File | Settings | File Templates.
  */
+@Deprecated
+
 public class T8118Service {
     private static final Logger logger = LoggerFactory.getLogger(T8118Service.class);
     private static DecimalFormat df = new DecimalFormat("0.00");

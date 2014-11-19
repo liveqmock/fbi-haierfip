@@ -24,12 +24,14 @@ import java.util.*;
 
 /**
  * Created by IntelliJ IDEA.
+ * 代扣采用直连银联方式
+   201401 zr 已废弃 现在采用DEP通道方式
  * User: zhanrui
  * Date: 11-8-24
  * Time: 上午7:17
- * To change this template use File | Settings | File Templates.
  */
 @Service
+@Deprecated
 public class UnipayService {
     private static final Logger logger = LoggerFactory.getLogger(UnipayService.class);
 
@@ -167,6 +169,7 @@ public class UnipayService {
      */
 
     @Transactional
+    @Deprecated
     public void sendAndRecvBatchTxnMessage(FipCutpaybat batchRecord) {
         try {
             String txPkgSn = batchRecord.getTxpkgSn();

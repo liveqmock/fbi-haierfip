@@ -43,7 +43,7 @@ public class HccbService {
     private FipJoblogMapper fipJoblogMapper;
 
     @Transactional
-    public int importDataFromXls(BizType bizType, List<FipCutpaydetl> cutpaydetls, List<String> returnMsgs) {
+    public synchronized int importDataFromXls(BizType bizType, List<FipCutpaydetl> cutpaydetls, List<String> returnMsgs) {
 
         int count = 0;
         String batchno = billManagerService.generateBatchno();

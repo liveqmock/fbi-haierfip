@@ -53,7 +53,7 @@ public class JobLogService {
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void checkAndUpdateRecversion(FipCutpaydetl record) {
+    public synchronized void checkAndUpdateRecversion(FipCutpaydetl record) {
         FipCutpaydetl originRecord = cutpaydetlMapper.selectByPrimaryKey(record.getPkid());
         if (originRecord.getRecversion().compareTo(record.getRecversion()) != 0) {
             throw new RuntimeException("并发更新冲突,UUID=" + record.getPkid());
@@ -65,7 +65,7 @@ public class JobLogService {
         }
     }
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void checkAndUpdateRecversion4Refund(FipRefunddetl record) {
+    public synchronized void checkAndUpdateRecversion4Refund(FipRefunddetl record) {
         FipRefunddetl originRecord = refunddetlMapper.selectByPrimaryKey(record.getPkid());
         if (originRecord.getRecversion().compareTo(record.getRecversion()) != 0) {
             throw new RuntimeException("并发更新冲突,UUID=" + record.getPkid());

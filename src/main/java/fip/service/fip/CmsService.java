@@ -91,7 +91,7 @@ public class CmsService {
      * 获取全部信贷系统记录  (不包括罚息帐单)
      */
     @Transactional
-    public int doObtainCmsBills(BizType bizType, BillType billType, List<String> returnMsgs) {
+    public synchronized int doObtainCmsBills(BizType bizType, BillType billType, List<String> returnMsgs) {
         List<T100101ResponseRecord> recvedList = getCmsResponseRecords(bizType);
         if (recvedList.size() == 0) {
             return 0;
@@ -138,7 +138,7 @@ public class CmsService {
     }
 
     @Transactional
-    public int doMultiObtainCmsBills(BizType bizType, BillType billType, FipCutpaydetl[] selectedCutpaydetls, List<String> returnMsgs) {
+    public synchronized int doMultiObtainCmsBills(BizType bizType, BillType billType, FipCutpaydetl[] selectedCutpaydetls, List<String> returnMsgs) {
         List<T100101ResponseRecord> recvedList = getCmsResponseRecords(bizType);
         if (recvedList.size() == 0) {
             return 0;
@@ -225,7 +225,7 @@ public class CmsService {
      * @return
      */
     @Transactional
-    public int doObtainCmsOverdueBills(BizType bizType, BillType billType, List<String> returnMsgs) {
+    public synchronized int doObtainCmsOverdueBills(BizType bizType, BillType billType, List<String> returnMsgs) {
         List<T100101ResponseRecord> recvedList = getCmsResponseRecords(bizType);
         if (recvedList.size() == 0) {
             return 0;
@@ -275,7 +275,7 @@ public class CmsService {
     }
 
     @Transactional
-    public int doMultiObtainCmsOverdueBills(BizType bizType, BillType billType, FipCutpaydetl[] selectedCutpaydetls, List<String> returnMsgs) {
+    public synchronized int doMultiObtainCmsOverdueBills(BizType bizType, BillType billType, FipCutpaydetl[] selectedCutpaydetls, List<String> returnMsgs) {
         List<T100101ResponseRecord> recvedList = getCmsResponseRecords(bizType);
         if (recvedList.size() == 0) {
             return 0;

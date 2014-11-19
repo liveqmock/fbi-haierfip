@@ -59,7 +59,7 @@ public class SbsSevice {
      * 入帐前进行金额核对
      * @param cutpaydetlList
      */
-    public void checkAmt4PendAccountRecord(List<FipCutpaydetl> cutpaydetlList) {
+    public synchronized  void checkAmt4PendAccountRecord(List<FipCutpaydetl> cutpaydetlList) {
         for (FipCutpaydetl cutpaydetl : cutpaydetlList) {
             BigDecimal totalamt = cutpaydetl.getPaybackamt();
             //TODO 暂时不核对罚息数据 (还要把所有入帐的金额字段加上)
@@ -75,7 +75,7 @@ public class SbsSevice {
     }
 
     //@Transactional  入帐时不做整体事务处理
-    public void accountCutPayRecord2SBS(List<FipCutpaydetl> cutpaydetlList) {
+    public synchronized void accountCutPayRecord2SBS(List<FipCutpaydetl> cutpaydetlList) {
 
         //TODO 检查金额
         checkAmt4PendAccountRecord(cutpaydetlList);
@@ -273,7 +273,7 @@ public class SbsSevice {
      * @param cutpaydetlList
      */
     //@Transactional
-    public void accountPrepayRecord2SBS(List<FipCutpaydetl> cutpaydetlList) {
+    public synchronized void accountPrepayRecord2SBS(List<FipCutpaydetl> cutpaydetlList) {
         //TODO 检查金额
         checkAmt4PendAccountRecord(cutpaydetlList);
 

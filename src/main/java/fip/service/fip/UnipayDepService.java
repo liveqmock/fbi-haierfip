@@ -458,7 +458,7 @@ public class UnipayDepService {
 
     //=======================================================================================
     //20140808  批量代扣交易 1001003   zhanrui
-    public void sendAndRecvT1001003Message(FipCutpaybat batchRecord) {
+    public synchronized void sendAndRecvT1001003Message(FipCutpaybat batchRecord) {
         String txPkgSn = batchRecord.getTxpkgSn();
         List<FipCutpaydetl> detailRecords = billManagerService.checkToMakeSendableRecords(txPkgSn);
 
@@ -565,7 +565,7 @@ public class UnipayDepService {
     /**
      * 批量结果查询交易 1003003
      */
-    public void sendAndRecvCutpayT1003003Message(FipCutpaybat batchRecord) {
+    public synchronized void sendAndRecvCutpayT1003003Message(FipCutpaybat batchRecord) {
         TOA1003003 toa;
         try {
             TIA1003003 tia = new TIA1003003();

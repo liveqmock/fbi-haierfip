@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service;
  * To change this template use File | Settings | File Templates.
  */
 @Service
+@Deprecated
+
 public class PayoutSbsactsService {
 
     @Autowired

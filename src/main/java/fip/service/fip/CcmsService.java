@@ -104,7 +104,7 @@ public class CcmsService {
      * @return
      */
     @Transactional
-    public int doObtainCcmsBills(BizType bizType, BillType billType, List<String> returnMsgs) {
+    public synchronized int doObtainCcmsBills(BizType bizType, BillType billType, List<String> returnMsgs) {
         List<T100101ResponseRecord> recvedList = getCcmsResponseRecords(bizType);
         if (recvedList.size() == 0) {
             return 0;
@@ -137,7 +137,7 @@ public class CcmsService {
     }
 
     @Transactional
-    public int doMultiObtainCcmsBills(BizType bizType, BillType billType, FipCutpaydetl[] selectedCutpaydetls, List<String> returnMsgs) {
+    public synchronized int doMultiObtainCcmsBills(BizType bizType, BillType billType, FipCutpaydetl[] selectedCutpaydetls, List<String> returnMsgs) {
         List<T100101ResponseRecord> recvedList = getCcmsResponseRecords(bizType);
         if (recvedList.size() == 0) {
             return 0;
@@ -179,7 +179,7 @@ public class CcmsService {
 
     //代付记录
     @Transactional
-    public int doObtainCcmsRefundBills(BizType bizType, BillType billType) {
+    public synchronized int doObtainCcmsRefundBills(BizType bizType, BillType billType) {
         List<T200101ResponseRecord> recvedList = getCcmsRefundResponseRecords(bizType);
         if (recvedList.size() == 0) {
             return 0;
@@ -212,7 +212,7 @@ public class CcmsService {
 
     //代付记录
     @Transactional
-    public int doMultiObtainCcmsRefundBills(BizType bizType, BillType billType, FipRefunddetl[] selecteddetls) {
+    public synchronized int doMultiObtainCcmsRefundBills(BizType bizType, BillType billType, FipRefunddetl[] selecteddetls) {
         List<T200101ResponseRecord> recvedList = getCcmsRefundResponseRecords(bizType);
         if (recvedList.size() == 0) {
             return 0;

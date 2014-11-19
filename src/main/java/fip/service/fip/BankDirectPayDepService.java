@@ -149,7 +149,7 @@ public class BankDirectPayDepService {
     }
 
     //处理本地明细记录
-    private void updateLocalDBRecordStatusByResponse(FipCutpaybat cutpaybat, TOA900n052 toa, String userid, String username) {
+    private synchronized void updateLocalDBRecordStatusByResponse(FipCutpaybat cutpaybat, TOA900n052 toa, String userid, String username) {
         List<FipCutpaydetl> cutpaydetlList = queryCutpaydetlList(cutpaybat);
         if (Integer.parseInt(toa.body.FALCNT) == 0) {
             for (FipCutpaydetl cutpaydetl : cutpaydetlList) {

@@ -19,7 +19,6 @@ import java.util.Map;
  * User: zhanrui
  * Date: 11-11-14
  * Time: обнГ4:24
- * To change this template use File | Settings | File Templates.
  */
 @Service
 public class UnipayHistoryQryService {

@@ -24,6 +24,8 @@ import java.util.List;
 * sbs-n057 -> unionpay 1002001 -> sbs-n058/n059
  */
 @Service
+@Deprecated
+
 public class PayoutTxnService {
     private static final Logger logger = LoggerFactory.getLogger(PayoutTxnService.class);
 

@@ -84,13 +84,13 @@ public class BillManagerService {
      * @param status
      */
     @Transactional
-    public void updateCutpaydetlBillStatus(List<FipCutpaydetl> cutpaydetls, BillStatus status){
+    public synchronized void updateCutpaydetlBillStatus(List<FipCutpaydetl> cutpaydetls, BillStatus status){
         for (FipCutpaydetl cutpaydetl : cutpaydetls) {
              updateCutpaydetlBillStatus(cutpaydetl, status);
         }
     }
     @Transactional
-    public void updateCutpaydetlBillStatus(FipCutpaydetl cutpaydetl, BillStatus status){
+    public synchronized void updateCutpaydetlBillStatus(FipCutpaydetl cutpaydetl, BillStatus status){
         Date date = new Date();
         String userid = SystemService.getOperatorManager().getOperatorId();
         String username = SystemService.getOperatorManager().getOperatorName();
@@ -117,7 +117,7 @@ public class BillManagerService {
     }
     // 批量内各记录发送状态修改
     @Transactional
-    public void updateCutpaydetlListToSendflag(List<FipCutpaydetl> records, String sendflag) {
+    public synchronized void updateCutpaydetlListToSendflag(List<FipCutpaydetl> records, String sendflag) {
         for (FipCutpaydetl record : records) {
             record.setSendflag(sendflag);
             record.setBillstatus(BillStatus.CUTPAY_QRY_PEND.getCode());
@@ -127,7 +127,7 @@ public class BillManagerService {
 
     // 批量包发送状态修改
     @Transactional
-    public void updateCutpaybatToSendflag(String txpkgSn, String sendflag) {
+    public synchronized void updateCutpaybatToSendflag(String txpkgSn, String sendflag) {
         FipCutpaybat fipCutpaybat = selectFipCutpaybatByTxpkgSn(txpkgSn);
         fipCutpaybat.setSendflag(sendflag);
         fipCutpaybat.setTxpkgStatus(TxpkgStatus.QRY_PEND.getCode());
@@ -141,7 +141,7 @@ public class BillManagerService {
 
     //更新批量报文表状态 独立事务
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void updateCutpaybatRecordStatus4NewTransactional(FipCutpaybat cutpaybat, TxpkgStatus status, String sendFlag) {
+    public synchronized void updateCutpaybatRecordStatus4NewTransactional(FipCutpaybat cutpaybat, TxpkgStatus status, String sendFlag) {
         cutpaybat.setTxpkgStatus(status.getCode());
         cutpaybat.setRecversion(cutpaybat.getRecversion() + 1);
         cutpaybat.setSendflag(sendFlag);
@@ -150,7 +150,7 @@ public class BillManagerService {
 
     // 批量内各记录发送状态修改
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void updateCutpaydetlListStatus4NewTransactional(List<FipCutpaydetl> records, BillStatus status) {
+    public synchronized void updateCutpaydetlListStatus4NewTransactional(List<FipCutpaydetl> records, BillStatus status) {
         for (FipCutpaydetl record : records) {
             //record.setSendflag(sendflag);
             record.setBillstatus(status.getCode());
@@ -309,7 +309,7 @@ public class BillManagerService {
      * 查询借据号、期次号、帐单类型相同、未删除的，帐单类型不为扣款失败的记录数
      * @return
      */
-    public boolean checkNoRepeatedBizkeyRecords(String iouno, String poano, String billtype) {
+    public synchronized boolean checkNoRepeatedBizkeyRecords(String iouno, String poano, String billtype) {
         int count = fipCommonMapper.countRepeatedBizkeyRecordsNumber(iouno, poano, billtype,
                 BillStatus.CUTPAY_FAILED.getCode());
         if (count > 0) {
@@ -317,7 +317,7 @@ public class BillManagerService {
         }
         return true;
     }
-    public boolean checkNoRepeatedBizkeyRecords4Ccms(String iouno, String poano, String billtype) {
+    public synchronized boolean checkNoRepeatedBizkeyRecords4Ccms(String iouno, String poano, String billtype) {
         int count = fipCommonMapper.countRepeatedBizkeyRecordsNumber4Ccms(iouno, poano, billtype,
                 BillStatus.CUTPAY_FAILED.getCode());
         if (count > 0) {
@@ -325,7 +325,7 @@ public class BillManagerService {
         }
         return true;
     }
-    public boolean checkNoRepeatedBizkeyRecords4Hccb(String iouno, String poano) {
+    public synchronized boolean checkNoRepeatedBizkeyRecords4Hccb(String iouno, String poano) {
         int count = fipCommonMapper.countRepeatedBizkeyRecordsNumber4Hccb(iouno, poano, BillStatus.CUTPAY_FAILED.getCode());
         if (count > 0) {
             return false;
@@ -334,7 +334,7 @@ public class BillManagerService {
     }
 
     //检查代付记录是否重复
-    public boolean checkNoRepeatedBizkeyRecords4CcmsRefund(String iouno, String poano) {
+    public synchronized boolean checkNoRepeatedBizkeyRecords4CcmsRefund(String iouno, String poano) {
         int count = fipCommonMapper.countRepeatedBizkeyRecordsNumber4CcmsRefund(iouno, poano,
                 BillStatus.CUTPAY_FAILED.getCode());
         if (count > 0) {
@@ -349,7 +349,7 @@ public class BillManagerService {
      * @param billtype
      * @return
      */
-    public boolean checkNoRepeatedBizkeyRecords4PreCutpay(String paybackdate,  String billtype) {
+    public synchronized boolean checkNoRepeatedBizkeyRecords4PreCutpay(String paybackdate,  String billtype) {
         int count = fipCommonMapper.countRepeatedBizkeyRecordsNumber4PreCutpay(paybackdate, billtype,
                 BillStatus.CUTPAY_FAILED.getCode());
         if (count > 0) {
@@ -364,12 +364,12 @@ public class BillManagerService {
      * @param batchno
      */
     @Transactional
-    public void archiveBillsByBatchno(String batchno) {
+    public synchronized void archiveBillsByBatchno(String batchno) {
         fipCommonMapper.archiveBillsByBatchSn(batchno);
     }
 
     @Transactional
-    public void archiveAllBillsByBizID(String bizID) {
+    public synchronized void archiveAllBillsByBizID(String bizID) {
         fipCommonMapper.archiveAllBillsByBizID(bizID);
     }
 
@@ -379,7 +379,7 @@ public class BillManagerService {
      * @return
      */
     @Transactional
-    public int  archiveBills(List<FipCutpaydetl> fipCutpaydetlList){
+    public synchronized int  archiveBills(List<FipCutpaydetl> fipCutpaydetlList){
         int count = 0;
         for (FipCutpaydetl cutpaydetl : fipCutpaydetlList) {
             FipCutpaydetl record = fipCutpaydetlMapper.selectByPrimaryKey(cutpaydetl.getPkid());
@@ -392,7 +392,7 @@ public class BillManagerService {
         return count;
     }
     @Transactional
-    public int  archiveBillsNoCheckRecvision(List<FipCutpaydetl> fipCutpaydetlList){
+    public synchronized int  archiveBillsNoCheckRecvision(List<FipCutpaydetl> fipCutpaydetlList){
         int count = 0;
         for (FipCutpaydetl cutpaydetl : fipCutpaydetlList) {
             cutpaydetl.setArchiveflag("1");
@@ -400,7 +400,7 @@ public class BillManagerService {
         }
         return count;
     }
-    public int  archiveRefundBills(List<FipRefunddetl> detlList){
+    public synchronized int  archiveRefundBills(List<FipRefunddetl> detlList){
         int count = 0;
         for (FipRefunddetl detl : detlList) {
             FipCutpaydetl record = fipCutpaydetlMapper.selectByPrimaryKey(detl.getPkid());
@@ -415,7 +415,7 @@ public class BillManagerService {
     }
 
     @Transactional
-    public void deleteBillsByKey(List<FipCutpaydetl> fipCutpaydetlList) {
+    public synchronized void deleteBillsByKey(List<FipCutpaydetl> fipCutpaydetlList) {
         Date date = new Date();
         String userid = SystemService.getOperatorManager().getOperatorId();
         String username = SystemService.getOperatorManager().getOperatorName();
@@ -440,7 +440,7 @@ public class BillManagerService {
 
     //删除代付记录
     @Transactional
-    public void deleteRefundBillsByKey(List<FipRefunddetl> detlList) {
+    public synchronized void deleteRefundBillsByKey(List<FipRefunddetl> detlList) {
         Date date = new Date();
         String userid = SystemService.getOperatorManager().getOperatorId();
         String username = SystemService.getOperatorManager().getOperatorName();
@@ -654,7 +654,7 @@ public class BillManagerService {
      * @return
      */
     @Transactional
-    public List<FipCutpaydetl> checkToMakeSendableRecords(String txPkgSn) {
+    public synchronized List<FipCutpaydetl> checkToMakeSendableRecords(String txPkgSn) {
         List<FipCutpaydetl> batchRecords = selectRecordsByTxpkgSn(txPkgSn);
         List<FipCutpaydetl> sendRecords = new ArrayList<FipCutpaydetl>();
         for (FipCutpaydetl record : batchRecords) {
@@ -674,7 +674,7 @@ public class BillManagerService {
      * @param record
      * @return
      */
-    public boolean isSameVersion(FipCutpaydetl record) {
+    public synchronized boolean isSameVersion(FipCutpaydetl record) {
         FipCutpaydetl originRecord = fipCutpaydetlMapper.selectByPrimaryKey(record.getPkid());
         if (originRecord.getRecversion().compareTo(record.getRecversion()) != 0) {
             return false;
@@ -704,7 +704,7 @@ public class BillManagerService {
      * @return
      */
     @Transactional
-    public FipCutpaydetl checkAndUpdateCutpaydetlRecordVersion(FipCutpaydetl record) {
+    public synchronized FipCutpaydetl checkAndUpdateCutpaydetlRecordVersion(FipCutpaydetl record) {
         FipCutpaydetl originRecord = fipCutpaydetlMapper.selectByPrimaryKey(record.getPkid());
         if (originRecord.getRecversion().compareTo(record.getRecversion()) != 0) {
             throw new RuntimeException("并发更新冲突,UUID=" + record.getPkid());
@@ -715,7 +715,7 @@ public class BillManagerService {
         }
     }
     @Transactional
-    public FipRefunddetl checkAndUpdateRefunddetlRecordVersion(FipRefunddetl record) {
+    public synchronized FipRefunddetl checkAndUpdateRefunddetlRecordVersion(FipRefunddetl record) {
         FipRefunddetl originRecord = fipRefunddetlMapper.selectByPrimaryKey(record.getPkid());
         if (originRecord.getRecversion().compareTo(record.getRecversion()) != 0) {
             throw new RuntimeException("并发更新冲突,UUID=" + record.getPkid());
@@ -781,7 +781,7 @@ public class BillManagerService {
 
     //扣款前变更代扣渠道   zhanrui 20121024
     @Transactional
-    public void chgChannel(List<FipCutpaydetl> cutpaydetlList, CutpayChannel channel) {
+    public synchronized void chgChannel(List<FipCutpaydetl> cutpaydetlList, CutpayChannel channel) {
         Date date = new Date();
         String userid = SystemService.getOperatorManager().getOperatorId();
         String username = SystemService.getOperatorManager().getOperatorName();
