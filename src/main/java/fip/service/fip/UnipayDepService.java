@@ -458,22 +458,15 @@ public class UnipayDepService {
 
     //=======================================================================================
     //20140808  批量代扣交易 1001003   zhanrui
-    public synchronized void sendAndRecvT1001003Message(FipCutpaybat batchRecord) {
+    public synchronized String sendAndRecvT1001003Message(FipCutpaybat batchRecord) {
         String txPkgSn = batchRecord.getTxpkgSn();
         List<FipCutpaydetl> detailRecords = billManagerService.checkToMakeSendableRecords(txPkgSn);
 
         TIA1001003 tia = new TIA1001003();
+
         //报文头
         tia.getHeader().APP_ID = APP_ID;
-
         tia.getHeader().BIZ_ID = batchRecord.getChannelBizid();
-/*
-        tia.getHeader().BIZ_ID = batchRecord.getOriginBizid();
-        if ("HCCB".equals(tia.getHeader().BIZ_ID)) {
-            tia.getHeader().BIZ_ID = "XFNEW";
-        }
-*/
-
         tia.getHeader().CHANNEL_ID = "100";
         tia.getHeader().USER_ID = DEP_USERNAME;
         tia.getHeader().PASSWORD = DEP_PWD;
@@ -502,7 +495,6 @@ public class UnipayDepService {
         tia.body.TRANS_SUM.TOTAL_ITEM = String.valueOf(detailRecords.size());
         tia.body.TRANS_SUM.TOTAL_SUM = String.valueOf(totalAmt);
 
-
         //处理batch记录的状态  设置为“待进行结果查询”
         FipCutpaybat originBatRecord = cutpaybatMapper.selectByPrimaryKey(batchRecord.getTxpkgSn());
         if (originBatRecord.getRecversion().compareTo(batchRecord.getRecversion()) != 0) {
@@ -518,16 +510,15 @@ public class UnipayDepService {
             //通过MQ发送信息到DEP
             toa = (TOA1001003) JmsManager.getInstance().sendAndRecv(tia);
         } catch (Exception e) {
-            logger.error("MQ处理失败", e);
             throw new RuntimeException("MQ处理失败", e);
         }
 
         billManagerService.updateCutpaydetlListToSendflag(detailRecords, TxSendFlag.SENT.getCode());
         billManagerService.updateCutpaybatToSendflag(txPkgSn, TxSendFlag.SENT.getCode());
-        processCutpayToa1001003(batchRecord, detailRecords, toa);
+        return processCutpayToa1001003(batchRecord, detailRecords, toa);
     }
 
-    private void processCutpayToa1001003(FipCutpaybat batchRecord, List<FipCutpaydetl> detailRecords, TOA1001003 toa) {
+    private String  processCutpayToa1001003(FipCutpaybat batchRecord, List<FipCutpaydetl> detailRecords, TOA1001003 toa) {
         //String batchSN = toa.header.REQ_SN;
         String batchSN = batchRecord.getTxpkgSn();
         if (!toa.header.REQ_SN.endsWith(batchSN)) {
@@ -549,7 +540,7 @@ public class UnipayDepService {
             setCutpaybatRecordStatus(batchSN, TxpkgStatus.QRY_PEND);
         }
         logger.debug(" ..........处理返回的消息结束........");
-
+        return headRetCode;
 
         //TODO  处理明细记录的 银联相应信息
     }
@@ -565,7 +556,7 @@ public class UnipayDepService {
     /**
      * 批量结果查询交易 1003003
      */
-    public synchronized void sendAndRecvCutpayT1003003Message(FipCutpaybat batchRecord) {
+    public synchronized String sendAndRecvCutpayT1003003Message(FipCutpaybat batchRecord) {
         TOA1003003 toa;
         try {
             TIA1003003 tia = new TIA1003003();
@@ -591,21 +582,19 @@ public class UnipayDepService {
             toa = (TOA1003003) JmsManager.getInstance().sendAndRecv(tia, 15000);
         } catch (Exception e) {
             jobLogService.insertNewJoblog(batchRecord.getTxpkgSn(), "fip_cutpaybat", "银联交易结果查询", "发起请求，MQ处理失败, 请查看日志", "数据交换平台", "数据交换平台");
-            logger.error("MQ消息处理失败", e);
             throw new RuntimeException("MQ消息处理失败" + e.getMessage(), e);
         }
 
         try {
-            processCutpayToa1003003(batchRecord, toa);
+            return processCutpayToa1003003(batchRecord, toa);
         } catch (Exception e) {
             jobLogService.insertNewJoblog(batchRecord.getTxpkgSn(), "fip_cutpaybat", "银联交易结果查询", "批量结果查询T1003003响应报文处理失败", "数据交换平台", "数据交换平台");
-            logger.error("批量结果查询T1003003响应报文处理失败", e);
             throw new RuntimeException("批量结果查询T1003003响应报文处理失败" + e.getMessage(), e);
         }
     }
 
 
-    private void processCutpayToa1003003(FipCutpaybat batchRecord, TOA1003003 toa) {
+    private String processCutpayToa1003003(FipCutpaybat batchRecord, TOA1003003 toa) {
         //检查响应报文是否与请求报文相对应
         String reqSn = batchRecord.getOriginBizid() + "-B-" + batchRecord.getTxpkgSn();
 
@@ -644,6 +633,7 @@ public class UnipayDepService {
            //
         }
 
+        return headRtnCode;
     }
 
     private void processTOA1003003Body(FipCutpaybat batchRecord, TOA1003003 toa) {

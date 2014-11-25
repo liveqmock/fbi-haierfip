@@ -2,8 +2,8 @@
 <web-app xmlns="http://java.sun.com/xml/ns/javaee"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
            xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
-		  http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
-           version="2.5">
+		  http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
+           version="3.0">
     <session-config>
         <session-timeout>360</session-timeout>
     </session-config>
@@ -17,7 +17,6 @@
         <filter-name>PrimeFaces FileUpload Filter</filter-name>
         <servlet-name>Faces Servlet</servlet-name>
     </filter-mapping>
-
 
     <filter>
         <filter-name>LoginCheckFilter</filter-name>
@@ -39,15 +38,113 @@
     </filter-mapping>
 
 
-    <!--primefaces-->
 
+    <!-- CAS login begin -->
+    <filter>
+        <!--认证filter -->
+        <filter-name>CAS Authentication Filter</filter-name>
+        <filter-class>org.jasig.cas.client.authentication.AuthenticationFilter</filter-class>
+        <init-param>
+            <!--单点登录统一登录入口 -->
+            <param-name>casServerLoginUrl</param-name>
+            <!--<param-value>http://localhost:8080/cas/login</param-value>-->
+            <param-value>https://finportal.haier.net:8443/cas/login</param-value>
+        </init-param>
+        <init-param>
+            <!--业务系统服务 -->
+            <param-name>serverName</param-name>
+            <param-value>http://10.143.18.20:7070</param-value>
+        </init-param>
+        <init-param>
+            <param-name>renew</param-name>
+            <param-value>false</param-value>
+        </init-param>
+        <init-param>
+            <param-name>gateway</param-name>
+            <param-value>false</param-value>
+        </init-param>
+    </filter>
+    <filter>
+        <!--验证filter -->
+        <filter-name>CAS Validation Filter</filter-name>
+        <filter-class>org.jasig.cas.client.validation.Cas20ProxyReceivingTicketValidationFilter</filter-class>
+        <init-param>
+            <!--CAS 服务器url -->
+            <param-name>casServerUrlPrefix</param-name>
+            <!--<param-value>http://localhost:8080/cas</param-value>-->
+            <param-value>https://finportal.haier.net:8443/cas/</param-value>
+        </init-param>
+        <init-param>
+            <!--业务系统服务 -->
+            <param-name>serverName</param-name>
+            <param-value>http://10.143.18.20:7070</param-value>
+        </init-param>
+    </filter>
+    <filter>
+        <filter-name>CAS HttpServletRequest Wrapper Filter</filter-name>
+        <filter-class>org.jasig.cas.client.util.HttpServletRequestWrapperFilter</filter-class>
+    </filter>
+    <filter>
+        <filter-name>CAS Assertion Thread Local Filter</filter-name>
+        <filter-class>org.jasig.cas.client.util.AssertionThreadLocalFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <!--认证拦截url -->
+        <filter-name>CAS Authentication Filter</filter-name>
+        <!--<url-pattern>/pages/frame</url-pattern>-->
+        <url-pattern>/system/login</url-pattern>
+    </filter-mapping>
+    <filter-mapping>
+        <!--验证拦截url -->
+        <filter-name>CAS Validation Filter</filter-name>
+        <url-pattern>/system/login</url-pattern>
+        <!--<url-pattern>/pages/frame</url-pattern>-->
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>CAS HttpServletRequest Wrapper Filter</filter-name>
+        <url-pattern>/system/login</url-pattern>
+        <!--<url-pattern>/pages/frame</url-pattern>-->
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>CAS Assertion Thread Local Filter</filter-name>
+        <url-pattern>/system/login</url-pattern>
+        <!--<url-pattern>/pages/frame</url-pattern>-->
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>CAS Validation Filter</filter-name>
+        <url-pattern>/proxyCallback</url-pattern>
+    </filter-mapping>
+
+    <!--业务系统自己需要实现的filter -->
+    <filter>
+        <filter-name>CASLoginFilter</filter-name>
+        <filter-class>pub.auth.CASLoginFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>CASLoginFilter</filter-name>
+        <url-pattern>/system/login</url-pattern>
+        <!--<url-pattern>/pages/frame</url-pattern>-->
+    </filter-mapping>
+    <!--用户同步  -->
+    <servlet>
+        <servlet-name>CASSyncUserServlet</servlet-name>
+        <servlet-class>pub.auth.CASSyncUserServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>CASSyncUserServlet</servlet-name>
+        <url-pattern>/system/syncuser</url-pattern>
+    </servlet-mapping>
+    <!-- CAS login end -->
+
+
+
+    <!--primefaces-->
     <context-param>
         <param-name>com.sun.faces.allowTextChildren</param-name>
         <param-value>true</param-value>
     </context-param>
     <context-param>
         <param-name>primefaces.THEME</param-name>
-        <!--<param-value>aristo</param-value>-->
         <param-value>hot-sneaks</param-value>
     </context-param>
 
@@ -88,6 +185,12 @@
     </listener>
 -->
 
+<!--    <servlet>
+        <servlet-name>SchedulerManager</servlet-name>
+        <servlet-class>pub.platform.advance.utils.SchedulerManager</servlet-class>
+        <load-on-startup>-1</load-on-startup>
+    </servlet>-->
+
     <servlet>
         <servlet-name>ImgServlet</servlet-name>
         <servlet-class>pub.platform.security.ImgServlet</servlet-class>
@@ -102,6 +205,11 @@
         <servlet-name>AdminServlet</servlet-name>
         <servlet-class>pub.platform.security.AdminServlet</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>AdminServletNocas</servlet-name>
+        <servlet-class>pub.platform.security.AdminServlet_nocas</servlet-class>
+    </servlet>
+
 
     <!--JSF2 mapping-->
     <servlet-mapping>
@@ -114,6 +222,10 @@
         <servlet-name>ImgServlet</servlet-name>
         <url-pattern>/signjpg</url-pattern>
     </servlet-mapping>
+<!--    <servlet-mapping>
+        <servlet-name>SchedulerManager</servlet-name>
+        <url-pattern>/SchedulerManager</url-pattern>
+    </servlet-mapping>-->
 
     <!-- Action Servlet Mapping -->
     <servlet-mapping>
@@ -121,6 +233,13 @@
         <!--<url-pattern>index.html</url-pattern>-->
         <url-pattern>*.login</url-pattern>
     </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>AdminServletNocas</servlet-name>
+        <!--<url-pattern>index.html</url-pattern>-->
+        <url-pattern>*.loginnocas</url-pattern>
+    </servlet-mapping>
+
 
     <mime-mapping>
         <extension>xls</extension>
