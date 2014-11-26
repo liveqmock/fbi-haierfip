@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="fip.repository.dao.fip.LazyDataCutpaydetlMapper">
+
+    <sql id="QueryCustinfo_Where_Clause">
+      <where>
+          <if test = " seqNo != null and seqNo != '' ">
+              and a.BATCH_SN like '${seqNo}%'
+          </if>
+          <if test = " bizId != null and bizId != '' ">
+              <![CDATA[ and a.ORIGIN_BIZID = #{bizId}  ]]>
+          </if>
+          <if test = " archiveflag != null and archiveflag != '' ">
+              <![CDATA[ and a.ARCHIVEFLAG = #{archiveflag}  ]]>
+          </if>
+          <if test = " deletedflag != null and deletedflag != '' ">
+              <![CDATA[ and a.DELETEDFLAG = #{deletedflag}  ]]>
+          </if>
+          <if test = " startDate != null and startDate != '' ">
+                <![CDATA[ and a.BATCH_SN >= #{startDate} ]]>
+          </if>
+          <if test = " endDate != null and endDate != '' ">
+                <![CDATA[ and a.BATCH_SN < #{endDate} ]]>
+          </if>
+          <if test = " startAmt != null and startAmt != 0 ">
+              <![CDATA[ and a.PAYBACKAMT >= #{startAmt} ]]>
+          </if>
+          <if test = " endAmt != null and endAmt != 0 ">
+              <![CDATA[ and a.PAYBACKAMT <= #{endAmt}  ]]>
+          </if>
+          <if test = " custName != null and custName != '' ">
+               and a.CLIENTNAME like '%${custName}%'
+          </if>
+      </where>
+    </sql>
+
+    <select id="countRecords" parameterType="fip.repository.model.fip.LazyDataCutpaydetlParam" resultType="java.lang.Integer">
+          select count(*)
+            from FIP_CUTPAYDETL a
+             <include refid="QueryCustinfo_Where_Clause" />
+    </select>
+
+
+    <select id="selectRecords" parameterType="fip.repository.model.fip.LazyDataCutpaydetlParam"  resultMap="fip.repository.dao.FipCutpaydetlMapper.BaseResultMap">
+        select  *
+            from FIP_CUTPAYDETL a
+          <include refid="QueryCustinfo_Where_Clause" />
+        order by a.branch_id
+    </select>
+
+    <select id="selectPagedRecords"  parameterType="fip.repository.model.fip.LazyDataCutpaydetlParam" resultMap="fip.repository.dao.FipCutpaydetlMapper.BaseResultMap">
+        select *
+          from (select t1.*, rownum rnum
+                from (
+                    select  *
+                        from FIP_CUTPAYDETL a
+                        <include refid="QueryCustinfo_Where_Clause" />
+                    order by
+                       <if test = " sortField != null and sortField != '' ">
+                            ${sortField}
+                       </if>
+                       <if test = " sortOrder != null and sortOrder != '' ">
+                            ${sortOrder}
+                       </if>
+                       , rowid
+        ) t1
+        <![CDATA[
+        where rownum <= #{pagesize}) t2
+       where t2.rnum > #{offset}
+       ]]>
+    </select>
+</mapper>

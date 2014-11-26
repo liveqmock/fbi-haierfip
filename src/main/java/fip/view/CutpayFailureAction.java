@@ -76,7 +76,7 @@ public class CutpayFailureAction implements Serializable {
         }
     }
 
-    private void initDataList() {
+    private synchronized void initDataList() {
         //²éÕÒÎ´¹éµµµÄÊ§°Ü¼ÇÂ¼
         failureDetlList = billManagerService.selectBillList(bizType, BillStatus.CUTPAY_FAILED);
         this.totalFailureAmt = sumTotalAmt(failureDetlList);
@@ -109,7 +109,7 @@ public class CutpayFailureAction implements Serializable {
      *
      * @return
      */
-    public String onArchiveAllFailureRecord() {
+    public synchronized String onArchiveAllFailureRecord() {
         if (this.failureDetlList.size() == 0) {
             MessageUtil.addWarn("Ê§°Ü¼ÇÂ¼¼¯Îª¿Õ¡£");
             return null;
@@ -121,7 +121,7 @@ public class CutpayFailureAction implements Serializable {
         return null;
     }
 
-    public String onArchiveMultiFailureRecord() {
+    public synchronized String onArchiveMultiFailureRecord() {
         if (this.selectedFailRecords.length == 0) {
             MessageUtil.addWarn("ÇëÑ¡Ôñ¼ÇÂ¼...");
             return null;

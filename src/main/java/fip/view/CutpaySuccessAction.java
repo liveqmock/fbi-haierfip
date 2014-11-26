@@ -113,7 +113,7 @@ public class CutpaySuccessAction implements Serializable {
      *
      * @return
      */
-    public String onConfirmAccountAll() {
+    public synchronized String onConfirmAccountAll() {
         if (successDetlList.isEmpty()) {
             MessageUtil.addWarn("记录为空！");
             return null;
@@ -132,7 +132,7 @@ public class CutpaySuccessAction implements Serializable {
         return null;
     }
 
-    public String onConfirmAccountMulti() {
+    public synchronized String onConfirmAccountMulti() {
         if (this.selectedSuccessRecords.length == 0) {
             MessageUtil.addWarn("请选择记录.");
             return null;

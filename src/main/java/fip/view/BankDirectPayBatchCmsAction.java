@@ -122,7 +122,7 @@ public class BankDirectPayBatchCmsAction implements Serializable {
 
     }
 
-    private void initDataList() {
+    private synchronized void initDataList() {
         detlList = billManagerService.selectRecords4NoChannelBatch(bizType, BillStatus.INIT, BankCode.JIANSHE);
         sendablePkgList = batchPkgService.selectBatchRecordList(bizType, CutpayChannel.NONE, TxpkgStatus.SEND_PEND);
         historyBatList = batchPkgService.selectHistoryBatchRecordList(bizType, CutpayChannel.NONE, TxpkgStatus.DEAL_SUCCESS);
@@ -157,7 +157,7 @@ public class BankDirectPayBatchCmsAction implements Serializable {
         return df.format(amt);
     }
 
-    public String onTxPkgAll() {
+    public synchronized String onTxPkgAll() {
         if (detlList.isEmpty()) {
             MessageUtil.addWarn("记录为空，无法打包！");
             return null;
@@ -175,7 +175,7 @@ public class BankDirectPayBatchCmsAction implements Serializable {
 
     //20121121 zhanrui
     //与上月（上一个批次）进行匹配，只打包已经扣过的
-    public String onTxPkgAll4FilterByLastPoano() {
+    public synchronized String onTxPkgAll4FilterByLastPoano() {
         if (detlList.isEmpty()) {
             MessageUtil.addWarn("记录为空，无法打包！");
             return null;
@@ -196,7 +196,7 @@ public class BankDirectPayBatchCmsAction implements Serializable {
         return null;
     }
 
-    public String onTxPkgMulti() {
+    public synchronized String onTxPkgMulti() {
         if (selectedRecords.length <= 0) {
             MessageUtil.addWarn("未选中记录，无法打包！");
             return null;
@@ -211,7 +211,7 @@ public class BankDirectPayBatchCmsAction implements Serializable {
         initDataList();
         return null;
     }
-    public String onChangeChannel() {
+    public synchronized String onChangeChannel() {
         if (selectedRecords.length <= 0) {
             MessageUtil.addWarn("未选中记录！");
             return null;
@@ -228,7 +228,7 @@ public class BankDirectPayBatchCmsAction implements Serializable {
     }
 
 
-    public String onSendRequestAll() {
+    public synchronized String onSendRequestAll() {
         if (sendablePkgList == null || sendablePkgList.isEmpty()) {
             MessageUtil.addWarn("没有可发送批量数据包！");
             return null;
@@ -246,7 +246,7 @@ public class BankDirectPayBatchCmsAction implements Serializable {
         return null;
     }
 
-    public String onSendRequestMulti() {
+    public synchronized String onSendRequestMulti() {
         if (selectedSendableRecords == null || selectedSendableRecords.length <= 0) {
             MessageUtil.addWarn("没有或未选中要发送的批量数据包！");
             return null;
@@ -269,7 +269,7 @@ public class BankDirectPayBatchCmsAction implements Serializable {
      *
      * @return
      */
-    public String onUnpackMulti() {
+    public synchronized String onUnpackMulti() {
         if (selectedSendableRecords == null || selectedSendableRecords.length <= 0) {
             MessageUtil.addWarn("没有或未选中要解包的批量数据包！");
             return null;
@@ -282,7 +282,7 @@ public class BankDirectPayBatchCmsAction implements Serializable {
         return null;
     }
 
-    public String onUnpackMultiForQryList() {
+    public synchronized String onUnpackMultiForQryList() {
         if (selectedQueryRecords == null || selectedQueryRecords.length <= 0) {
             MessageUtil.addWarn("没有或未选中要解包的批量数据包！");
             return null;

@@ -46,7 +46,7 @@ public class UnionpayBatchDepCCMSAction extends UnionpayBatchAction implements S
         super.initBaseDataList();
     }
     //回写全部不明记录，不存档
-    public String onWriteBackAllUncertainlyRecords() {
+    public synchronized String onWriteBackAllUncertainlyRecords() {
         if (this.needQueryDetlList.size() == 0) {
             MessageUtil.addWarn("记录集为空。");
             return null;
@@ -62,7 +62,7 @@ public class UnionpayBatchDepCCMSAction extends UnionpayBatchAction implements S
         initDataList();
         return null;
     }
-    public String onWriteBackSelectedUncertainlyRecords() {
+    public synchronized String onWriteBackSelectedUncertainlyRecords() {
         if (this.selectedNeedQryRecords.length == 0) {
             MessageUtil.addWarn("请选择记录...");
             return null;
@@ -83,7 +83,7 @@ public class UnionpayBatchDepCCMSAction extends UnionpayBatchAction implements S
 
 
     //回写全部成功记录 做存档处理
-    public String onWriteBackAllSuccessCutpayRecords() {
+    public synchronized String onWriteBackAllSuccessCutpayRecords() {
         if (this.successDetlList.size() == 0) {
             MessageUtil.addWarn("记录集为空。");
             return null;
@@ -100,7 +100,7 @@ public class UnionpayBatchDepCCMSAction extends UnionpayBatchAction implements S
         return null;
     }
 
-    public String onWriteBackAllFailCutpayRecords() {
+    public synchronized String onWriteBackAllFailCutpayRecords() {
         if (this.failureDetlList.size() == 0) {
             MessageUtil.addWarn("记录集为空。");
             return null;
@@ -118,7 +118,7 @@ public class UnionpayBatchDepCCMSAction extends UnionpayBatchAction implements S
     }
 
 
-    public String onWriteBackSelectedSuccessCutpayRecords() {
+    public synchronized String onWriteBackSelectedSuccessCutpayRecords() {
         if (this.selectedConfirmAccountRecords.length == 0) {
             MessageUtil.addWarn("请选择记录...");
             return null;
@@ -136,7 +136,7 @@ public class UnionpayBatchDepCCMSAction extends UnionpayBatchAction implements S
         return null;
     }
 
-    public String onWriteBackSelectedFailCutpayRecords() {
+    public synchronized String onWriteBackSelectedFailCutpayRecords() {
         if (this.selectedFailRecords.length == 0) {
             MessageUtil.addWarn("请选择记录...");
             return null;

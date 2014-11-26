@@ -86,7 +86,7 @@ public class ObtainPreCutpayBillsAction implements Serializable {
         }
     }
 
-    private void initDetlList() {
+    private synchronized void initDetlList() {
         detlList = billManagerService.selectBillList(this.bizType, BillType.PRECUTPAYMENT, BillStatus.INIT);
         this.totalamt = sumTotalAmt(detlList);
         this.totalcount = detlList.size();
@@ -99,7 +99,7 @@ public class ObtainPreCutpayBillsAction implements Serializable {
 
     }
 
-    public String onQryCms() {
+    public synchronized String onQryCms() {
         try {
             qrydetlList = cmsPreCutpayService.doQueryCmsBills(this.bizType);
             if (qrydetlList.size() == 0) {
@@ -122,7 +122,7 @@ public class ObtainPreCutpayBillsAction implements Serializable {
         return df.format(amt);
     }
 
-    public String onObtain() {
+    public synchronized String onObtain() {
         //TODO 检查本地记录状态
 
         try {
@@ -135,7 +135,7 @@ public class ObtainPreCutpayBillsAction implements Serializable {
         initDetlList();
         return null;
     }
-    public String onObtainMulti() {
+    public synchronized String onObtainMulti() {
         if (selectedQryRecords.length == 0) {
             MessageUtil.addWarn("请先选择记录。");
             return null;
@@ -154,13 +154,13 @@ public class ObtainPreCutpayBillsAction implements Serializable {
         return null;
     }
 
-    public String onDeleteAll() {
+    public synchronized String onDeleteAll() {
         billManagerService.deleteBillsByKey(detlList);
         initDetlList();
         return null;
     }
 
-    public String onDeleteMulti() {
+    public synchronized String onDeleteMulti() {
         billManagerService.deleteBillsByKey(Arrays.asList(selectedRecords));
         initDetlList();
         return null;

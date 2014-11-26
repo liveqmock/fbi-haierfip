@@ -47,8 +47,30 @@ public class CcmsCutpayBatchHandler implements AutoCutpayManager {
 
     public synchronized void processAll() {
         try {
+            int count = 0;
+            boolean isExistPendQryRecord = true;
+            while (count < 2 && isExistPendQryRecord) {
+                List<FipCutpaybat> needQueryBatList = batchPkgService.selectNeedConfirmBatchRecords(bizType, CutpayChannel.UNIPAY);
+                if (needQueryBatList.size() > 0) {
+                    logger.info("消费信贷批量代扣: 系统中存在未完成结果确认的记录:" + needQueryBatList.size());
+                    performCutpayTxn();
+                    count++;
+                    isExistPendQryRecord = true;
+                } else {
+                    isExistPendQryRecord = false;
+                }
+            }
+
             obtainBills();
             performCutpayTxn();
+
+            try {
+                Thread.sleep(10 * 60 * 1000);  //十分钟后进行结果查询
+            } catch (InterruptedException e) {
+                //
+            }
+
+
             performResultQueryTxn();
             writebackBills();
         } catch (Exception e) {
@@ -122,7 +144,7 @@ public class CcmsCutpayBatchHandler implements AutoCutpayManager {
         for (FipCutpaybat bat : needQueryBatList) {
             boolean isQryOver = false;
             int count = 0;
-            while (!isQryOver && count < 10) { //重发
+            while (!isQryOver && count < 60) { //重发   3小时
                 try {
                     String unipayRtnCode = unipayDepService.sendAndRecvCutpayT1003003Message(bat);
                     count++;
@@ -144,7 +166,7 @@ public class CcmsCutpayBatchHandler implements AutoCutpayManager {
                     count++;
                     isQryOver = false;
                     try {
-                        Thread.sleep(30 * 1000);   //出现异常
+                        Thread.sleep(3 * 60 * 1000);   //出现异常
                     } catch (InterruptedException e1) {
                         //
                     }
@@ -154,18 +176,17 @@ public class CcmsCutpayBatchHandler implements AutoCutpayManager {
     }
 
     @Override
-    public synchronized  void writebackBills() {
+    public synchronized void writebackBills() {
         if (!isCronTaskOpen()) {
             throw new RuntimeException("自动批量处理开关已关闭。");
         }
-        List<FipCutpaydetl> successDetlList = billManagerService.selectRecords4UnipayOnline(BizType.XFNEW, BillStatus.CUTPAY_SUCCESS);
-        List<FipCutpaydetl> failureDetlList = billManagerService.selectRecords4UnipayOnline(BizType.XFNEW, BillStatus.CUTPAY_FAILED);
-        List<FipCutpaydetl> needQueryDetlList = billManagerService.selectRecords4UnipayOnline(BizType.XFNEW, BillStatus.CUTPAY_QRY_PEND);
+        List<FipCutpaydetl> successDetlList = billManagerService.selectRecords4UnipayBatch(this.bizType, BillStatus.CUTPAY_SUCCESS);
+        List<FipCutpaydetl> failureDetlList = billManagerService.selectRecords4UnipayBatch(this.bizType, BillStatus.CUTPAY_FAILED);
+        List<FipCutpaydetl> needQueryDetlList = billManagerService.selectRecords4UnipayBatchDetail(this.bizType, BillStatus.CUTPAY_QRY_PEND);
+
 
         int succCnt = ccmsService.writebackCutPayRecord2CCMS(successDetlList, true);
-
         int failCnt = ccmsService.writebackCutPayRecord2CCMS(failureDetlList, true);
-
         //回写结果不明记录 不归档
         int qryCnt = ccmsService.writebackCutPayRecord2CCMS(needQueryDetlList, false);
 
@@ -174,9 +195,9 @@ public class CcmsCutpayBatchHandler implements AutoCutpayManager {
         } catch (InterruptedException e) {
             //
         }
-        logger.info("本次回写记录条数(代扣成功)：" + succCnt + " 条(已做归档处理).");
-        logger.info("本次回写记录条数(代扣失败)：" + failCnt + " 条(已做归档处理).");
-        logger.info("本次回写记录条数(代扣结果不明)：" + qryCnt + " 条(未作归档处理).");
+        logger.info("消费信贷自动批量代扣【代扣结果回写】：本次回写记录条数(代扣成功)：" + succCnt + " 条(已做归档处理).");
+        logger.info("消费信贷自动批量代扣【代扣结果回写】：本次回写记录条数(代扣失败)：" + failCnt + " 条(已做归档处理).");
+        logger.info("消费信贷自动批量代扣【代扣结果回写】：本次回写记录条数(代扣结果不明)：" + qryCnt + " 条(未作归档处理).");
     }
 
     @Override

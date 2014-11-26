@@ -86,7 +86,7 @@ public class ObtainCcmsBillsAction implements Serializable {
         }
     }
 
-    private void initDetlList() {
+    private synchronized void initDetlList() {
         detlList = billManagerService.selectBillList(this.bizType, BillType.NORMAL, BillStatus.INIT);
         //detlList = billManagerService.selectBillList(this.bizType, BillType.NORMAL, BillStatus.INIT, "XF-CCMS");
         this.totalamt = sumTotalAmt(detlList);
@@ -100,7 +100,7 @@ public class ObtainCcmsBillsAction implements Serializable {
 
     }
 
-    public String onQryCms() {
+    public synchronized String onQryCms() {
         try {
             qrydetlList = ccmsService.doQueryCcmsBills(this.bizType, BillType.NORMAL);
             if (qrydetlList.size() == 0) {
@@ -123,7 +123,7 @@ public class ObtainCcmsBillsAction implements Serializable {
         return df.format(amt);
     }
 
-    public String onObtain() {
+    public synchronized String onObtain() {
         //TODO 检查本地记录状态
         try {
             List<String> returnMsgs = new ArrayList<String>();
@@ -139,7 +139,7 @@ public class ObtainCcmsBillsAction implements Serializable {
         initDetlList();
         return null;
     }
-    public String onObtainMulti() {
+    public synchronized String onObtainMulti() {
         if (selectedQryRecords.length == 0) {
             MessageUtil.addWarn("请先选择记录。");
             return null;
@@ -162,7 +162,7 @@ public class ObtainCcmsBillsAction implements Serializable {
         return null;
     }
 
-    public String onDeleteAll() {
+    public synchronized String onDeleteAll() {
         if (detlList.size() == 0) {
             MessageUtil.addWarn("记录为空。");
             return null;
@@ -172,7 +172,7 @@ public class ObtainCcmsBillsAction implements Serializable {
         return null;
     }
 
-    public String onDeleteMulti() {
+    public synchronized String onDeleteMulti() {
         if (selectedRecords.length == 0) {
             MessageUtil.addWarn("请先选择记录。");
             return null;

@@ -3,10 +3,16 @@ package fip.view;
 import fip.common.constant.BillStatus;
 import fip.common.constant.BizType;
 import fip.common.constant.CutpayChannel;
+import fip.repository.dao.fip.LazyDataCutpaydetlMapper;
 import fip.repository.model.FipCutpaydetl;
+import fip.repository.model.fip.LazyDataCutpaydetlParam;
 import fip.service.fip.BillManagerService;
 import fip.service.fip.JobLogService;
+import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.lang.StringUtils;
+import org.joda.time.DateTime;
+import org.primefaces.model.LazyDataModel;
+import org.primefaces.model.SortOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,12 +38,13 @@ import java.util.Map;
  */
 @ManagedBean
 @ViewScoped
+//@RequestScoped
 public class CutpayArchiveQryAction implements Serializable {
     private static final Logger logger = LoggerFactory.getLogger(CutpayArchiveQryAction.class);
 
     private FipCutpaydetl selectedRecord;
     private FipCutpaydetl[] selectedRecords;
-    private List<FipCutpaydetl> detlList;
+    private LazyDataModel<FipCutpaydetl> detlList;
     private List<FipCutpaydetl> filteredDetlList;
 
     private CutpayChannel channelEnum = CutpayChannel.NONE;
@@ -55,6 +62,7 @@ public class CutpayArchiveQryAction implements Serializable {
 
     private int totalcount;
     private String totalamt;
+    private LazyDataCutpaydetlParam paramBean;
 
     @PostConstruct
     public void init() {
@@ -67,10 +75,12 @@ public class CutpayArchiveQryAction implements Serializable {
 
             if (!StringUtils.isEmpty(this.bizid)) {
                 this.bizType = BizType.valueOf(bizid);
-                initDetlList();
             }
+            this.paramBean = new LazyDataCutpaydetlParam();
+            this.paramBean.setStartDate(new DateTime().dayOfMonth().withMinimumValue().toString("yyyyMMdd"));
+            this.paramBean.setEndDate(new DateTime().toString("yyyyMMdd"));
         } catch (Exception e) {
-            logger.error("初始化时出现错误。");
+            logger.error("初始化时出现错误。", e);
             FacesContext context = FacesContext.getCurrentInstance();
             context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,
                     "初始化时出现错误。", "检索数据库出现问题。"));
@@ -78,10 +88,18 @@ public class CutpayArchiveQryAction implements Serializable {
 
     }
 
-    private void initDetlList() {
-        detlList = billManagerService.selectBillListForCurrMonth(this.bizType, true);
-        this.totalamt = sumTotalAmt(detlList);
-        this.totalcount = detlList.size();
+    public void onQuery() {
+        paramBean.setBizId(this.bizid);
+        paramBean.setArchiveflag("1"); //已存档
+        paramBean.setDeletedflag("0"); //未删除
+
+        String endDate = new DateTime(this.paramBean.getEndDate()).plusDays(1).toString("yyyyMMdd");
+        paramBean.setEndDate(endDate); //截止日期加一 便于查询
+        detlList = new LazyDataCutpaydetlModel(billManagerService.getLazyDataCutpaydetlMapper(), paramBean);
+        if (detlList.getWrappedData() == null) {
+            this.totalcount = 0;
+        } else
+            this.totalcount = ((List) detlList.getWrappedData()).size();
     }
 
     private String sumTotalAmt(List<FipCutpaydetl> qrydetlList) {
@@ -92,6 +110,67 @@ public class CutpayArchiveQryAction implements Serializable {
         DecimalFormat df = new DecimalFormat("#,##0.00");
         return df.format(amt);
     }
+
+
+    //====================================================================================
+    class LazyDataCutpaydetlModel extends LazyDataModel<FipCutpaydetl> {
+        private LazyDataCutpaydetlParam paramBean;
+        private LazyDataCutpaydetlMapper lazyDataMapper;
+
+        public LazyDataCutpaydetlModel(LazyDataCutpaydetlMapper lazyDataMapper, LazyDataCutpaydetlParam paramBean) {
+            this.lazyDataMapper = lazyDataMapper;
+            this.paramBean = paramBean;
+        }
+
+        @Override
+        public List<FipCutpaydetl> load(int first, int pageSize, String sortField, SortOrder sortOrder, Map<String, String> filters) {
+            List<FipCutpaydetl> dataList;
+            try {
+                LazyDataCutpaydetlParam vo = new LazyDataCutpaydetlParam();
+                PropertyUtils.copyProperties(vo, paramBean);
+                vo.setOffset(first);
+                vo.setPagesize(first + pageSize);
+                if (sortField != null) {
+                    vo.setSortField(changeBeanPropertyName2DBTableFieldName(sortField));
+                    if (sortOrder != null) {
+                        if (sortOrder.compareTo(SortOrder.DESCENDING) == 0) {
+                            vo.setSortOrder(" DESC ");
+                        }
+                    }
+                }else{ //默认排序字段
+                    vo.setSortField("batch_sn, batch_detl_sn");
+                    //vo.setSortField("1");
+                }
+                dataList = this.lazyDataMapper.selectPagedRecords(vo);
+            } catch (Exception e) {
+                logger.error("查询数据出现错误.", e);
+                throw new RuntimeException(e);
+            }
+
+            if (super.getRowCount() <= 0) {
+                int total = lazyDataMapper.countRecords(paramBean);
+                this.setRowCount(total);
+            }
+            this.setPageSize(pageSize);
+            return dataList;
+        }
+
+        private String changeBeanPropertyName2DBTableFieldName(String propertyName) {
+            char[] ch = propertyName.toCharArray();
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < propertyName.length(); i++) {
+                if ('A' <= ch[i] && ch[i] <= 'Z') {
+                    sb.append("_");
+                    sb.append(String.valueOf(ch[i]).toLowerCase());
+                }else{
+                    sb.append(String.valueOf(ch[i]).toLowerCase());
+                }
+            }
+            return sb.toString();
+        }
+    }
+
+
 
 
     //====================================================================================
@@ -144,14 +223,6 @@ public class CutpayArchiveQryAction implements Serializable {
         this.channelMap = channelMap;
     }
 
-    public List<FipCutpaydetl> getDetlList() {
-        return detlList;
-    }
-
-    public void setDetlList(List<FipCutpaydetl> detlList) {
-        this.detlList = detlList;
-    }
-
     public BillStatus getStatus() {
         return status;
     }
@@ -198,5 +269,21 @@ public class CutpayArchiveQryAction implements Serializable {
 
     public void setFilteredDetlList(List<FipCutpaydetl> filteredDetlList) {
         this.filteredDetlList = filteredDetlList;
+    }
+
+    public LazyDataModel<FipCutpaydetl> getDetlList() {
+        return detlList;
+    }
+
+    public void setDetlList(LazyDataModel<FipCutpaydetl> detlList) {
+        this.detlList = detlList;
+    }
+
+    public LazyDataCutpaydetlParam getParamBean() {
+        return paramBean;
+    }
+
+    public void setParamBean(LazyDataCutpaydetlParam paramBean) {
+        this.paramBean = paramBean;
     }
 }

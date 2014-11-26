@@ -76,7 +76,7 @@ public class BatchPkgService {
                     .andBillstatusEqualTo(BillStatus.CMS_SUCCESS.getCode());
             if (fipCutpaydetlMapper.selectByExample(example).size() > 0) {
                 resultList.add(detl);
-            }else{
+            } else {
                 example.clear();
                 poano = Integer.parseInt(detl.getPoano()) - 2;
                 example.createCriteria().andIounoEqualTo(detl.getIouno())
@@ -233,8 +233,9 @@ public class BatchPkgService {
         fipCutpaydetlMapper.updateByPrimaryKey(cutpaydetl);
 
         Date date = new Date();
-        String userid = SystemService.getOperatorManager().getOperatorId();
-        String username = SystemService.getOperatorManager().getOperatorName();
+        OperatorManager operatorManager = SystemService.getOperatorManager();
+        String userid = operatorManager == null ? "CronBatch" : operatorManager.getOperatorId();
+        String username = operatorManager == null ? "CronBatch" : operatorManager.getOperatorName();
         FipJoblog log = new FipJoblog();
         log.setTablename("fip_cutpaydetl");
         log.setRowpkid(cutpaydetl.getPkid());
@@ -263,7 +264,7 @@ public class BatchPkgService {
         fipCutpaybat.setTxntype(txnType);
 
         fipCutpaybat.setTxntype(txnType);
-        short count = (short)batPkgCount;
+        short count = (short) batPkgCount;
 
         //不区分后续包
         fipCutpaybat.setTotalcount(count); //总笔数
@@ -273,7 +274,7 @@ public class BatchPkgService {
 
         fipCutpaybat.setTotalamt(totalamt);
         fipCutpaybat.setFailamt(new BigDecimal(0));
-        fipCutpaybat.setFailcount((short)0);
+        fipCutpaybat.setFailcount((short) 0);
 
         fipCutpaybat.setUsage("99999999    "); //用途
         fipCutpaybat.setRemark("");
@@ -302,8 +303,9 @@ public class BatchPkgService {
      */
     private void insertFipCutpaybatList(List<FipCutpaybat> fipCutpaybatList) {
         Date date = new Date();
-        String userid = SystemService.getOperatorManager().getOperatorId();
-        String username = SystemService.getOperatorManager().getOperatorName();
+        OperatorManager operatorManager = SystemService.getOperatorManager();
+        String userid = operatorManager == null ? "CronBatch" : operatorManager.getOperatorId();
+        String username = operatorManager == null ? "CronBatch" : operatorManager.getOperatorName();
         for (FipCutpaybat fipCutpaybat : fipCutpaybatList) {
             fipCutpaybatMapper.insert(fipCutpaybat);
             FipJoblog log = new FipJoblog();

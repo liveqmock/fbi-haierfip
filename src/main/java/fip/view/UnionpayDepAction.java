@@ -130,7 +130,7 @@ public class UnionpayDepAction implements Serializable {
 
     }
 
-    public void initList() {
+    public synchronized void initList() {
         detlList = billManagerService.selectRecords4UnipayOnline(this.bizType, BillStatus.INIT);
         detlList.addAll(billManagerService.selectRecords4UnipayOnline(this.bizType, BillStatus.RESEND_PEND));
         filteredDetlList = detlList;
@@ -168,7 +168,7 @@ public class UnionpayDepAction implements Serializable {
         return df.format(amt);
     }
 
-    public String onSendRequestAll() {
+    public synchronized String onSendRequestAll() {
         if (filteredDetlList.isEmpty()) {
             MessageUtil.addWarn("没有要发送的记录！");
             return null;
@@ -205,7 +205,7 @@ public class UnionpayDepAction implements Serializable {
         return null;
     }
 
-    public String onSendRequestMulti() {
+    public synchronized String onSendRequestMulti() {
         if (selectedRecords == null || selectedRecords.length <= 0) {
             MessageUtil.addWarn("未选中要处理的记录！");
             return null;

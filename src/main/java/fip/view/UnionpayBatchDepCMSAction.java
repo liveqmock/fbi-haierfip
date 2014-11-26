@@ -38,7 +38,7 @@ public class UnionpayBatchDepCMSAction extends UnionpayBatchAction implements Se
         super.initBaseDataList();
     }
 
-    public String onConfirmAccountAll() {
+    public synchronized String onConfirmAccountAll() {
         if (successDetlList.isEmpty()) {
             MessageUtil.addWarn("记录为空！");
             return null;
@@ -57,7 +57,7 @@ public class UnionpayBatchDepCMSAction extends UnionpayBatchAction implements Se
         return null;
     }
 
-    public String onConfirmAccountMulti() {
+    public synchronized String onConfirmAccountMulti() {
         if (this.selectedConfirmAccountRecords.length == 0) {
             MessageUtil.addWarn("请选择记录.");
             return null;

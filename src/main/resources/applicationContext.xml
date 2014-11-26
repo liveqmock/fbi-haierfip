@@ -178,10 +178,10 @@
     </bean>
 
 
-    <!-- 新消费信贷代扣账单自动获取 cronTrigger -->
+    <!-- 新消费信贷代扣账单自动获取 批量处理 cronTrigger -->
     <bean id="ccmsCutpay_1_JobDetailBean"
           class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
-        <property name="targetObject" ref="ccmsCutpayHandler"/>
+        <property name="targetObject" ref="ccmsCutpayBatchHandler"/>
         <property name="targetMethod" value="processAll"/>
         <property name="concurrent" value="false"/>
     </bean>
@@ -190,6 +190,7 @@
         <property name="cronExpression" value="0 0 17 * * ?"/>
     </bean>
     <!-- 新消费信贷代扣账单自动结果查询并回写 cronTrigger -->
+<!--
     <bean id="ccmsCutpay_2_JobDetailBean"
           class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
         <property name="targetObject" ref="ccmsCutpayHandler"/>
@@ -200,6 +201,7 @@
         <property name="jobDetail" ref="ccmsCutpay_2_JobDetailBean"/>
         <property name="cronExpression" value="0 10 17 * * ?"/>
     </bean>
+-->
 
     <!--SBS内部总分账户清算数据发送到EAI（JDE）-->
     <bean id="autoSendSbsZfqsRecordsJobDetailBean"
@@ -223,7 +225,7 @@
                 <ref bean="zongfenNotifyCronTriggerBean"/>
                 <ref bean="zongfen4SCFNotifyCronTriggerBean"/>
                 <ref bean="ccmsCutpayCronTriggerBean_1"/>
-                <ref bean="ccmsCutpayCronTriggerBean_2"/>
+                <!--<ref bean="ccmsCutpayCronTriggerBean_2"/>-->
                 <ref bean="autoSendSbsZfqsRecordsCronTriggerBean"/>
             </list>
         </property>

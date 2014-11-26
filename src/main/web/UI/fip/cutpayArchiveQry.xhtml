@@ -14,14 +14,12 @@
             }
         </script>
         <style type="text/css">
-            .col-label {
-                width: 70px;
+            .col-95 {
+                width: 95%;
             }
-            .col-input {
-                width: 120px;
-            }
-            .col-input-200 {
-                width: 300px;
+
+            .col-5 {
+                width: 5%;
             }
         </style>
     </ui:define>
@@ -31,23 +29,69 @@
 
             <p:tabView dynamic="true" cache="false" style="font-weight:normal;font-style:normal">
                 <p:tab title="已归档明细代扣记录清单">
-                    <p:growl id="msgs" showDetail="false"/>
-
-
                     <div id="table">
                         <h:form id="form">
-                            <p:dataTable id="pdt" dynamic="true" style="width:100%;"
+                            <p:growl id="msgs" showDetail="false"/>
+                            <p:panel>
+                                <h:panelGrid columns="2" cellspacing="5" columnClasses="col-95,col-5">
+                                    <h:panelGrid columns="4" cellspacing="5">
+                                        <h:outputLabel value="流水号:"/>
+                                        <p:inputText id="seqNo" value="#{cutpayArchiveQryAction.paramBean.seqNo}"/>
+                                        <h:outputLabel value="客户姓名:"/>
+                                        <p:inputText id="custName" value="#{cutpayArchiveQryAction.paramBean.custName}"/>
+
+                                        <h:outputLabel value="起始日期:"/>
+                                        <p:inputText id="startDate"
+                                                     value="#{cutpayArchiveQryAction.paramBean.startDate}"
+                                                     onclick="WdatePicker({dateFmt:'yyyyMMdd'})"/>
+                                        <h:outputLabel value="截止日期:"/>
+                                        <p:inputText id="endDate" value="#{cutpayArchiveQryAction.paramBean.endDate}"
+                                                     onclick="WdatePicker({dateFmt:'yyyyMMdd'})"/>
+                                        <h:outputLabel value="起始金额:"/>
+                                        <p:inputText id="startAmt"
+                                                     value="#{cutpayArchiveQryAction.paramBean.startAmt}"/>
+                                        <h:outputLabel value="截止金额:"/>
+                                        <p:inputText id="endAmt" value="#{cutpayArchiveQryAction.paramBean.endAmt}"/>
+                                    </h:panelGrid>
+                                    <h:panelGrid>
+                                        <p:commandButton id="qrybtn" style="width:120px;" value="查询"
+                                                         action="#{cutpayArchiveQryAction.onQuery}"
+                                                         update="pdt,msgs">
+                                        </p:commandButton>
+
+                                        <p:commandButton ajax="false" id="btnExportXLs" value="导出EXCEL"
+                                                         style="width:120px;">
+                                            <p:dataExporter type="xls" target="pdt" fileName="rptArchiveQry"
+                                                            encoding="GBK"
+                                                            pageOnly="false"/>
+                                        </p:commandButton>
+                                    </h:panelGrid>
+                                </h:panelGrid>
+                            </p:panel>
+
+                            <p:ajaxStatus style="height:18px;text-align:center">
+                                <f:facet name="start">
+                                    <h:graphicImage value="/images/ajaxloadingbar.gif"/>
+                                </f:facet>
+                                <f:facet name="complete">
+                                    <h:outputText value=""/>
+                                </f:facet>
+                            </p:ajaxStatus>
+
+                            <p:dataTable id="pdt"
+                                         lazy="true"
+                                         style="width:100%;"
                                          value="#{cutpayArchiveQryAction.detlList}" var="record"
                                          rowKey="#{record.pkid}"
                                          filteredValue="#{cutpayArchiveQryAction.filteredDetlList}"
                                          paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown} "
-                                         currentPageReportTemplate="【过滤后笔数:{totalRecords}】"
+                                         currentPageReportTemplate="【笔数:{totalRecords}】"
                                          paginator="true" rows="15" paginatorPosition="bottom"
                                          rowsPerPageTemplate="100,50,30,15,5"
                                          selection="#{cutpayArchiveQryAction.selectedRecords}"
                                          emptyMessage="数据记录为空...">
                                 <p:column selectionMode="multiple" style="width:18px"/>
-                                <ui:include src="common/cutpayListFields.xhtml">
+                                <ui:include src="common/cutpayListFieldsNofilter.xhtml">
                                     <ui:param name="backBean" value="#{cutpayArchiveQryAction}"/>
                                 </ui:include>
                             </p:dataTable>

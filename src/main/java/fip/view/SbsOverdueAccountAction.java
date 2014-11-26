@@ -87,7 +87,7 @@ public class SbsOverdueAccountAction implements Serializable {
         this.totalSuccessCount = successDetlList.size();
     }
 
-    public String onAccountAll() {
+    public synchronized String onAccountAll() {
         if (this.detlList.isEmpty()) {
             MessageUtil.addWarn("没有需要处理的记录...");
             return null;
@@ -107,7 +107,7 @@ public class SbsOverdueAccountAction implements Serializable {
         return null;
     }
 
-    public String onAccountMulti() {
+    public synchronized String onAccountMulti() {
         if (selectedRecords == null || selectedRecords.length <= 0) {
             MessageUtil.addWarn("未选择处理记录...");
             return null;

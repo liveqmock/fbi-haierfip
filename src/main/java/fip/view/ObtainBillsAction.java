@@ -88,7 +88,7 @@ public class ObtainBillsAction implements Serializable {
         }
     }
 
-    private void initDetlList() {
+    private synchronized void initDetlList() {
         detlList = billManagerService.selectBillList(this.bizType, BillType.NORMAL, BillStatus.INIT);
         filteredDetlList = detlList;
         this.totalamt = sumTotalAmt(detlList);
@@ -102,7 +102,7 @@ public class ObtainBillsAction implements Serializable {
 
     }
 
-    public String onQryCms() {
+    public synchronized String onQryCms() {
         try {
             qrydetlList = cmsService.doQueryCmsBills(this.bizType, BillType.NORMAL);
             if (qrydetlList.size() == 0) {
@@ -125,7 +125,7 @@ public class ObtainBillsAction implements Serializable {
         return df.format(amt);
     }
 
-    public String onObtain() {
+    public synchronized String onObtain() {
         List<String> returnMsgs = new ArrayList<String>();
         try {
             int count = cmsService.doObtainCmsBills(this.bizType, BillType.NORMAL, returnMsgs);
@@ -140,7 +140,7 @@ public class ObtainBillsAction implements Serializable {
         }
         return null;
     }
-    public String onObtainMulti() {
+    public synchronized String onObtainMulti() {
         if (selectedQryRecords.length == 0) {
             MessageUtil.addWarn("请先选择记录。");
             return null;
@@ -160,7 +160,7 @@ public class ObtainBillsAction implements Serializable {
         return null;
     }
 
-    public String onDeleteAll() {
+    public synchronized String onDeleteAll() {
         if (filteredDetlList.size() == 0) {
             MessageUtil.addWarn("记录为空。");
             return null;
@@ -171,7 +171,7 @@ public class ObtainBillsAction implements Serializable {
         return null;
     }
 
-    public String onDeleteMulti() {
+    public synchronized String onDeleteMulti() {
         if (selectedRecords.length == 0) {
             MessageUtil.addWarn("请先选择记录。");
             return null;

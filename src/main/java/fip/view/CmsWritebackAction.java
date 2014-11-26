@@ -74,7 +74,7 @@ public class CmsWritebackAction implements Serializable {
         }
     }
 
-    private void initList() {
+    private synchronized void initList() {
         detlList = billManagerService.selectBillList(this.bizType, BillStatus.ACCOUNT_SUCCESS, BillStatus.CMS_FAILED);
         successDetlList = billManagerService.selectBillList(this.bizType, BillStatus.CMS_SUCCESS);
 
@@ -107,7 +107,7 @@ public class CmsWritebackAction implements Serializable {
     }
 */
 
-    public String onWritebackAll() {
+    public synchronized String onWritebackAll() {
         List<String> returnMsgs = new ArrayList<String>();
         try {
             cmsSevice.writebackCutPayRecord2CMS(this.detlList, returnMsgs);
@@ -123,7 +123,7 @@ public class CmsWritebackAction implements Serializable {
         return null;
     }
 
-    public String onWritebackMulti() {
+    public synchronized String onWritebackMulti() {
         List<String> returnMsgs = new ArrayList<String>();
         try {
             cmsSevice.writebackCutPayRecord2CMS(Arrays.asList(this.selectedRecords), returnMsgs);

@@ -116,7 +116,7 @@ public abstract class UnionpayBatchAction implements Serializable {
     }
 
     protected abstract  void initDataList();
-    protected void initBaseDataList() {
+    protected synchronized  void initBaseDataList() {
         detlList = billManagerService.selectRecords4UnipayBatch(bizType, BillStatus.INIT);
         //detlList.addAll(billManagerService.selectRecords4UnipayBatch(this.bizType, BillStatus.RESEND_PEND));
 
@@ -148,7 +148,7 @@ public abstract class UnionpayBatchAction implements Serializable {
         return df.format(amt);
     }
 
-    public String onTxPkgAll() {
+    public synchronized String onTxPkgAll() {
         if (detlList.isEmpty()) {
             MessageUtil.addWarn("记录为空，无法打包！");
             return null;
@@ -164,7 +164,7 @@ public abstract class UnionpayBatchAction implements Serializable {
         return null;
     }
 
-    public String onTxPkgMulti() {
+    public synchronized String onTxPkgMulti() {
         if (selectedRecords.length <= 0) {
             MessageUtil.addWarn("未选中记录，无法打包！");
             return null;
@@ -181,7 +181,7 @@ public abstract class UnionpayBatchAction implements Serializable {
     }
 
 
-    public String onSendRequestAll() {
+    public synchronized String onSendRequestAll() {
         if (sendablePkgList == null || sendablePkgList.isEmpty()) {
             MessageUtil.addWarn("没有可发送批量数据包！");
             return null;
@@ -198,7 +198,7 @@ public abstract class UnionpayBatchAction implements Serializable {
         return null;
     }
 
-    public String onSendRequestMulti() {
+    public synchronized String onSendRequestMulti() {
         if (selectedSendableRecords == null || selectedSendableRecords.length <= 0) {
             MessageUtil.addWarn("没有或未选中要发送的批量数据包！");
             return null;
@@ -248,7 +248,7 @@ public abstract class UnionpayBatchAction implements Serializable {
         String pkid = batpkg.getTxpkgSn();
         try {
             //unipayService.sendAndRecvBatchTxnMessage(batpkg);
-            unipayDepService.sendAndRecvT1001003Message(batpkg);
+            String rtnCode = unipayDepService.sendAndRecvT1001003Message(batpkg);
             appendNewJoblog(pkid, "发送扣款请求", "发送银联扣款请求报文完成。");
         } catch (Exception e) {
             MessageUtil.addError("数据发送异常，请检查系统线路重新发送！");

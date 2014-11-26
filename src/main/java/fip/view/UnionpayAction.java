@@ -144,7 +144,7 @@ public class UnionpayAction implements Serializable {
         return df.format(amt);
     }
 
-    public String onSendRequestAll() {
+    public synchronized String onSendRequestAll() {
         for (FipCutpaydetl cutpaydetl : this.detlList) {
             if (!processOneCutpayRequestRecord(cutpaydetl)) break;
         }
@@ -153,7 +153,7 @@ public class UnionpayAction implements Serializable {
         return null;
     }
 
-    public String onSendRequestMulti() {
+    public synchronized String onSendRequestMulti() {
         for (FipCutpaydetl cutpaydetl : this.selectedRecords) {
             if (!processOneCutpayRequestRecord(cutpaydetl)) break;
         }

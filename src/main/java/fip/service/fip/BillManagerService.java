@@ -7,6 +7,7 @@ import fip.repository.dao.FipCutpaydetlMapper;
 import fip.repository.dao.FipJoblogMapper;
 import fip.repository.dao.FipRefunddetlMapper;
 import fip.repository.dao.fip.FipCommonMapper;
+import fip.repository.dao.fip.LazyDataCutpaydetlMapper;
 import fip.repository.model.*;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -45,6 +46,9 @@ public class BillManagerService {
     private FipCommonMapper fipCommonMapper;
 
     @Autowired
+    private LazyDataCutpaydetlMapper lazyDataCutpaydetlMapper;
+
+    @Autowired
     private FipJoblogMapper fipJoblogMapper;
 
     @Autowired
@@ -55,7 +59,12 @@ public class BillManagerService {
 
     @Autowired
     private JobLogService jobLogService;
-    /**
+
+    public LazyDataCutpaydetlMapper getLazyDataCutpaydetlMapper() {
+        return lazyDataCutpaydetlMapper;
+    }
+
+/**
      * ===============================================
      */
     /**
@@ -816,4 +825,5 @@ public class BillManagerService {
 
         jobLogService.insertNewJoblog(pkid, tblname, jobname, jobdesc, "数据交换平台", "数据交换平台");
     }
+
 }

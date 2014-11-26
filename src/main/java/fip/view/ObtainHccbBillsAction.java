@@ -102,7 +102,7 @@ public class ObtainHccbBillsAction implements Serializable {
         }
     }
 
-    private void initDetlList() {
+    private synchronized void initDetlList() {
         detlList = billManagerService.selectBillList(this.bizType, BillType.NORMAL, BillStatus.INIT);
         this.totalamt = sumTotalAmt(detlList);
         this.totalcount = detlList.size();
@@ -165,7 +165,7 @@ public class ObtainHccbBillsAction implements Serializable {
     }
 
 */
-    public String onDeleteAll() {
+    public synchronized String onDeleteAll() {
         if (detlList.size() == 0) {
             MessageUtil.addWarn("记录为空。");
             return null;
@@ -175,7 +175,7 @@ public class ObtainHccbBillsAction implements Serializable {
         return null;
     }
 
-    public String onDeleteMulti() {
+    public synchronized String onDeleteMulti() {
         if (selectedRecords.length == 0) {
             MessageUtil.addWarn("请先选择记录。");
             return null;
@@ -189,7 +189,7 @@ public class ObtainHccbBillsAction implements Serializable {
 
 
     //=============
-    public void onUpload() {
+    public synchronized void onUpload() {
         long start = System.currentTimeMillis();
         int xlsRowImpCount = 0;
         int rowcount = 0;
