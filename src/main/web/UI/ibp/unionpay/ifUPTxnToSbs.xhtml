@@ -1,0 +1,148 @@
+<!--银联记账明细，需要做SBS入帐处理 -->
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui" xmlns:P="http://java.sun.com/jsf/html"
+                template="/templates/ui.xhtml">
+    <ui:define name="head">
+        <script type="text/javascript">
+            function doPopupWindow(obj) {
+                var pkid = obj.parentNode.parentNode.parentNode.getAttribute("data-rk");
+                var popupwindow = window.open("common/cutpayDetlFields.xhtml?pkid=" + pkid, "", "height=600,width=800,left=200,top=100,toolbar=no,menubar=no,scrollbars=yes,location=no");
+                popupwindow.focus;
+            }
+        </script>
+    </ui:define>
+    <ui:define name="content">
+        <div style="margin:5px">
+            <p:tabView id="tabview" dynamic="true" cache="false" style="font-weight:normal;font-style:normal">
+                <p:tab title="银联记账明细（#{ifUnionpayTxnAction.detlList.size()}）" id="toActTab">
+
+                    <div id="table">
+                        <h:form id="form">
+                            <p:menubar>
+                                <p:menuitem type="push" value="全部入账" icon="ui-icon ui-icon-document"
+                                            action="#{ifUnionpayTxnAction.onBookAll}" update=":tabview"
+                                            ajax="true"/>
+                                <p:menuitem type="push" value="多笔入账" icon="ui-icon ui-icon-disk"
+                                            action="#{ifUnionpayTxnAction.onBookMulti}" update=":tabview"/>
+                            </p:menubar>
+                            <p:messages id="msgs" showDetail="false"/>
+                            <p:ajaxStatus style="height:18px;text-align:center">
+                                <f:facet name="start">
+                                    <h:graphicImage value="/images/ajaxloadingbar.gif"/>
+                                </f:facet>
+                                <f:facet name="complete">
+                                    <h:outputText value=""/>
+                                </f:facet>
+                            </p:ajaxStatus>
+                            <p:dataTable id="pdt" dynamic="true" style="width:100%;"
+                                         value="#{ifUnionpayTxnAction.detlList}" var="record"
+                                         rowKey="#{record.pkid}"
+                                         selection="#{ifUnionpayTxnAction.selectedRecords}"
+                                         paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                                         paginator="true" rows="10" paginatorPosition="bottom"
+                                         rowsPerPageTemplate="30,15,10,5"
+                                         emptyMessage="数据记录为空...">
+
+                                <p:column selectionMode="multiple"/>
+
+                                <p:column headerText="记账流水号" style="text-align: center">
+                                    <h:outputText value="#{record.querySn}"/>
+                                </p:column>
+
+                                <p:column headerText="序号" style="text-align: left">
+                                    <h:outputText value="#{record.sn}"/>
+                                </p:column>
+
+                                <p:column headerText="账号" style="text-align: center">
+                                    <h:outputText value="#{record.account}"/>
+                                </p:column>
+
+                                <p:column headerText="账户名" style="text-align: left">
+                                    <h:outputText value="#{record.accountName}"/>
+                                </p:column>
+                                <p:column headerText="金额" sortBy="#{record.amount}">
+                                    <h:outputText value="#{record.amount}" style="float: right">
+                                        <f:convertNumber type="number" pattern="#,###,###,###,##0.00"/>
+                                    </h:outputText>
+                                </p:column>
+                                <p:column headerText="完成时间" style="text-align: center">
+                                    <h:outputText value="#{record.completeTime}">
+                                    </h:outputText>
+                                </p:column>
+                                <p:column headerText="返回码" style="text-align: center">
+                                    <h:outputText value="#{record.retCode}">
+                                    </h:outputText>
+                                </p:column>
+                                <p:column headerText="获取日期" sortBy="#{record.createtime}" style="text-align: center">
+                                    <h:outputText value="#{record.createtime}">
+                                    </h:outputText>
+                                </p:column>
+
+                                <p:column headerText="状态" style="text-align: center">
+                                    <h:outputText value="#{ifCcbTxnAction.status.valueOfAlias(record.bookflag).title}"/>
+                                </p:column>
+
+                            </p:dataTable>
+
+                        </h:form>
+                    </div>
+                    <div>
+
+                    </div>
+                </p:tab>
+                <p:tab title="SBS 已入账明细（#{ifUnionpayTxnAction.sbsTxnList.size()}）" id="sbsActList">
+                    <div id="qrytable">
+                        <h:form id="qryform">
+                            <p:dataTable id="qrypdt" dynamic="true" style="width:100%;"
+                                         value="#{ifUnionpayTxnAction.sbsTxnList}" var="sbs"
+                                         rowKey="#{record.pkid}"
+                                         paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                                         paginator="true" rows="15" paginatorPosition="bottom"
+                                         rowsPerPageTemplate="100,50,30,15,5"
+                                         emptyMessage="数据记录为空...">
+
+
+                                <p:column headerText="流水号" style="text-align: center">
+                                    <h:outputText value="#{sbs.serialno}"/>
+                                </p:column>
+
+                                <p:column headerText="转出账户" style="text-align: left">
+                                    <h:outputText value="#{sbs.outAct}"/>
+                                </p:column>
+
+                                <p:column headerText="转入账号" style="text-align: center">
+                                    <h:outputText value="#{sbs.inAct}"/>
+                                </p:column>
+
+                                <p:column headerText="转入账户名" style="text-align: left">
+                                    <h:outputText value="#{sbs.inActnam}"/>
+                                </p:column>
+
+                                <p:column headerText="交易金额" sortBy="#{sbs.txnamt}">
+                                    <h:outputText value="#{sbs.txnamt}" style="float: right">
+                                        <f:convertNumber type="number" pattern="#,###,###,###,##0.00"/>
+                                    </h:outputText>
+                                </p:column>
+
+                                <p:column headerText="交易时间" style="text-align: center">
+                                    <h:outputText value="#{sbs.txntime}">
+                                    </h:outputText>
+                                </p:column>
+
+                                <p:column headerText="操作员" style="text-align: center">
+                                    <h:outputText value="#{sbs.operid}">
+                                    </h:outputText>
+                                </p:column>
+                            </p:dataTable>
+                        </h:form>
+                    </div>
+                </p:tab>
+            </p:tabView>
+        </div>
+
+    </ui:define>
+
+</ui:composition>
