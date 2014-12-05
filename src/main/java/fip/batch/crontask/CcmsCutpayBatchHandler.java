@@ -74,7 +74,7 @@ public class CcmsCutpayBatchHandler implements AutoCutpayManager {
 
 
             performResultQueryTxn();
-            writebackBills();
+            //writebackBills();
         } catch (Exception e) {
             logger.error("消费信贷批量代扣错误。", e);
             //TODO 结果记录在数据库表中
@@ -196,6 +196,9 @@ public class CcmsCutpayBatchHandler implements AutoCutpayManager {
                 }
             }
         }
+
+        //TODO 只处理当前包的明细记录
+        writebackBills();
     }
 
     @Override
