@@ -321,7 +321,7 @@ public class BatchPkgService {
     }
 
 
-    public List<FipCutpaybat> selectSendableBatchs(BizType bizType, CutpayChannel channel, TxSendFlag sendFlag) {
+    public synchronized  List<FipCutpaybat> selectSendableBatchs(BizType bizType, CutpayChannel channel, TxSendFlag sendFlag) {
         FipCutpaybatExample example = new FipCutpaybatExample();
         example.createCriteria().andDeletedflagEqualTo("0").andArchiveflagEqualTo("0")
                 .andChannelEqualTo(channel.getCode())
@@ -357,7 +357,7 @@ public class BatchPkgService {
      * @param channel
      * @return
      */
-    public List<FipCutpaybat> selectNeedConfirmBatchRecords(BizType bizType, CutpayChannel channel) {
+    public synchronized  List<FipCutpaybat> selectNeedConfirmBatchRecords(BizType bizType, CutpayChannel channel) {
         FipCutpaybatExample example = new FipCutpaybatExample();
         example.or().andChannelEqualTo(channel.getCode())
                 .andSendflagEqualTo(TxSendFlag.SENT.getCode())

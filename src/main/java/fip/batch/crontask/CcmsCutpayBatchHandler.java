@@ -16,6 +16,8 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 /**
  * 新消费信贷后台自动代扣处理.  批量代扣
@@ -141,35 +143,56 @@ public class CcmsCutpayBatchHandler implements AutoCutpayManager {
 
         List<FipCutpaybat> needQueryBatList = batchPkgService.selectNeedConfirmBatchRecords(bizType, CutpayChannel.UNIPAY);
 
-        for (FipCutpaybat bat : needQueryBatList) {
-            boolean isQryOver = false;
-            int count = 0;
-            while (!isQryOver && count < 60) { //重发   3小时
-                try {
-                    String unipayRtnCode = unipayDepService.sendAndRecvCutpayT1003003Message(bat);
-                    count++;
-                    if (!StringUtils.isEmpty(unipayRtnCode)) {
-                        if (unipayRtnCode.startsWith("0") || unipayRtnCode.startsWith("1")) {  //无法查询到该交易，可以重发
-                            isQryOver = true;  //明确返回成功或失败
-                            logger.info("消费信贷自动批量代扣【代扣结果查询】：处理完成, 返回代码：" + unipayRtnCode);
-                        } else {
-                            isQryOver = false;
-                            logger.info("消费信贷自动批量代扣【代扣结果查询】：未返回明确结果，三分钟后继续查询, 返回代码：" + unipayRtnCode);
-                            Thread.sleep(3 * 60 * 1000); //未查回明确结果 3分钟后继续查询
-                        }
+        //并发进行
+        Executor executor = Executors.newCachedThreadPool();
+        for (final FipCutpaybat bat : needQueryBatList) {
+            try {
+                Thread.sleep(15 * 1000);
+            } catch (InterruptedException e) {
+                //
+            }
+            Runnable task = new Runnable() {
+                @Override
+                public void run() {
+                    doSendAndRecvOneBatchPkg(bat);
+                }
+            };
+            executor.execute(task);
+        }
+    }
+
+    private void doSendAndRecvOneBatchPkg(FipCutpaybat bat) {
+        boolean isQryOver = false;
+        int count = 0;
+        while (!isQryOver && count < 60) { //重发   3小时
+            try {
+                String unipayRtnCode = unipayDepService.sendAndRecvCutpayT1003003Message(bat);
+                count++;
+                if (!StringUtils.isEmpty(unipayRtnCode)) {
+                    if (unipayRtnCode.startsWith("0") || unipayRtnCode.startsWith("1")) {  //无法查询到该交易，可以重发
+                        isQryOver = true;  //明确返回成功或失败
+                        logger.info("消费信贷自动批量代扣【代扣结果查询】：处理完成, 返回代码：" + unipayRtnCode);
                     } else {
-                        logger.error("自动批量处理代扣交易结果查询：银联响应信息为空, 不再重发查询交易" + bat.getTxpkgSn());
-                        break;
+                        isQryOver = false;
+                        logger.info("消费信贷自动批量代扣【代扣结果查询】：未返回明确结果，三分钟后继续查询, 返回代码：" + unipayRtnCode);
+                        Thread.sleep(3 * 60 * 1000); //未查回明确结果 3分钟后继续查询
                     }
-                } catch (Exception e) {
-                    logger.error("自动批量处理结果查询交易处理失败", e);
-                    count++;
-                    isQryOver = false;
-                    try {
-                        Thread.sleep(3 * 60 * 1000);   //出现异常
-                    } catch (InterruptedException e1) {
-                        //
-                    }
+                } else {
+                    logger.error("自动批量处理代扣交易结果查询：银联响应信息为空, 不再重发查询交易" + bat.getTxpkgSn());
+                    break;
+                }
+                //查询10次以后 每次都回写
+                if (count >= 10) {
+                    writebackBills();
+                }
+            } catch (Exception e) {
+                logger.error("自动批量处理结果查询交易处理失败", e);
+                count++;
+                isQryOver = false;
+                try {
+                    Thread.sleep(3 * 60 * 1000);   //出现异常
+                } catch (InterruptedException e1) {
+                    //
                 }
             }
         }

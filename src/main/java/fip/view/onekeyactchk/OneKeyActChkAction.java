@@ -305,7 +305,9 @@ public class OneKeyActChkAction implements Serializable {
         } else if ("1000".equals(rtncode)) {
             app.setStatus(TxnStatus.ACCT_SUCC_NOTBANLANCE.getCode());
         } else if ("0001".equals(rtncode)) {
-            app.setStatus(TxnStatus.ACCT_SUCC_NOTBANLANCE.getCode());
+            app.setStatus(TxnStatus.ACCT_UNDERWAY.getCode());
+        } else {
+            app.setStatus(TxnStatus.ACCT_FAIL_EXCEPTION.getCode());
         }
         app.setRtnCode(rtncode);
         app.setRtnMsg(response.getINFO().getRTNMSG());
@@ -343,8 +345,11 @@ public class OneKeyActChkAction implements Serializable {
         } else if ("1000".equals(rtncode)) {
             app.setStatus(TxnStatus.ACCT_SUCC_NOTBANLANCE.getCode());
         } else if ("0001".equals(rtncode)) {
-            app.setStatus(TxnStatus.ACCT_SUCC_NOTBANLANCE.getCode());
+            app.setStatus(TxnStatus.ACCT_UNDERWAY.getCode());
+        } else {
+            app.setStatus(TxnStatus.ACCT_FAIL_EXCEPTION.getCode());
         }
+
         app.setRtnCode(rtncode);
         app.setRtnMsg(respVo.getRtnMsg());
         app.setResultQryTime(new DateTime().toString("HH:mm:ss"));

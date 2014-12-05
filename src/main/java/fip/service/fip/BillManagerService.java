@@ -608,7 +608,7 @@ public class BillManagerService {
      * @param billstatus
      * @return
      */
-    public List<FipCutpaydetl> selectRecords4UnipayBatch(BizType bizType, BillStatus billstatus) {
+    public synchronized  List<FipCutpaydetl> selectRecords4UnipayBatch(BizType bizType, BillStatus billstatus) {
         //List<String> bankcodes = toolsService.selectEnuItemValue("UnipayRealTxnBank");
 
         FipCutpaydetlExample example = new FipCutpaydetlExample();
