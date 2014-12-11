@@ -1,4 +1,4 @@
-package fip.view.onekeyactchk;
+package mock.onekeyactchk.domain;
 
 /**
  * Created by zhanrui on 2014/11/30.

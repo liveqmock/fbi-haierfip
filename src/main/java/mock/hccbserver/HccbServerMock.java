@@ -1,30 +1,35 @@
-package onekeyactchkmock;
+package mock.hccbserver;
 
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.io.xml.DomDriver;
-import fip.view.onekeyactchk.T1001Request;
-import fip.view.onekeyactchk.T1001Response;
-import fip.view.onekeyactchk.T1002Request;
-import fip.view.onekeyactchk.T1002Response;
+import fip.view.hccb.gateway.HccbBillVO;
+import fip.view.hccb.gateway.HccbT1001Request;
+import fip.view.hccb.gateway.HccbT1001Response;
+import mock.onekeyactchk.domain.T1002Request;
+import mock.onekeyactchk.domain.T1002Response;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by zhanrui on 2014/11/13.
  * 房地产资金管理系统 对账 mock
  */
-@WebServlet(name = "hfcactchk", urlPatterns = "/hfcactchk")
-public class HFCActChkMock extends HaierCardActChkMock {
-    private static final Logger logger = LoggerFactory.getLogger(HFCActChkMock.class);
+@WebServlet(name = "hccbserver", urlPatterns = "/hccbserver")
+public class HccbServerMock extends HttpServlet {
+    private static final Logger logger = LoggerFactory.getLogger(HccbServerMock.class);
 
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         response.setCharacterEncoding("GBK");
@@ -36,15 +41,15 @@ public class HFCActChkMock extends HaierCardActChkMock {
             reqXml = getRequestXmlMsg(request);
             logger.info(">>>>XML:" + reqXml);
 
-            int startIndex = reqXml.indexOf("<TXNCODE>")+"<TXNCODE>".length();
-            int endIndex = reqXml.indexOf("</TXNCODE>");
-            String txnCode = reqXml.substring(startIndex,endIndex);
+            int startIndex = reqXml.indexOf("<txncode>") + "<txncode>".length();
+            int endIndex = reqXml.indexOf("</txncode>");
+            String txnCode = reqXml.substring(startIndex, endIndex);
 
             String respXml = "";
             if ("1001".equals(txnCode)) {
                 respXml = process1001(reqXml);
             } else if ("1002".equals(txnCode)) {
-                Thread.sleep(25*1000);
+                Thread.sleep(25 * 1000);
                 respXml = process1002(reqXml);
             } else {
                 logger.error("交易号错误");
@@ -75,22 +80,57 @@ public class HFCActChkMock extends HaierCardActChkMock {
         return sb.toString();
     }
 
-    private  String process1001(String reqXml){
-        XStream xs = new XStream(new DomDriver());
-        xs.processAnnotations(T1001Request.class);
-        T1001Request tia = (T1001Request) xs.fromXML(reqXml);
-        logger.info(">>>>TIA:" + tia);
+    private String process1001(String reqXml) {
+        HccbT1001Request request = new HccbT1001Request();
+        request = (HccbT1001Request) request.toBean(reqXml);
+        logger.info(">>>>REQUEST:" + request);
 
-        T1001Response response = new T1001Response();
-        response.getINFO().setTXNCODE(tia.getINFO().getTXNCODE());
-        response.getINFO().setREQSN(tia.getINFO().getREQSN());
-        response.getINFO().setVERSION(tia.getINFO().getVERSION());
-        response.getINFO().setRTNCODE("0000");
-        response.getINFO().setRTNMSG("开始对账");
+        //init data
+        int billnum = 2001;
+        List<HccbBillVO> bills = new ArrayList<HccbBillVO>();
+        for (int i = 0; i < billnum; i++) {
+            HccbBillVO bill = new HccbBillVO();
+            bill.setActno("actno-" + i);
+            bills.add(bill);
+        }
 
-        return  response.toXml(response);
+        //txn
+        int pagesize = 0;
+        if (StringUtils.isNotEmpty(request.body.pagesize)) {
+            pagesize = Integer.parseInt(request.body.pagesize);
+        }
+        if (pagesize == 0) {
+            pagesize = 1000;
+        }
+        int pagesum = billnum % pagesize == 0 ? billnum / pagesize : billnum / pagesize + 1;
+
+        int pagenum = 1;
+        if (StringUtils.isNotEmpty(request.body.pagenum)) {
+            pagenum = Integer.parseInt(request.body.pagenum);
+        }
+
+        int step = 0;
+        int framenum = pagenum * pagesize;
+        List<HccbBillVO> billsForMsg = new ArrayList<HccbBillVO>();
+        for (HccbBillVO bill : bills) {
+            if (step >= framenum - pagesize && step < framenum) {
+                billsForMsg.add(bill);
+            }
+            if (step == framenum) {
+                break;
+            }
+            step++;
+        }
+
+
+        HccbT1001Response response = new HccbT1001Response();
+        response.body.pagesum = "" + pagesum;
+        response.body.records.bills = billsForMsg;
+
+        return response.toXml(response);
     }
-    private  String process1002(String reqXml){
+
+    private String process1002(String reqXml) {
         XStream xs = new XStream(new DomDriver());
         xs.processAnnotations(T1002Request.class);
         T1002Request tia = (T1002Request) xs.fromXML(reqXml);
@@ -103,6 +143,6 @@ public class HFCActChkMock extends HaierCardActChkMock {
         response.getINFO().setRTNCODE("0000");
         response.getINFO().setRTNMSG("平帐");
 
-        return  response.toXml(response);
+        return response.toXml(response);
     }
 }

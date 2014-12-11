@@ -1,4 +1,4 @@
-package fip.view.onekeyactchk;
+package mock.onekeyactchk.domain;
 
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.io.xml.DomDriver;

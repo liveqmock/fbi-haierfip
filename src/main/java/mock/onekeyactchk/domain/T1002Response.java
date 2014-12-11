@@ -1,4 +1,4 @@
-package fip.view.onekeyactchk;
+package mock.onekeyactchk.domain;
 
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 
@@ -6,7 +6,7 @@ import com.thoughtworks.xstream.annotations.XStreamAlias;
  * Created by zhanrui on 2014/11/27.
  */
 @XStreamAlias("ROOT")
-public class T1001Request extends HttpXmlMsg{
+public class T1002Response extends HttpXmlMsg{
     private Info INFO = new Info();
     private Body BODY = new Body();
 
@@ -30,6 +30,8 @@ public class T1001Request extends HttpXmlMsg{
         private String TXNCODE;
         private String VERSION;
         private String REQSN;
+        private String RTNCODE;
+        private String RTNMSG;
 
         public String getTXNCODE() {
             return TXNCODE;
@@ -54,53 +56,24 @@ public class T1001Request extends HttpXmlMsg{
         public void setREQSN(String REQSN) {
             this.REQSN = REQSN;
         }
+
+        public String getRTNCODE() {
+            return RTNCODE;
+        }
+
+        public void setRTNCODE(String RTNCODE) {
+            this.RTNCODE = RTNCODE;
+        }
+
+        public String getRTNMSG() {
+            return RTNMSG;
+        }
+
+        public void setRTNMSG(String RTNMSG) {
+            this.RTNMSG = RTNMSG;
+        }
     }
 
     public static class Body {
-        private String TXNDATE;
-        private String TXNTIME;
-        private String CHNCODE;
-        private String ACTION;
-        private String REMARK;
-
-        public String getTXNDATE() {
-            return TXNDATE;
-        }
-
-        public void setTXNDATE(String TXNDATE) {
-            this.TXNDATE = TXNDATE;
-        }
-
-        public String getTXNTIME() {
-            return TXNTIME;
-        }
-
-        public void setTXNTIME(String TXNTIME) {
-            this.TXNTIME = TXNTIME;
-        }
-
-        public String getCHNCODE() {
-            return CHNCODE;
-        }
-
-        public void setCHNCODE(String CHNCODE) {
-            this.CHNCODE = CHNCODE;
-        }
-
-        public String getACTION() {
-            return ACTION;
-        }
-
-        public void setACTION(String ACTION) {
-            this.ACTION = ACTION;
-        }
-
-        public String getREMARK() {
-            return REMARK;
-        }
-
-        public void setREMARK(String REMARK) {
-            this.REMARK = REMARK;
-        }
     }
 }

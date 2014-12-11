@@ -1,4 +1,4 @@
-package fip.view.onekeyactchk;
+package mock.onekeyactchk.domain;
 
 import fip.common.constant.EnumApp;
 

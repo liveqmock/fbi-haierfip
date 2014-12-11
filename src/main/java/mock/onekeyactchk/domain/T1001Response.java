@@ -1,4 +1,4 @@
-package fip.view.onekeyactchk;
+package mock.onekeyactchk.domain;
 
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 
@@ -6,7 +6,7 @@ import com.thoughtworks.xstream.annotations.XStreamAlias;
  * Created by zhanrui on 2014/11/27.
  */
 @XStreamAlias("ROOT")
-public class T1002Response extends HttpXmlMsg{
+public class T1001Response extends HttpXmlMsg{
     private Info INFO = new Info();
     private Body BODY = new Body();
 

@@ -1,11 +1,11 @@
-package onekeyactchkmock;
+package mock.onekeyactchk;
 
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.io.xml.DomDriver;
-import fip.view.onekeyactchk.T1001Request;
-import fip.view.onekeyactchk.T1001Response;
-import fip.view.onekeyactchk.T1002Request;
-import fip.view.onekeyactchk.T1002Response;
+import mock.onekeyactchk.domain.T1001Request;
+import mock.onekeyactchk.domain.T1001Response;
+import mock.onekeyactchk.domain.T1002Request;
+import mock.onekeyactchk.domain.T1002Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
