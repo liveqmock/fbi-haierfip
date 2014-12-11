@@ -13,6 +13,15 @@
                 popupwindow.focus;
             }
         </script>
+        <style type="text/css">
+            .col-95 {
+                width: 95%;
+            }
+
+            .col-5 {
+                width: 5%;
+            }
+        </style>
     </ui:define>
     <ui:define name="content">
         <div style="margin:5px">
@@ -21,6 +30,28 @@
 
                     <div id="table">
                         <h:form id="form">
+                            <p:panel style="margin-top:10px">
+                                <h:panelGrid columns="2" cellspacing="3" columnClasses="col-95,col-5">
+                                    <h:panelGrid columns="4" cellspacing="3">
+                                        <h:outputLabel value="起始日期:" for="startdate"/>
+                                        <p:inputText id="startdate"
+                                                     value="#{ifUnionpayTxnAction.qryParam.BEGIN_DATE}"
+                                                     onclick="WdatePicker()"/>
+                                        <h:outputLabel value="结束日期:" for="enddate"/>
+                                        <p:inputText id="enddate"
+                                                     value="#{ifUnionpayTxnAction.qryParam.END_DATE}"
+                                                     onclick="WdatePicker()"/>
+
+                                    </h:panelGrid>
+                                    <h:panelGrid>
+                                        <p:commandButton id="qrybtn" style="width:90px;" value="查询"
+                                                         action="#{ifUnionpayTxnAction.onQuery}"
+                                                         update=":tabview">
+                                        </p:commandButton>
+                                    </h:panelGrid>
+                                </h:panelGrid>
+                            </p:panel>
+                            <br/>
                             <p:menubar>
                                 <p:menuitem type="push" value="全部入账" icon="ui-icon ui-icon-document"
                                             action="#{ifUnionpayTxnAction.onBookAll}" update=":tabview"
@@ -28,6 +59,19 @@
                                 <p:menuitem type="push" value="多笔入账" icon="ui-icon ui-icon-disk"
                                             action="#{ifUnionpayTxnAction.onBookMulti}" update=":tabview"/>
                             </p:menubar>
+                            <br/>
+                            <h:panelGrid columns="4" cellspacing="1">
+                                <p:outputLabel
+                                        value="转出账户：#{ifUnionpayTxnAction.sbsOutActName}"/>
+                                <p:outputLabel
+                                        value="转出账号：#{ifUnionpayTxnAction.sbsOutAct}" style="margin-left: 20px;"/>
+                                <p:outputLabel
+                                        value="转入账户：#{ifUnionpayTxnAction.sbsInActName}"
+                                        style="margin-left: 20px;"/>
+                                <p:outputLabel
+                                        value="转入账号：#{ifUnionpayTxnAction.sbsInAct}" style="margin-left: 20px;"/>
+                            </h:panelGrid>
+
                             <p:messages id="msgs" showDetail="false"/>
                             <p:ajaxStatus style="height:18px;text-align:center">
                                 <f:facet name="start">
@@ -41,18 +85,14 @@
                                          value="#{ifUnionpayTxnAction.detlList}" var="record"
                                          rowKey="#{record.pkid}"
                                          selection="#{ifUnionpayTxnAction.selectedRecords}"
-                                         paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                                         paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown} 金额合计：#{ifUnionpayTxnAction.toActAmt}"
                                          paginator="true" rows="10" paginatorPosition="bottom"
                                          rowsPerPageTemplate="30,15,10,5"
                                          emptyMessage="数据记录为空...">
 
                                 <p:column selectionMode="multiple"/>
 
-                                <p:column headerText="记账流水号" style="text-align: center">
-                                    <h:outputText value="#{record.querySn}"/>
-                                </p:column>
-
-                                <p:column headerText="序号" style="text-align: left">
+                                <p:column headerText="序列号" style="text-align: center">
                                     <h:outputText value="#{record.sn}"/>
                                 </p:column>
 
@@ -68,13 +108,18 @@
                                         <f:convertNumber type="number" pattern="#,###,###,###,##0.00"/>
                                     </h:outputText>
                                 </p:column>
-                                <p:column headerText="完成时间" style="text-align: center">
-                                    <h:outputText value="#{record.completeTime}">
-                                    </h:outputText>
-                                </p:column>
+
                                 <p:column headerText="返回码" style="text-align: center">
                                     <h:outputText value="#{record.retCode}">
                                     </h:outputText>
+                                </p:column>
+                                <p:column headerText="银联代扣结果" style="text-align: right">
+                                    <h:outputText value="#{record.errMsg}">
+                                    </h:outputText>
+                                </p:column>
+                                <p:column headerText="发生时间" style="text-align: center"> <h:outputText
+                                        value="#{record.completeTime}">
+                                </h:outputText>
                                 </p:column>
                                 <p:column headerText="获取日期" sortBy="#{record.createtime}" style="text-align: center">
                                     <h:outputText value="#{record.createtime}">

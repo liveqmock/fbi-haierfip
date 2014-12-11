@@ -39,6 +39,17 @@ public class IbpSbsTransTxnService {
         return ibpSbsTranstxnMapper.selectByExample(example);
     }
 
+    public String qryMaxSerialNo() {
+        String strMaxSerialno = ibpSbsTranstxnMapper.qryMaxSerialNo();
+        if (StringUtils.isEmpty(strMaxSerialno)) {
+            return "FIPAA411000000001";
+        } else {
+            long newno = Long.parseLong(strMaxSerialno) + 1L;
+            return "FIPAA41" + newno;
+        }
+
+    }
+
     // 执行SBS交易 返回Form号
     public String executeSBSTxn(IbpSbsTranstxn txn, String remark) {
         List<String> paramList = assembleTaa41Param(txn.getSerialno(), txn.getOutAct(), txn.getInAct(), txn.getTxnamt(), remark);
@@ -56,8 +67,8 @@ public class IbpSbsTransTxnService {
 
         DecimalFormat df = new DecimalFormat("#############0.00");
         List<String> txnparamList = new ArrayList<String>();
-        String txndate = new SimpleDateFormat("yyyyMMdd").format(new Date());
-//        String txndate = "20141106";
+//        String txndate = new SimpleDateFormat("yyyyMMdd").format(new Date());
+        String txndate = "20141204";
 
         //转出帐户类型
         txnparamList.add("01");

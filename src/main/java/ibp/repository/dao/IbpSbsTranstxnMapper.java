@@ -4,6 +4,7 @@ import ibp.repository.model.IbpSbsTranstxn;
 import ibp.repository.model.IbpSbsTranstxnExample;
 import java.util.List;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -95,4 +96,7 @@ public interface IbpSbsTranstxnMapper {
      * @mbggenerated Wed Nov 05 14:58:40 CST 2014
      */
     int updateByPrimaryKey(IbpSbsTranstxn record);
+
+    @Select("select max(substr(t.serialno, 8)) from IBP_SBS_TRANSTXN t")
+    String qryMaxSerialNo();
 }

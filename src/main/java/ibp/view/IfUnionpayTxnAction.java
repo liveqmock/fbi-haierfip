@@ -3,10 +3,14 @@ package ibp.view;
 import fip.common.SystemService;
 import fip.common.constant.BillStatus;
 import fip.common.utils.MessageUtil;
+import fip.repository.model.fip.UnipayQryParam;
+import fip.repository.model.fip.UnipayQryResult;
+import fip.service.fip.UnipayHistoryQryService;
 import ibp.repository.model.*;
 import ibp.service.IbpIfUnionpayTxnService;
 import ibp.service.IbpSbsActService;
 import ibp.service.IbpSbsTransTxnService;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,6 +22,7 @@ import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
 import javax.faces.model.SelectItem;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -35,13 +40,16 @@ public class IfUnionpayTxnAction implements Serializable {
     private List<IbpSbsTranstxn> sbsTxnList = new ArrayList<IbpSbsTranstxn>();
     private List<IbpIfUnionpayTxn> filteredDetlList = new ArrayList<IbpIfUnionpayTxn>();
     private List<SelectItem> sbsActList = new ArrayList<SelectItem>();
+    private UnipayQryParam qryParam = new UnipayQryParam();
 
     private BillStatus status = BillStatus.INIT;
-    private String sbsInAct = "801000043902012001";
-    private String sbsInActName = "石家庄";
+    private String sbsInAct = "801000026113021001";
+    private String sbsInActName = "建行海尔路支行-ZYQD";
 
-    private String sbsOutAct = "801000026131041001";
-    private String sbsOutActName = "801000026131041001";
+    private String sbsOutAct = "801000026111041001";
+    private String sbsOutActName = "存放同业-建行海尔路支行";
+    private BigDecimal toActAmt = new BigDecimal("0.00");
+    private BigDecimal overActAmt = new BigDecimal("0.00");
 
     @ManagedProperty(value = "#{ibpIfUnionpayTxnService}")
     private IbpIfUnionpayTxnService ibpIfUnionpayTxnService;
@@ -49,14 +57,18 @@ public class IfUnionpayTxnAction implements Serializable {
     private IbpSbsTransTxnService ibpSbsTransTxnService;
     @ManagedProperty(value = "#{ibpSbsActService}")
     private IbpSbsActService ibpSbsActService;
-    private Map<String, String> actMap = new HashMap<String, String>();
+    @ManagedProperty(value = "#{unipayHistoryQryService}")
+    private UnipayHistoryQryService unipayHistoryQryService;
     DecimalFormat df = new DecimalFormat("0.00");
 
     @PostConstruct
     public void init() {
         try {
-            detlList = ibpIfUnionpayTxnService.qryUnionpayTxnsByBookFlag(BillStatus.INIT);
+            initDetList();
             sbsTxnList = ibpSbsTransTxnService.qryTodayTrans();
+            qryParam.setBEGIN_DATE(new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
+            qryParam.setEND_DATE(qryParam.getBEGIN_DATE());
+            qryParam.setBIZ_ID("ZYQD");
         } catch (Exception e) {
             logger.error("初始化时出现错误。", e);
             FacesContext context = FacesContext.getCurrentInstance();
@@ -66,19 +78,71 @@ public class IfUnionpayTxnAction implements Serializable {
 
     }
 
+    public void onQuery() {
+
+        try {
+
+            if (StringUtils.isEmpty(qryParam.getBIZ_ID())) {
+                qryParam.setBIZ_ID("ZYQD");
+            }
+            List<UnipayQryResult> upaylist = new ArrayList<UnipayQryResult>();
+
+            Map<String, String> rtnMainMsgMap = unipayHistoryQryService.queryCurrentData(qryParam, upaylist);
+
+            String rtn_code = rtnMainMsgMap.get("RTN_CODE");
+            if (!rtn_code.equals("0000")) {
+                MessageUtil.addWarn("银联返回信息：[" + rtn_code + "] " + rtnMainMsgMap.get("ERR_MSG"));
+                return;
+            } else {
+                // 保存银联明细
+                ibpIfUnionpayTxnService.insert(upaylist);
+                if (upaylist.isEmpty()) {
+                    MessageUtil.addWarn("银联返回代扣记录为空！");
+                    return;
+                } else {
+                    initDetList();
+                }
+            }
+
+        } catch (Exception e) {
+            logger.error("获取代扣记录时出错", e);
+            MessageUtil.addError("获取代扣记录时出错。" + e.getMessage() + e.getCause());
+        }
+        return;
+
+    }
+
 
     // 全部
     public void onBookAll() {
 
+        if (detlList.isEmpty()) {
+            MessageUtil.addWarn("没有待入账记录！");
+            return;
+        }
 
         bookList(detlList);
-        detlList = ibpIfUnionpayTxnService.qryUnionpayTxnsByBookFlag(BillStatus.INIT);
+        initDetList();
         sbsTxnList = ibpSbsTransTxnService.qryTodayTrans();
 
     }
 
+    private void initDetList() {
+        detlList = ibpIfUnionpayTxnService.qryUnionpayTxnsByBookFlag(BillStatus.INIT);
+        toActAmt = new BigDecimal("0.00");
+        for (IbpIfUnionpayTxn record : detlList) {
+            toActAmt = toActAmt.add(record.getAmount());
+        }
+    }
+
     // 多笔
     public void onBookMulti() {
+
+        if (detlList.isEmpty()) {
+            MessageUtil.addWarn("没有待入账记录！");
+            return;
+        }
+
         if (selectedRecords == null || selectedRecords.length <= 0) {
             MessageUtil.addInfo("请选择至少一项纪录！");
             return;
@@ -86,22 +150,25 @@ public class IfUnionpayTxnAction implements Serializable {
             List<IbpIfUnionpayTxn> txnList = Arrays.asList(selectedRecords);
             bookList(txnList);
         }
-        detlList = ibpIfUnionpayTxnService.qryUnionpayTxnsByBookFlag(BillStatus.INIT);
+        initDetList();
         sbsTxnList = ibpSbsTransTxnService.qryTodayTrans();
 
     }
 
     private void bookList(List<IbpIfUnionpayTxn> txnList) {
-        for (IbpIfUnionpayTxn record : txnList) {
+        try {
 
-            if (ibpIfUnionpayTxnService.isConflict(record)) {
-                MessageUtil.addError("并发冲突，刷新页面后重新操作！序号：" + record.getSn());
-                return;
-            }
-            try {
+            overActAmt = new BigDecimal("0.00");
+            for (IbpIfUnionpayTxn record : txnList) {
+
+                if (ibpIfUnionpayTxnService.isConflict(record)) {
+                    MessageUtil.addError("并发冲突，刷新页面后重新操作！序号：" + record.getSn());
+                    return;
+                }
                 IbpSbsTranstxn txn = new IbpSbsTranstxn();
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd HH:mm:ss");
-                txn.setSerialno(record.getQuerySn() + record.getSn());
+//                txn.setSerialno(record.getCompleteTime().substring(0, 8) + record.getSn().substring(record.getSn().length() - 10));
+                txn.setSerialno(ibpSbsTransTxnService.qryMaxSerialNo());
                 txn.setOutAct(sbsOutAct);
                 txn.setInAct(sbsInAct);
                 txn.setInActnam(sbsInActName);
@@ -117,19 +184,21 @@ public class IfUnionpayTxnAction implements Serializable {
                     ibpSbsTransTxnService.insertTxn(txn);
                     record.setBookflag(BillStatus.ACCOUNT_SUCCESS.getCode());
                     ibpIfUnionpayTxnService.update(record);
+                    overActAmt = overActAmt.add(txn.getTxnamt());
                     sbsActList.clear();
                 } else {
-                    MessageUtil.addError("入账失败：SBS返回码 " + formCode);
+                    MessageUtil.addError("入账失败：SBS返回码 " + formCode + " sn:" + record.getSn());
                     return;
                 }
                 //
-            } catch (Exception e) {
-                logger.error("交易出现异常。", e);
-                MessageUtil.addError("交易出现异常!");
-                detlList = ibpIfUnionpayTxnService.qryUnionpayTxnsByBookFlag(BillStatus.INIT);
-                sbsTxnList = ibpSbsTransTxnService.qryTodayTrans();
-                return;
             }
+            MessageUtil.addInfo("SBS入账完成，本次入账金额：" + overActAmt.toString());
+        } catch (Exception e) {
+            logger.error("交易出现异常。", e);
+            MessageUtil.addError("交易出现异常!");
+            initDetList();
+            sbsTxnList = ibpSbsTransTxnService.qryTodayTrans();
+            return;
         }
     }
 
@@ -201,12 +270,12 @@ public class IfUnionpayTxnAction implements Serializable {
         this.ibpSbsActService = ibpSbsActService;
     }
 
-    public Map<String, String> getActMap() {
-        return actMap;
+    public UnipayHistoryQryService getUnipayHistoryQryService() {
+        return unipayHistoryQryService;
     }
 
-    public void setActMap(Map<String, String> actMap) {
-        this.actMap = actMap;
+    public void setUnipayHistoryQryService(UnipayHistoryQryService unipayHistoryQryService) {
+        this.unipayHistoryQryService = unipayHistoryQryService;
     }
 
     public DecimalFormat getDf() {
@@ -223,6 +292,14 @@ public class IfUnionpayTxnAction implements Serializable {
 
     public void setFilteredDetlList(List<IbpIfUnionpayTxn> filteredDetlList) {
         this.filteredDetlList = filteredDetlList;
+    }
+
+    public UnipayQryParam getQryParam() {
+        return qryParam;
+    }
+
+    public void setQryParam(UnipayQryParam qryParam) {
+        this.qryParam = qryParam;
     }
 
     public String getSbsInAct() {
@@ -255,5 +332,21 @@ public class IfUnionpayTxnAction implements Serializable {
 
     public void setSbsOutActName(String sbsOutActName) {
         this.sbsOutActName = sbsOutActName;
+    }
+
+    public BigDecimal getToActAmt() {
+        return toActAmt;
+    }
+
+    public void setToActAmt(BigDecimal toActAmt) {
+        this.toActAmt = toActAmt;
+    }
+
+    public BigDecimal getOverActAmt() {
+        return overActAmt;
+    }
+
+    public void setOverActAmt(BigDecimal overActAmt) {
+        this.overActAmt = overActAmt;
     }
 }

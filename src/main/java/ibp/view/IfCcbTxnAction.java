@@ -104,7 +104,8 @@ public class IfCcbTxnAction implements Serializable {
         try {
             IbpSbsTranstxn txn = new IbpSbsTranstxn();
             SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd HH:mm:ss");
-            txn.setSerialno(selectedRecord.getTxdate() + selectedRecord.getTxseqid());
+//            txn.setSerialno(selectedRecord.getTxdate() + selectedRecord.getTxseqid());
+            txn.setSerialno(ibpSbsTransTxnService.qryMaxSerialNo());
             txn.setOutAct(sbsOutAct);
             txn.setInAct(sbsAct);
             String inActName = actMap.get(sbsAct);
