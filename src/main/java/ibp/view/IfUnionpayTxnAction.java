@@ -11,6 +11,9 @@ import ibp.service.IbpIfUnionpayTxnService;
 import ibp.service.IbpSbsActService;
 import ibp.service.IbpSbsTransTxnService;
 import org.apache.commons.lang.StringUtils;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,16 +62,17 @@ public class IfUnionpayTxnAction implements Serializable {
     private IbpSbsActService ibpSbsActService;
     @ManagedProperty(value = "#{unipayHistoryQryService}")
     private UnipayHistoryQryService unipayHistoryQryService;
-    DecimalFormat df = new DecimalFormat("0.00");
 
     @PostConstruct
     public void init() {
         try {
-            initDetList();
             sbsTxnList = ibpSbsTransTxnService.qryTodayTrans();
-            qryParam.setBEGIN_DATE(new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
-            qryParam.setEND_DATE(qryParam.getBEGIN_DATE());
+            DateTime yesterday = new DateTime().minusDays(1);
+            String yesterdayStr = yesterday.toString("yyyy-MM-dd");
+            qryParam.setBEGIN_DATE(yesterdayStr);
+            qryParam.setEND_DATE(yesterdayStr);
             qryParam.setBIZ_ID("ZYQD");
+            initDetList();
         } catch (Exception e) {
             logger.error("初始化时出现错误。", e);
             FacesContext context = FacesContext.getCurrentInstance();
@@ -81,6 +85,17 @@ public class IfUnionpayTxnAction implements Serializable {
     public void onQuery() {
 
         try {
+
+            DateTime begin = new DateTime(qryParam.getBEGIN_DATE());
+            DateTime end = new DateTime(qryParam.getEND_DATE());
+            DateTime today = new DateTime(new DateTime().toString("yyyy-MM-dd"));
+            if (!begin.isBefore(today) || !end.isBefore(today)) {
+                MessageUtil.addError("今日资金可能未到账，日期请选择昨日或之前。");
+                return;
+            } else if (begin.isAfter(end)) {
+                MessageUtil.addError("起始日期不能大于截止日期。");
+                return;
+            }
 
             if (StringUtils.isEmpty(qryParam.getBIZ_ID())) {
                 qryParam.setBIZ_ID("ZYQD");
@@ -95,7 +110,10 @@ public class IfUnionpayTxnAction implements Serializable {
                 return;
             } else {
                 // 保存银联明细
-                ibpIfUnionpayTxnService.insert(upaylist);
+                logger.info("本次查询到自有渠道银联代扣记录笔数：" + upaylist.size());
+                int cnt = ibpIfUnionpayTxnService.insert(upaylist);
+                logger.info("本次保存自有渠道银联代扣记录笔数：" + cnt);
+
                 if (upaylist.isEmpty()) {
                     MessageUtil.addWarn("银联返回代扣记录为空！");
                     return;
@@ -128,7 +146,7 @@ public class IfUnionpayTxnAction implements Serializable {
     }
 
     private void initDetList() {
-        detlList = ibpIfUnionpayTxnService.qryUnionpayTxnsByBookFlag(BillStatus.INIT);
+        detlList = ibpIfUnionpayTxnService.qryUnionpayTxnsByBookFlag(BillStatus.INIT, qryParam.getBEGIN_DATE(), qryParam.getEND_DATE());
         toActAmt = new BigDecimal("0.00");
         for (IbpIfUnionpayTxn record : detlList) {
             toActAmt = toActAmt.add(record.getAmount());
@@ -276,14 +294,6 @@ public class IfUnionpayTxnAction implements Serializable {
 
     public void setUnipayHistoryQryService(UnipayHistoryQryService unipayHistoryQryService) {
         this.unipayHistoryQryService = unipayHistoryQryService;
-    }
-
-    public DecimalFormat getDf() {
-        return df;
-    }
-
-    public void setDf(DecimalFormat df) {
-        this.df = df;
     }
 
     public List<IbpIfUnionpayTxn> getFilteredDetlList() {

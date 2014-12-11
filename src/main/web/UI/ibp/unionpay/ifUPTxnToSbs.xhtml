@@ -117,9 +117,10 @@
                                     <h:outputText value="#{record.errMsg}">
                                     </h:outputText>
                                 </p:column>
-                                <p:column headerText="发生时间" style="text-align: center"> <h:outputText
-                                        value="#{record.completeTime}">
-                                </h:outputText>
+                                <p:column headerText="发生时间" sortBy="#{record.completeTime}" style="text-align: center">
+                                    <h:outputText
+                                            value="#{record.completeTime}">
+                                    </h:outputText>
                                 </p:column>
                                 <p:column headerText="获取日期" sortBy="#{record.createtime}" style="text-align: center">
                                     <h:outputText value="#{record.createtime}">

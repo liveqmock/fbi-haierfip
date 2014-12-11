@@ -32,10 +32,20 @@ public class IbpIfUnionpayTxnService {
     @Autowired
     private IbpIfUnionpayTxnMapper ibpIfUnionpayTxnMapper;
 
-    public List<IbpIfUnionpayTxn> qryUnionpayTxnsByBookFlag(BillStatus bookFlag) {
+    public List<IbpIfUnionpayTxn> qryUnionpayTxnsByBookFlag(BillStatus bookFlag, String beginDate, String endDate) {
+        if (beginDate.contains("-")) {
+            beginDate = beginDate.replace("-", "");
+        }
+        if (endDate.contains("-")) {
+            endDate = endDate.replace("-", "");
+        }
         IbpIfUnionpayTxnExample example = new IbpIfUnionpayTxnExample();
-        example.createCriteria().andBookflagEqualTo(bookFlag.getCode()).andRetCodeEqualTo("0000");
-        example.setOrderByClause(" createtime,query_sn,sn desc ");
+        if (beginDate.equals(endDate)) {
+            example.createCriteria().andBookflagEqualTo(bookFlag.getCode()).andCompleteTimeLike(beginDate + "%");
+        } else {
+            example.createCriteria().andBookflagEqualTo(bookFlag.getCode()).andCompleteTimeBetween(beginDate, endDate + " 240000");
+        }
+        example.setOrderByClause(" createtime,sn desc ");
         return ibpIfUnionpayTxnMapper.selectByExample(example);
     }
 
@@ -51,10 +61,11 @@ public class IbpIfUnionpayTxnService {
         }
         int cnt = 0;
         for (UnipayQryResult result : upaylist) {
-            example.createCriteria().andCompleteTimeEqualTo(result.getCOMPLETE_TIME()).andSnEqualTo(result.getSN());
+            example.clear();
+            example.createCriteria().andAccountEqualTo(result.getACCOUNT()).andSnEqualTo(result.getSN());
             List<IbpIfUnionpayTxn> txns = ibpIfUnionpayTxnMapper.selectByExample(example);
             // 不存在则做保存处理
-            if (txns == null || txns.isEmpty()) {
+            if ((txns == null || txns.isEmpty()) && "0000".equals(result.getRET_CODE())) {
                 //
                 IbpIfUnionpayTxn txn = new IbpIfUnionpayTxn();
                 txn.setPkid(UUID.randomUUID().toString());
@@ -64,7 +75,10 @@ public class IbpIfUnionpayTxnService {
                 txn.setOrafileId(result.getORAFILE_ID());
                 txn.setAccount(result.getACCOUNT());
                 txn.setAccountName(result.getACCOUNT_NAME());
-                txn.setAmount(new BigDecimal(result.getAMOUNT()).divide(new BigDecimal("100.00")).subtract(new BigDecimal("1.50")));
+                logger.info("银联返回 户名:" + result.getACCOUNT_NAME() + " SN:" + result.getSN() + "  AMT:" + result.getAMOUNT());
+
+                txn.setAmount((new BigDecimal(result.getAMOUNT()).divide(new BigDecimal("100.00"))).subtract(new BigDecimal("1.50")));
+                logger.info("系统保存 户名:" + result.getACCOUNT_NAME() + " SN:" + result.getSN() + "  AMT:" + txn.getAmount());
                 txn.setCustUserid(result.getCUST_USERID());
                 txn.setCompleteTime(result.getCOMPLETE_TIME());
                 txn.setRemark(result.getREMARK());
@@ -73,8 +87,7 @@ public class IbpIfUnionpayTxnService {
                 txn.setBookflag(BillStatus.INIT.getCode());
                 txn.setCreatetime(datetime);
                 txn.setOperid(operid);
-                ibpIfUnionpayTxnMapper.insert(txn);
-                cnt++;
+                cnt += ibpIfUnionpayTxnMapper.insert(txn);
             }
             // 已存在则不做处理
         }
