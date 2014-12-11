@@ -1,12 +1,8 @@
 package mock.hccbserver;
 
-import com.thoughtworks.xstream.XStream;
-import com.thoughtworks.xstream.io.xml.DomDriver;
 import fip.view.hccb.gateway.HccbBillVO;
 import fip.view.hccb.gateway.HccbT1001Request;
 import fip.view.hccb.gateway.HccbT1001Response;
-import mock.onekeyactchk.domain.T1002Request;
-import mock.onekeyactchk.domain.T1002Response;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,9 +44,9 @@ public class HccbServerMock extends HttpServlet {
             String respXml = "";
             if ("1001".equals(txnCode)) {
                 respXml = process1001(reqXml);
-            } else if ("1002".equals(txnCode)) {
+            } else if ("1003".equals(txnCode)) {
                 Thread.sleep(25 * 1000);
-                respXml = process1002(reqXml);
+                respXml = process1003(reqXml);
             } else {
                 logger.error("交易号错误");
                 throw new RuntimeException("交易号错误");
@@ -111,6 +107,7 @@ public class HccbServerMock extends HttpServlet {
 
         int step = 0;
         int framenum = pagenum * pagesize;
+
         List<HccbBillVO> billsForMsg = new ArrayList<HccbBillVO>();
         for (HccbBillVO bill : bills) {
             if (step >= framenum - pagesize && step < framenum) {
@@ -130,19 +127,8 @@ public class HccbServerMock extends HttpServlet {
         return response.toXml(response);
     }
 
-    private String process1002(String reqXml) {
-        XStream xs = new XStream(new DomDriver());
-        xs.processAnnotations(T1002Request.class);
-        T1002Request tia = (T1002Request) xs.fromXML(reqXml);
-        logger.info(">>>>TIA:" + tia);
+    private String process1003(String reqXml) {
 
-        T1002Response response = new T1002Response();
-        response.getINFO().setTXNCODE(tia.getINFO().getTXNCODE());
-        response.getINFO().setREQSN(tia.getINFO().getREQSN());
-        response.getINFO().setVERSION(tia.getINFO().getVERSION());
-        response.getINFO().setRTNCODE("0000");
-        response.getINFO().setRTNMSG("平帐");
-
-        return response.toXml(response);
+        return "";
     }
 }

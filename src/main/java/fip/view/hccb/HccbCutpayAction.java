@@ -1,8 +1,6 @@
 package fip.view.hccb;
 
-import fip.view.hccb.gateway.HccbBillVO;
-import fip.view.hccb.gateway.HccbT1001Request;
-import fip.view.hccb.gateway.HccbT1001Response;
+import fip.view.hccb.gateway.*;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -32,14 +30,12 @@ public class HccbCutpayAction {
         int txcount = 1;
         int pagesize = 10;
         try {
-            HccbT1001Response response = sendAndRecv(pagesize, txcount);
-
+            HccbT1001Response response = sendAndRecvT1001(pagesize, txcount);
             assembleBills(bills, response);
-
             int pagesum = Integer.parseInt(response.body.pagesum);
-            while (txcount <= pagesum) {
+            while (txcount < pagesum) {
                 txcount++;
-                response = sendAndRecv(pagesize, txcount);
+                response = sendAndRecvT1001(pagesize, txcount);
                 assembleBills(bills, response);
             }
             logger.info("" + bills.size());
@@ -48,13 +44,24 @@ public class HccbCutpayAction {
         }
     }
 
+    public  void doSendFeedback(){
+        try {
+            HccbT1003Response response = sendAndRecvT1003();
+            String rtnCode = response.head.getRtncode();
+            //TODO
+        } catch (Exception e) {
+            logger.error("", e);
+        }
+
+    }
+    //====
     private void assembleBills(List<HccbBillVO> bills, HccbT1001Response response) {
         for (HccbBillVO bill : response.body.records.bills) {
             bills.add(bill);
         }
     }
 
-    private HccbT1001Response sendAndRecv(int pagesize, int pagenum) {
+    private HccbT1001Response sendAndRecvT1001(int pagesize, int pagenum) {
         HccbT1001Request req = new HccbT1001Request();
         req.head.setTxnsn(new SimpleDateFormat("yyyyMMddHHmmssSSS").format(new Date()));
         req.head.setTxndate(new SimpleDateFormat("yyyyMMdd").format(new Date()));
@@ -66,26 +73,49 @@ public class HccbCutpayAction {
         String reqXml = req.toXml(req);
         logger.info("HCCB request:" + reqXml);
 
-        String respXml = doPost("http://localhost:8080/haierfip/hccbserver", reqXml, "GBK");
+        String respXml = postHttpMsg("http://localhost:8080/haierfip/hccbserver", reqXml, "GBK");
         logger.info("HCCB response:" + respXml);
 
         if (StringUtils.isEmpty(respXml)) {
             throw new RuntimeException("HCCB 响应报文为空");
         }
-        HccbT1001Response response = null;
-        response = new HccbT1001Response();
+        HccbT1001Response response = new HccbT1001Response();
         response = (HccbT1001Response) response.toBean(respXml);
+        return response;
+    }
+    private HccbT1003Response sendAndRecvT1003() {
+        List<HccbResultVO> records = new ArrayList<HccbResultVO>();
+
+        HccbT1003Request req = new HccbT1003Request();
+        req.head.setTxnsn(new SimpleDateFormat("yyyyMMddHHmmssSSS").format(new Date()));
+        req.head.setTxndate(new SimpleDateFormat("yyyyMMdd").format(new Date()));
+        req.head.setTxntime(new SimpleDateFormat("HHmmss").format(new Date()));
+
+        req.body.totalitems = "2";
+        req.body.totalamt = "123.45";
+
+        String reqXml = req.toXml(req);
+        logger.info("HCCB request:" + reqXml);
+
+        String respXml = postHttpMsg("http://localhost:8080/haierfip/hccbserver", reqXml, "GBK");
+        logger.info("HCCB response:" + respXml);
+
+        if (StringUtils.isEmpty(respXml)) {
+            throw new RuntimeException("HCCB 响应报文为空");
+        }
+        HccbT1003Response response = new HccbT1003Response();
+        response = (HccbT1003Response) response.toBean(respXml);
         return response;
     }
 
 
-    private String doPost(String serverUrl, String datagram, String charsetName) {
+    private String postHttpMsg(String serverUrl, String datagram, String charsetName) {
         HttpClient httpclient = new DefaultHttpClient();
         try {
             //请求超时
             httpclient.getParams().setParameter(CoreConnectionPNames.CONNECTION_TIMEOUT, 1000 * 20);
             //读取超时
-            httpclient.getParams().setParameter(CoreConnectionPNames.SO_TIMEOUT, 1000 * 30);
+            httpclient.getParams().setParameter(CoreConnectionPNames.SO_TIMEOUT, 1000 * 120);
 
             HttpPost httppost = new HttpPost(serverUrl);
             httppost.getURI();

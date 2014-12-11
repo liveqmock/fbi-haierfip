@@ -8,19 +8,22 @@ import java.util.List;
 
 /**
  * Created by zhanrui on 2014/12/10.
+ * 批量返回结果
  */
 @XStreamAlias("root")
-public class HccbT1001Response extends HccbMsg {
+public class HccbT1003Request extends HccbMsg {
     public Body body = new Body();
 
     public static class Body {
-        public String pagesum = "0";
+        public String totalitems = "0";
+        public String totalamt = "0.00";
         public BodyRecords records = new BodyRecords();
 
         @Override
         public String toString() {
             return "Body{" +
-                    "pagesum='" + pagesum + '\'' +
+                    "totalitems='" + totalitems + '\'' +
+                    ", totalamt='" + totalamt + '\'' +
                     ", records=" + records +
                     '}';
         }
@@ -28,32 +31,22 @@ public class HccbT1001Response extends HccbMsg {
 
     public static class BodyRecords {
         @XStreamImplicit(itemFieldName = "record")
-        public List<HccbBillVO> bills = new ArrayList<HccbBillVO>();
+        public List<HccbResultVO> cutpayResults = new ArrayList<HccbResultVO>();
 
         @Override
         public String toString() {
             return "BodyRecords{" +
-                    "cutpayResults=" + bills +
+                    "cutpayResults=" + cutpayResults +
                     '}';
         }
     }
 
     @Override
     public String toString() {
-        return "HccbT1001Response{" +
+        return "HccbT1003Request{" +
                 "head=" + head +
                 "body=" + body +
                 '}';
     }
 
-    public static void main(String argv[]) {
-        HccbT1001Response req = new HccbT1001Response();
-        HccbBillVO vo = new HccbBillVO();
-        req.body.records.bills.add(vo);
-        vo = new HccbBillVO();
-        req.body.records.bills.add(vo);
-
-        String xml = req.toXml(req);
-        System.out.println(xml);
-    }
 }
