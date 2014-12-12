@@ -60,7 +60,7 @@ public class IfCcbTxnAction implements Serializable {
     public void init() {
         try {
             detlList = ibpIfCcbTxnService.qryCcbTxnsByBookFlag(BillStatus.INIT);
-            sbsTxnList = ibpSbsTransTxnService.qryTodayTrans();
+            sbsTxnList = ibpSbsTransTxnService.qryTodayTrans("N102");
         } catch (Exception e) {
             logger.error("初始化时出现错误。", e);
             FacesContext context = FacesContext.getCurrentInstance();
@@ -112,7 +112,7 @@ public class IfCcbTxnAction implements Serializable {
             txn.setInActnam(inActName == null ? (sbsActName + sbsAct) : inActName);
             txn.setTxnamt(selectedRecord.getTxamount());
             txn.setTxntime(sdf.format(new Date()));
-            txn.setTxncode("aa41");
+            txn.setTxncode("N102");
             txn.setOperid(SystemService.getOperatorManager().getOperatorId());
             String formCode = ibpSbsTransTxnService.executeSBSTxn(txn, "N102", selectedRecord.getOutacctname() + "&" + selectedRecord.getAbstractstr());
             logger.info("SBS返回码:" + formCode);
@@ -126,7 +126,7 @@ public class IfCcbTxnAction implements Serializable {
                 sbsAct = "";
                 sbsActName = " ";
                 detlList = ibpIfCcbTxnService.qryCcbTxnsByBookFlag(BillStatus.INIT);
-                sbsTxnList = ibpSbsTransTxnService.qryTodayTrans();
+                sbsTxnList = ibpSbsTransTxnService.qryTodayTrans("N102");
                 selectedRecord = null;
                 actMap.clear();
                 sbsActList.clear();

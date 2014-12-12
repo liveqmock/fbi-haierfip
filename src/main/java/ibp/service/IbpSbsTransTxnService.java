@@ -33,9 +33,9 @@ public class IbpSbsTransTxnService {
         return ibpSbsTranstxnMapper.insert(txn);
     }
 
-    public List<IbpSbsTranstxn> qryTodayTrans() {
+    public List<IbpSbsTranstxn> qryTodayTrans(String code) {
         IbpSbsTranstxnExample example = new IbpSbsTranstxnExample();
-        example.createCriteria().andTxntimeLike(new SimpleDateFormat("yyyyMMdd").format(new Date()) + "%");
+        example.createCriteria().andTxntimeLike(new SimpleDateFormat("yyyyMMdd").format(new Date()) + "%").andTxncodeEqualTo(code);
         return ibpSbsTranstxnMapper.selectByExample(example);
     }
 

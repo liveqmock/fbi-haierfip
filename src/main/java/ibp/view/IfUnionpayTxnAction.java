@@ -12,8 +12,6 @@ import ibp.service.IbpSbsActService;
 import ibp.service.IbpSbsTransTxnService;
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,7 +24,6 @@ import javax.faces.context.FacesContext;
 import javax.faces.model.SelectItem;
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -66,13 +63,12 @@ public class IfUnionpayTxnAction implements Serializable {
     @PostConstruct
     public void init() {
         try {
-            sbsTxnList = ibpSbsTransTxnService.qryTodayTrans();
             DateTime yesterday = new DateTime().minusDays(1);
             String yesterdayStr = yesterday.toString("yyyy-MM-dd");
             qryParam.setBEGIN_DATE(yesterdayStr);
             qryParam.setEND_DATE(yesterdayStr);
             qryParam.setBIZ_ID("ZYQD");
-            initDetList();
+            initDataList();
         } catch (Exception e) {
             logger.error("初始化时出现错误。", e);
             FacesContext context = FacesContext.getCurrentInstance();
@@ -118,7 +114,7 @@ public class IfUnionpayTxnAction implements Serializable {
                     MessageUtil.addWarn("银联返回代扣记录为空！");
                     return;
                 } else {
-                    initDetList();
+                    initDataList();
                 }
             }
 
@@ -140,17 +136,17 @@ public class IfUnionpayTxnAction implements Serializable {
         }
 
         bookList(detlList);
-        initDetList();
-        sbsTxnList = ibpSbsTransTxnService.qryTodayTrans();
+        initDataList();
 
     }
 
-    private void initDetList() {
+    private void initDataList() {
         detlList = ibpIfUnionpayTxnService.qryUnionpayTxnsByBookFlag(BillStatus.INIT, qryParam.getBEGIN_DATE(), qryParam.getEND_DATE());
         toActAmt = new BigDecimal("0.00");
         for (IbpIfUnionpayTxn record : detlList) {
             toActAmt = toActAmt.add(record.getAmount());
         }
+        sbsTxnList = ibpSbsTransTxnService.qryTodayTrans("N101");
     }
 
     // 多笔
@@ -168,8 +164,7 @@ public class IfUnionpayTxnAction implements Serializable {
             List<IbpIfUnionpayTxn> txnList = Arrays.asList(selectedRecords);
             bookList(txnList);
         }
-        initDetList();
-        sbsTxnList = ibpSbsTransTxnService.qryTodayTrans();
+        initDataList();
 
     }
 
@@ -192,7 +187,7 @@ public class IfUnionpayTxnAction implements Serializable {
                 txn.setInActnam(sbsInActName);
                 txn.setTxnamt(record.getAmount());
                 txn.setTxntime(sdf.format(new Date()));
-                txn.setTxncode("aa41");
+                txn.setTxncode("N101");
                 txn.setOperid(SystemService.getOperatorManager().getOperatorId());
                 String formCode = ibpSbsTransTxnService.executeSBSTxn(txn, "N101", "自有渠道银联代扣");
                 logger.info(txn.getSerialno() + " SBS返回码:" + formCode);
@@ -214,8 +209,7 @@ public class IfUnionpayTxnAction implements Serializable {
         } catch (Exception e) {
             logger.error("交易出现异常。", e);
             MessageUtil.addError("交易出现异常!");
-            initDetList();
-            sbsTxnList = ibpSbsTransTxnService.qryTodayTrans();
+            initDataList();
             return;
         }
     }
