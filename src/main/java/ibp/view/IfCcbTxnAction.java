@@ -114,7 +114,7 @@ public class IfCcbTxnAction implements Serializable {
             txn.setTxntime(sdf.format(new Date()));
             txn.setTxncode("aa41");
             txn.setOperid(SystemService.getOperatorManager().getOperatorId());
-            String formCode = ibpSbsTransTxnService.executeSBSTxn(txn, selectedRecord.getOutacctname() + "&" + selectedRecord.getAbstractstr());
+            String formCode = ibpSbsTransTxnService.executeSBSTxn(txn, "N102", selectedRecord.getOutacctname() + "&" + selectedRecord.getAbstractstr());
             logger.info("SBS·µ»ØÂë:" + formCode);
             if ("T531".equals(formCode) || "T999".equals(formCode)) {
                 txn.setFormcode(formCode);

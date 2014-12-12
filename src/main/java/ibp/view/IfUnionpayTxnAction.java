@@ -194,7 +194,7 @@ public class IfUnionpayTxnAction implements Serializable {
                 txn.setTxntime(sdf.format(new Date()));
                 txn.setTxncode("aa41");
                 txn.setOperid(SystemService.getOperatorManager().getOperatorId());
-                String formCode = ibpSbsTransTxnService.executeSBSTxn(txn, "自有渠道银联代扣");
+                String formCode = ibpSbsTransTxnService.executeSBSTxn(txn, "N101", "自有渠道银联代扣");
                 logger.info(txn.getSerialno() + " SBS返回码:" + formCode);
                 if ("T531".equals(formCode) || "T999".equals(formCode)) {
                     txn.setFormcode(formCode);

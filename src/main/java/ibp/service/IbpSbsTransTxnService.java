@@ -51,14 +51,15 @@ public class IbpSbsTransTxnService {
     }
 
     // 执行SBS交易 返回Form号
-    public String executeSBSTxn(IbpSbsTranstxn txn, String remark) {
-        List<String> paramList = assembleTaa41Param(txn.getSerialno(), txn.getOutAct(), txn.getInAct(), txn.getTxnamt(), remark);
+    public String executeSBSTxn(IbpSbsTranstxn txn, String productCode, String remark) {
+        List<String> paramList = assembleTaa41Param(txn.getSerialno(), txn.getOutAct(),
+                txn.getInAct(), txn.getTxnamt(), productCode, remark);
         logger.info(paramList.toString());
         byte[] sbsResBytes = DepCtgManager.processSingleResponsePkg("aa41", paramList);
         return new String(sbsResBytes, 21, 4);
     }
 
-    private static List<String> assembleTaa41Param(String sn, String fromAcct, String toAcct, BigDecimal txnAmt, String remark) {
+    private static List<String> assembleTaa41Param(String sn, String fromAcct, String toAcct, BigDecimal txnAmt, String productCode, String remark) {
 
         // 转出账户
         String outAct = StringUtils.rightPad(fromAcct, 22, ' ');
@@ -67,8 +68,8 @@ public class IbpSbsTransTxnService {
 
         DecimalFormat df = new DecimalFormat("#############0.00");
         List<String> txnparamList = new ArrayList<String>();
-//        String txndate = new SimpleDateFormat("yyyyMMdd").format(new Date());
-        String txndate = "20141204";
+        String txndate = new SimpleDateFormat("yyyyMMdd").format(new Date());
+//        String txndate = "20141204";
 
         //转出帐户类型
         txnparamList.add("01");
@@ -118,7 +119,7 @@ public class IbpSbsTransTxnService {
         //摘要
         txnparamList.add(remark == null ? "" : rightPad4ChineseToByteLength(remark, 25, " "));
         //产品码
-        txnparamList.add("N101");
+        txnparamList.add(productCode);
         //MAGFL1
         txnparamList.add(" ");
         //MAGFL2
