@@ -276,7 +276,7 @@ public class UnipayDepCcmsRefundAction implements Serializable {
         } else {
             int count = 0;
             try {
-                count = ccmsService.writebackRefundRecord2CCMS(this.needQueryDetlList, false);
+                count = ccmsService.writebackRefundRecord2CCMS(this.needQueryDetlList, false, this.bizType);
                 MessageUtil.addWarn("回写成功记录条数：" + count);
             } catch (Exception e) {
                 MessageUtil.addError("数据处理错误！" + e.getMessage());
@@ -293,7 +293,7 @@ public class UnipayDepCcmsRefundAction implements Serializable {
         } else {
             int count = 0;
             try {
-                count = ccmsService.writebackRefundRecord2CCMS(this.successDetlList, true);
+                count = ccmsService.writebackRefundRecord2CCMS(this.successDetlList, true, this.bizType);
                 MessageUtil.addWarn("回写成功记录条数：" + count);
             } catch (Exception e) {
                 MessageUtil.addError("数据处理错误！" + e.getMessage());
@@ -310,7 +310,7 @@ public class UnipayDepCcmsRefundAction implements Serializable {
         } else {
             int count = 0;
             try {
-                count = ccmsService.writebackRefundRecord2CCMS(this.failureDetlList, true);
+                count = ccmsService.writebackRefundRecord2CCMS(this.failureDetlList, true, this.bizType);
                 billManagerService.archiveRefundBills(this.failureDetlList);
                 MessageUtil.addWarn("回写记录条数：" + count);
             } catch (Exception e) {
@@ -329,7 +329,7 @@ public class UnipayDepCcmsRefundAction implements Serializable {
             try {
                 int count = 0;
                 List<FipRefunddetl> detlList = Arrays.asList(this.selectedNeedQryRecords);
-                count = ccmsService.writebackRefundRecord2CCMS(detlList, false);
+                count = ccmsService.writebackRefundRecord2CCMS(detlList, false, this.bizType);
                 MessageUtil.addWarn("更新记录条数：" + count);
             } catch (Exception e) {
                 MessageUtil.addError("数据处理错误！" + e.getMessage());
@@ -347,7 +347,7 @@ public class UnipayDepCcmsRefundAction implements Serializable {
             try {
                 int count = 0;
                 List<FipRefunddetl> detlList = Arrays.asList(this.selectedConfirmAccountRecords);
-                count = ccmsService.writebackRefundRecord2CCMS(detlList, true);
+                count = ccmsService.writebackRefundRecord2CCMS(detlList, true, this.bizType);
                 MessageUtil.addWarn("更新记录条数：" + count);
             } catch (Exception e) {
                 MessageUtil.addError("数据处理错误！" + e.getMessage());
@@ -365,7 +365,7 @@ public class UnipayDepCcmsRefundAction implements Serializable {
             try {
                 int count = 0;
                 List<FipRefunddetl> detlList = Arrays.asList(this.selectedFailRecords);
-                count = ccmsService.writebackRefundRecord2CCMS(detlList, true);
+                count = ccmsService.writebackRefundRecord2CCMS(detlList, true, this.bizType);
                 //billManagerService.archiveRefundBills(detlList);
                 MessageUtil.addWarn("更新记录条数：" + count);
             } catch (Exception e) {

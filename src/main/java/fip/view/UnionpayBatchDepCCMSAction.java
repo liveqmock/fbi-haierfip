@@ -16,7 +16,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * 银联批量代扣.
+ * 银联批量代扣
  * User: zhanrui
  * Date: 2014-08-13
  */
@@ -53,7 +53,7 @@ public class UnionpayBatchDepCCMSAction extends UnionpayBatchAction implements S
         } else {
             int count = 0;
             try {
-                count = ccmsService.writebackCutPayRecord2CCMS(this.needQueryDetlList, false);
+                count = ccmsService.writebackCutPayRecord2CCMS(this.needQueryDetlList, false, this.bizType);
                 MessageUtil.addWarn("回写成功记录条数：" + count);
             } catch (Exception e) {
                 MessageUtil.addError("数据处理错误！" + e.getMessage());
@@ -70,7 +70,7 @@ public class UnionpayBatchDepCCMSAction extends UnionpayBatchAction implements S
             try {
                 int count = 0;
                 List<FipCutpaydetl> cutpaydetlList = Arrays.asList(this.selectedNeedQryRecords);
-                count = ccmsService.writebackCutPayRecord2CCMS(cutpaydetlList, false);
+                count = ccmsService.writebackCutPayRecord2CCMS(cutpaydetlList, false, this.bizType);
                 MessageUtil.addWarn("更新记录条数：" + count);
             } catch (Exception e) {
                 MessageUtil.addError("数据处理错误！" + e.getMessage());
@@ -90,7 +90,7 @@ public class UnionpayBatchDepCCMSAction extends UnionpayBatchAction implements S
         } else {
             int count = 0;
             try {
-                count = ccmsService.writebackCutPayRecord2CCMS(this.successDetlList, true);
+                count = ccmsService.writebackCutPayRecord2CCMS(this.successDetlList, true, this.bizType);
                 MessageUtil.addWarn("回写成功记录条数：" + count);
             } catch (Exception e) {
                 MessageUtil.addError("数据处理错误！" + e.getMessage());
@@ -107,7 +107,7 @@ public class UnionpayBatchDepCCMSAction extends UnionpayBatchAction implements S
         } else {
             int count = 0;
             try {
-                count = ccmsService.writebackCutPayRecord2CCMS(this.failureDetlList, true);
+                count = ccmsService.writebackCutPayRecord2CCMS(this.failureDetlList, true, this.bizType);
                 MessageUtil.addWarn("回写记录条数：" + count);
             } catch (Exception e) {
                 MessageUtil.addError("数据处理错误！" + e.getMessage());
@@ -126,7 +126,7 @@ public class UnionpayBatchDepCCMSAction extends UnionpayBatchAction implements S
             try {
                 int count = 0;
                 List<FipCutpaydetl> cutpaydetlList = Arrays.asList(this.selectedConfirmAccountRecords);
-                count = ccmsService.writebackCutPayRecord2CCMS(cutpaydetlList, true);
+                count = ccmsService.writebackCutPayRecord2CCMS(cutpaydetlList, true, this.bizType);
                 MessageUtil.addWarn("更新记录条数：" + count);
             } catch (Exception e) {
                 MessageUtil.addError("数据处理错误！" + e.getMessage());
@@ -144,7 +144,7 @@ public class UnionpayBatchDepCCMSAction extends UnionpayBatchAction implements S
             try {
                 int count = 0;
                 List<FipCutpaydetl> cutpaydetlList = Arrays.asList(this.selectedFailRecords);
-                count = ccmsService.writebackCutPayRecord2CCMS(cutpaydetlList, true);
+                count = ccmsService.writebackCutPayRecord2CCMS(cutpaydetlList, true, this.bizType);
                 MessageUtil.addWarn("更新记录条数：" + count);
             } catch (Exception e) {
                 MessageUtil.addError("数据处理错误！" + e.getMessage());

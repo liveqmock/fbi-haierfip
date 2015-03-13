@@ -19,13 +19,11 @@ import pgw.CCMSHttpManager;
 public class T100102Handler extends BaseTxnHandler{
     private Logger logger = LoggerFactory.getLogger(this.getClass());
     private XStream xstream;
-    private CCMSHttpManager httpManager;
 
     public T100102Handler(){
         xstream = new XStream(new DomDriver());
         xstream.processAnnotations(T100102Request.class);
         xstream.processAnnotations(T100102Response.class);
-        httpManager = new CCMSHttpManager(SERVER_ID);
     }
     public boolean start(T100102Request request) {
         //T100102Request request = new T100102Request();
@@ -41,6 +39,7 @@ public class T100102Handler extends BaseTxnHandler{
         //发送请求
         String responseBody = null;
         try {
+            CCMSHttpManager httpManager = new CCMSHttpManager(SERVER_ID);
             responseBody = httpManager.doPostXml(strXml);
         } catch (Exception e) {
             logger.error("通讯失败");

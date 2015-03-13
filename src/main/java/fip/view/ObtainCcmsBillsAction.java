@@ -68,6 +68,7 @@ public class ObtainCcmsBillsAction implements Serializable {
     private BizType bizType;
 
     private List<SelectItem> billStatusOptions;
+    private String title="";
 
     @PostConstruct
     public void init() {
@@ -77,6 +78,13 @@ public class ObtainCcmsBillsAction implements Serializable {
                 this.bizType = BizType.valueOf(bizid);
                 qrydetlList = new ArrayList<FipCutpaydetl>();
                 initDetlList();
+                if (this.bizType.equals(BizType.XFNEW)) {
+                    this.title = "消费信贷系统";
+                } else if (this.bizType.equals(BizType.XFJR)) {
+                    this.title = "消费金融系统";
+                } else {
+                    this.title = "====系统错误=======";
+                }
             }
         } catch (Exception e) {
             logger.error("初始化时出现错误。");
@@ -360,5 +368,13 @@ public class ObtainCcmsBillsAction implements Serializable {
 
     public void setFilteredQrydetlList(List<FipCutpaydetl> filteredQrydetlList) {
         this.filteredQrydetlList = filteredQrydetlList;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
     }
 }

@@ -108,7 +108,7 @@ public class CcmsWritebackAction implements Serializable {
 
     public String onWritebackAll() {
         try {
-            ccmsService.writebackCutPayRecord2CCMS(this.detlList, true);
+            ccmsService.writebackCutPayRecord2CCMS(this.detlList, true, this.bizType);
             MessageUtil.addInfo("信贷系统回写处理结束。");
         } catch (Exception e) {
             logger.error("信贷系统回写时出现错误，请查询。", e);
@@ -120,7 +120,7 @@ public class CcmsWritebackAction implements Serializable {
 
     public String onWritebackMulti() {
         try {
-            ccmsService.writebackCutPayRecord2CCMS(Arrays.asList(this.selectedRecords), true);
+            ccmsService.writebackCutPayRecord2CCMS(Arrays.asList(this.selectedRecords), true, this.bizType);
             MessageUtil.addInfo("信贷系统回写处理结束，请查看处理结果明细。");
         } catch (Exception e) {
             logger.error("信贷系统回写时出现错误，请查询。", e);

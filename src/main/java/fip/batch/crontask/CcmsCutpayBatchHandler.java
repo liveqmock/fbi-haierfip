@@ -211,10 +211,10 @@ public class CcmsCutpayBatchHandler implements AutoCutpayManager {
         List<FipCutpaydetl> needQueryDetlList = billManagerService.selectRecords4UnipayBatchDetail(this.bizType, BillStatus.CUTPAY_QRY_PEND);
 
 
-        int succCnt = ccmsService.writebackCutPayRecord2CCMS(successDetlList, true);
-        int failCnt = ccmsService.writebackCutPayRecord2CCMS(failureDetlList, true);
+        int succCnt = ccmsService.writebackCutPayRecord2CCMS(successDetlList, true, bizType);
+        int failCnt = ccmsService.writebackCutPayRecord2CCMS(failureDetlList, true, bizType);
         //回写结果不明记录 不归档
-        int qryCnt = ccmsService.writebackCutPayRecord2CCMS(needQueryDetlList, false);
+        int qryCnt = ccmsService.writebackCutPayRecord2CCMS(needQueryDetlList, false, bizType);
 
         try {
             Thread.sleep(500);
@@ -244,7 +244,7 @@ public class CcmsCutpayBatchHandler implements AutoCutpayManager {
     //===========================================================
     public static void main(String... argv) {
         ApplicationContext context = new ClassPathXmlApplicationContext("applicationContext.xml");
-        CcmsCutpayBatchHandler handler = (CcmsCutpayBatchHandler) context.getBean("ccmsCutpayHandler");
+        CcmsCutpayBatchHandler handler = (CcmsCutpayBatchHandler) context.getBean("ccmsCutpayBatchHandler");
 //        handler.obtainBills();
         handler.performCutpayTxn();
         handler.writebackBills();

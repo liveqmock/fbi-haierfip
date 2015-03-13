@@ -29,12 +29,12 @@
     <ui:define name="content">
         <div style="margin:5px">
             <p:tabView id="tabview" dynamic="true" cache="false" style="font-weight:normal;font-style:normal">
-                <p:tab title="新消费信贷系统代扣记录查询">
+                <p:tab title="#{obtainCcmsBillsAction.title}代扣记录查询">
                     <div id="qrytable">
                         <h:form id="qryform">
                             <p:messages  id="qrymsgs" showDetail="false"/>
                             <p:menubar>
-                                <p:menuitem type="push" value="查询消费信贷系统的代扣记录" icon="ui-icon ui-icon-gear"
+                                <p:menuitem type="push" value="查询#{obtainCcmsBillsAction.title}代扣记录" icon="ui-icon ui-icon-gear"
                                             action="#{obtainCcmsBillsAction.onQryCms}" update="qrymsgs, qrypdt"
                                             ajax="true"/>
                                 <p:menuitem type="push" value="获取选择的代扣记录" icon="ui-icon ui-icon-gear"
@@ -107,12 +107,12 @@
                         </h:form>
                     </div>
                 </p:tab>
-                <p:tab title="新消费信贷系统代扣记录处理">
+                <p:tab title="#{obtainCcmsBillsAction.title}代扣记录处理">
                     <div id="table">
                         <h:form id="form">
                             <p:messages id="msgs" showDetail="false"/>
                             <p:menubar>
-                                <p:menuitem type="push" value="获取消费信贷系统的代扣记录" icon="ui-icon ui-icon-gear"
+                                <p:menuitem type="push" value="获取#{obtainCcmsBillsAction.title}代扣记录" icon="ui-icon ui-icon-gear"
                                             action="#{obtainCcmsBillsAction.onObtain}" update="msgs,:tabview:form:pdt" ajax="true"/>
                                 <p:menuitem type="push" value="全部删除" icon="ui-icon ui-icon-close"
                                             action="#{obtainCcmsBillsAction.onDeleteAll}" update="msgs,:tabview:form:pdt" ajax="true"/>

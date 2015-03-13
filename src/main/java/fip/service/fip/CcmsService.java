@@ -32,14 +32,14 @@ import java.util.UUID;
 
 /**
  * 消费信贷正常还款处理.
+ * 20150312 zr 消费金融
  * User: zhanrui
- * Date: 11-8-13
- * Time: 下午3:10
- * To change this template use File | Settings | File Templates.
+ * Date: 2011-8-13
  */
 @Service
 public class CcmsService {
     private static final Logger logger = LoggerFactory.getLogger(CcmsService.class);
+    private  int uniqKeyLen = 20;
 
     @Autowired
     private BillManagerService billManagerService;
@@ -50,18 +50,9 @@ public class CcmsService {
     private FipRefunddetlMapper fipRefunddetlMapper;
     @Autowired
     private FipJoblogMapper fipJoblogMapper;
-    @Autowired
-    private XfappMapper xfappMapper;
-
-    @Autowired
-    private XfapprepaymentMapper xfapprepaymentMapper;
 
     /**
      * 查询消费信贷系统的代扣记录（可供选择性获取）    (不包括罚息帐单)
-     *
-     * @param bizType
-     * @param billType
-     * @return
      */
     public List<FipCutpaydetl> doQueryCcmsBills(BizType bizType, BillType billType) {
 
@@ -120,14 +111,16 @@ public class CcmsService {
                 continue;
             }
             //TODO 判断业务主键是否重复   注意 修改IOUNO长度时需要同步修改commonmapper中的SQL
-            boolean isNotRepeated = billManagerService.checkNoRepeatedBizkeyRecords4Ccms(cutpaydetl.getIouno().substring(0, 20), cutpaydetl.getPoano(), cutpaydetl.getBilltype());
+            //boolean isNotRepeated = billManagerService.checkNoRepeatedBizkeyRecords4Ccms(cutpaydetl.getIouno().substring(0, 20), cutpaydetl.getPoano(), cutpaydetl.getBilltype());
+            String uniqKey = cutpaydetl.getIouno().substring(0, uniqKeyLen);
+            boolean isNotRepeated = billManagerService.checkNoRepeatedBizkeyRecords4Ccms(uniqKeyLen, uniqKey, cutpaydetl.getPoano(), cutpaydetl.getBilltype(), cutpaydetl.getOriginBizid());
             if (isNotRepeated) {
                 cutpaydetl.setDateCmsGet(new Date());
                 fipCutpaydetlMapper.insert(cutpaydetl);
                 count++;
             } else {
                 returnMsgs.add("重复记录：" + cutpaydetl.getIouno() + cutpaydetl.getClientname());
-                logger.error("获取新消费信贷数据时检查出重复记录：" + cutpaydetl.getIouno() + cutpaydetl.getClientname());
+                logger.error("获取数据时检查出重复记录：" + cutpaydetl.getIouno() + cutpaydetl.getClientname());
             }
         }
 
@@ -157,9 +150,9 @@ public class CcmsService {
                         continue;
                     }
                     //TODO 判断业务主键是否重复   注意 修改IOUNO长度时需要同步修改commonmapper中的SQL
-                    //boolean isNotRepeated = billManagerService.checkNoRepeatedBizkeyRecords(cutpaydetl.getIouno().substring(0, 14), cutpaydetl.getPoano(), cutpaydetl.getBilltype());
-                    //boolean isNotRepeated = billManagerService.checkNoRepeatedBizkeyRecords4Ccms(cutpaydetl.getIouno().substring(0, 14), cutpaydetl.getPoano(), cutpaydetl.getBilltype());
-                    boolean isNotRepeated = billManagerService.checkNoRepeatedBizkeyRecords4Ccms(cutpaydetl.getIouno().substring(0, 20), cutpaydetl.getPoano(), cutpaydetl.getBilltype());
+                    //boolean isNotRepeated = billManagerService.checkNoRepeatedBizkeyRecords4Ccms(cutpaydetl.getIouno().substring(0, 20), cutpaydetl.getPoano(), cutpaydetl.getBilltype());
+                    String uniqKey = cutpaydetl.getIouno().substring(0, uniqKeyLen);
+                    boolean isNotRepeated = billManagerService.checkNoRepeatedBizkeyRecords4Ccms(uniqKeyLen, uniqKey, cutpaydetl.getPoano(), cutpaydetl.getBilltype(), cutpaydetl.getOriginBizid());
                     if (isNotRepeated) {
                         cutpaydetl.setDateCmsGet(new Date());
                         fipCutpaydetlMapper.insert(cutpaydetl);
@@ -252,44 +245,56 @@ public class CcmsService {
     //====================
     private List<T100101ResponseRecord> getCcmsResponseRecords(BizType bizType) {
         //获取新信贷数据LIST
-        T100101Handler ctl;
-        ctl = new T100101Handler();
+        T100101Handler ctl = new T100101Handler();
+        ctl.setSERVER_ID(getServerId(bizType));
 
-        String biztype = "";
+/*
+        String bizFlag = "";
         if (bizType.equals(BizType.FD)) {
-            biztype = "1";
+            bizFlag = "1";
         } else if (bizType.equals(BizType.XFNEW)) {
-            biztype = "2";
+            bizFlag = "2";
         }
+*/
         //查询 房贷/消费信贷（1/2） 数据
-        return ctl.start(biztype);
+        String bizFlag = "2";
+        return ctl.start(bizFlag);
+    }
+
+    private String getServerId(BizType bizType) {
+        String servId = "";
+        if (bizType.equals(BizType.XFNEW)) {
+            servId = "CCMS_SERVER_URL";
+        }else if (bizType.equals(BizType.XFJR)) {
+            servId = "XFJR_SERVER_URL";
+        } else {
+            throw  new RuntimeException("业务类别错误.");
+        }
+        return servId;
     }
 
     private List<T200101ResponseRecord> getCcmsRefundResponseRecords(BizType bizType) {
-        //获取新信贷数据LIST
-        T200101Handler ctl;
-        ctl = new T200101Handler();
+        //获取数据LIST
+        T200101Handler ctl = new T200101Handler();
+        ctl.setSERVER_ID(getServerId(bizType));
 
-        String biztype = "";
+
+/*        String bizFlag = "";
         if (bizType.equals(BizType.FD)) {
-            biztype = "1";
+            bizFlag = "1";
         } else if (bizType.equals(BizType.XFNEW)) {
-            biztype = "2";
-        }
+            bizFlag = "2";
+        }*/
+
         //查询 房贷/消费信贷（1/2） 数据
-        return ctl.start(biztype);
+        String bizFlag = "2";
+        return ctl.start(bizFlag);
     }
 
 
     /**
      * 不包括 罚息帐单处理 ！！！
-     *
-     * @param bizType
-     * @param batchSn
-     * @param iBatchDetlSn
-     * @param billType
-     * @param responseBean
-     * @return
+     * Billtype: 帐单性质 （“0”：基本帐单， “1”逾期帐单, “2”提前还款帐单, "3"消费信贷首付帐单）
      */
 
     private FipCutpaydetl assembleCutpayRecord(BizType bizType,
@@ -339,7 +344,7 @@ public class CcmsService {
         cutpaydetl.setBilltype(billType.getCode());
 
         //还款渠道信息
-        if (bizType.equals(BizType.XFNEW)) {
+        if (bizType.equals(BizType.XFNEW)||bizType.equals(BizType.XFJR)) {
             cutpaydetl.setBiChannel(CutpayChannel.UNIPAY.getCode()); //默认为银联
             cutpaydetl.setBiBankactno(responseBean.getStdhkzh());
             cutpaydetl.setBiBankactname(responseBean.getStdkhmc());
@@ -363,7 +368,12 @@ public class CcmsService {
         cutpaydetl.setSendflag("0");
 
         //zhanrui 20120305  标识消费信贷数据来源自信贷系统 便与回写时区分来源系统
-        cutpaydetl.setRemark3("XF-CCMS");
+        if (bizType.equals(BizType.XFNEW)) {
+            cutpaydetl.setRemark3("XF-CCMS");
+        }
+        if (bizType.equals(BizType.XFJR)) {
+            cutpaydetl.setRemark3("XF-XFJR");
+        }
 
         cutpaydetl.setDateCmsGet(new Date());
 
@@ -375,6 +385,7 @@ public class CcmsService {
      * 区分建行直连渠道版本  暂不用   20120912  zhanrui
      */
 
+    /*
     private FipCutpaydetl assembleCutpayRecordNew4CcbDirect(BizType bizType,
                                                String batchSn,
                                                int iBatchDetlSn,
@@ -456,6 +467,7 @@ public class CcmsService {
 
         return cutpaydetl;
     }
+    */
 
     //代付记录
     private FipRefunddetl assembleRefundRecord(BizType bizType,
@@ -502,7 +514,7 @@ public class CcmsService {
         //refunddetl.setBilltype(billType.getCode());
 
         //还款渠道信息
-        if (bizType.equals(BizType.XFNEW)) {
+        if (bizType.equals(BizType.XFNEW)||bizType.equals(BizType.XFJR)) {
             refunddetl.setBiChannel(CutpayChannel.UNIPAY.getCode()); //默认为银联
             refunddetl.setBiBankactno(responseBean.getStdhkzh());
             refunddetl.setBiBankactname(responseBean.getStdkhmc());
@@ -534,19 +546,6 @@ public class CcmsService {
 
     //============================================
 
-
-    /**
-     * 检查本地表中既存记录的状态 不允许有
-     * 1、状态不明的记录
-     * 2、未发送的记录
-     * 3、发送成功的记录（发送成功的必须入帐回写）
-     *
-     * @return
-     */
-    private boolean checkLocalBillsStatus() {
-        return true;
-    }
-
     //TODO  事务
     private void batchInsertLogByBatchno(String batchno) {
         FipCutpaydetlExample example = new FipCutpaydetlExample();
@@ -571,7 +570,7 @@ public class CcmsService {
             log.setTablename("fip_cutpaydetl");
             log.setRowpkid(fipCutpaydetl.getPkid());
             log.setJobname("新建记录");
-            log.setJobdesc("新获取新消费信贷系统代扣记录");
+            log.setJobdesc("新获取代扣记录");
             log.setJobtime(date);
             log.setJobuserid(userid);
             log.setJobusername(username);
@@ -601,7 +600,7 @@ public class CcmsService {
             log.setTablename("fip_refunddetl");
             log.setRowpkid(detl.getPkid());
             log.setJobname("新建记录");
-            log.setJobdesc("新获取新消费信贷系统代扣记录");
+            log.setJobdesc("新获取代付记录");
             log.setJobtime(date);
             log.setJobuserid(userid);
             log.setJobusername(username);
@@ -613,9 +612,11 @@ public class CcmsService {
      * 回写信息系统（正常帐单及提前还款帐单）
      */
     //@Transactional 回写时不做整体事务处理
-    public int writebackCutPayRecord2CCMS(List<FipCutpaydetl> cutpaydetlList, boolean isArchive) {
+    public int writebackCutPayRecord2CCMS(List<FipCutpaydetl> cutpaydetlList, boolean isArchive, BizType bizType) {
         int count = 0;
         T100102Handler t100102ctl = new T100102Handler();
+        t100102ctl.setSERVER_ID(getServerId(bizType));
+
 
         for (FipCutpaydetl detl : cutpaydetlList) {
             boolean txResult = false;
@@ -666,7 +667,7 @@ public class CcmsService {
             FipJoblog log = new FipJoblog();
             log.setTablename("fip_cutpaydetl");
             log.setRowpkid(detl.getPkid());
-            log.setJobname("新消费信贷回写处理");
+            log.setJobname("回写处理");
             log.setJobtime(date);
             log.setJobuserid(userid);
             log.setJobusername(username);
@@ -677,11 +678,11 @@ public class CcmsService {
                     detl.setArchiveflag("1");   //回写完成 做存档处理
                 }
                 detl.setDateCmsPut(new Date());
-                log.setJobdesc("新消费信贷回写处理成功");
+                log.setJobdesc("回写处理成功");
                 count++;
             } else {
                 detl.setWritebackflag("0");
-                log.setJobdesc("新消费信贷回写处理失败");
+                log.setJobdesc("处理失败");
             }
             fipJoblogMapper.insert(log);
             detl.setRecversion(detl.getRecversion() + 1);
@@ -690,9 +691,10 @@ public class CcmsService {
         return count;
     }
 
-    public int writebackRefundRecord2CCMS(List<FipRefunddetl> detlList, boolean isArchive) {
+    public int writebackRefundRecord2CCMS(List<FipRefunddetl> detlList, boolean isArchive, BizType bizType) {
         int count = 0;
         T200102Handler ctl = new T200102Handler();
+        ctl.setSERVER_ID(getServerId(bizType));
 
         for (FipRefunddetl detl : detlList) {
             boolean txResult = false;
@@ -749,7 +751,7 @@ public class CcmsService {
             FipJoblog log = new FipJoblog();
             log.setTablename("fip_refunddetl");
             log.setRowpkid(detl.getPkid());
-            log.setJobname("新消费信贷回写处理");
+            log.setJobname("回写处理");
             log.setJobtime(date);
             log.setJobuserid(userid);
             log.setJobusername(username);
@@ -760,11 +762,11 @@ public class CcmsService {
                     detl.setArchiveflag("1");   //回写完成 做存档处理
                 }
                 detl.setDateCmsPut(new Date());
-                log.setJobdesc("新消费信贷回写处理成功");
+                log.setJobdesc("回写处理成功");
                 count++;
             } else {
                 detl.setWritebackflag("0");
-                log.setJobdesc("新消费信贷回写处理失败");
+                log.setJobdesc("回写处理失败");
             }
             fipJoblogMapper.insert(log);
             detl.setRecversion(detl.getRecversion() + 1);

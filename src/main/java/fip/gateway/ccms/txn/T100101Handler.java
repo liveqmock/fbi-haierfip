@@ -108,7 +108,7 @@ public class T100101Handler extends BaseTxnHandler implements java.io.Serializab
 
         //查询 房贷/消费信贷（1/2） 数据
         request.setStdcxlx(systemcode);
-        int pkgcnt = 100;
+        int pkgcnt = 1000;
         int startnum = 1;
         request.setStdymjls(String.valueOf(pkgcnt));
         //request.setStdqsjls("1");

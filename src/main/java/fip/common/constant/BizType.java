@@ -19,6 +19,7 @@ public enum BizType implements EnumApp {
     HCSP("HCSP", "售后"),
     ZYQD("ZYQD", "自有渠道"),
     GM("GM", "个人买方信贷"),
+    XFJR("XFJR", "消费金融"),
     HCCB("HCCB", "海尔小贷");
 
     private String code = null;

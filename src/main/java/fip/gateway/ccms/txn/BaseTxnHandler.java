@@ -8,5 +8,13 @@ package fip.gateway.ccms.txn;
  * To change this template use File | Settings | File Templates.
  */
 public class BaseTxnHandler {
-    protected static String SERVER_ID = "CCMS_SERVER_URL";
+    protected  String SERVER_ID = "CCMS_SERVER_URL";
+
+    public String getSERVER_ID() {
+        return SERVER_ID;
+    }
+
+    public void setSERVER_ID(String SERVER_ID) {
+        this.SERVER_ID = SERVER_ID;
+    }
 }

@@ -29,7 +29,6 @@ import java.util.*;
  * User: zhanrui
  * Date: 2012-03-18
  * Time: 12:52:46
- * To change this template use File | Settings | File Templates.
  */
 @ManagedBean
 @ViewScoped
@@ -93,6 +92,7 @@ public class UnionpayDepCcmsAction implements Serializable {
     private String pkid;
     private BizType bizType;
 
+    private String title="";
 
     private String userid, username;
 
@@ -108,6 +108,13 @@ public class UnionpayDepCcmsAction implements Serializable {
             if (!StringUtils.isEmpty(this.bizid)) {
                 this.bizType = BizType.valueOf(this.bizid);
                 initList();
+                if (this.bizType.equals(BizType.XFNEW)) {
+                    this.title = "消费信贷系统";
+                } else if (this.bizType.equals(BizType.XFJR)) {
+                    this.title = "消费金融系统";
+                } else {
+                    this.title = "====系统错误=======";
+                }
             }
         } catch (Exception e) {
             logger.error("初始化时出现错误。");
@@ -277,7 +284,7 @@ public class UnionpayDepCcmsAction implements Serializable {
         } else {
             int count = 0;
             try {
-                count = ccmsService.writebackCutPayRecord2CCMS(this.needQueryDetlList, false);
+                count = ccmsService.writebackCutPayRecord2CCMS(this.needQueryDetlList, false, this.bizType);
                 MessageUtil.addWarn("回写成功记录条数：" + count);
             } catch (Exception e) {
                 MessageUtil.addError("数据处理错误！" + e.getMessage());
@@ -295,7 +302,7 @@ public class UnionpayDepCcmsAction implements Serializable {
         } else {
             int count = 0;
             try {
-                count = ccmsService.writebackCutPayRecord2CCMS(this.successDetlList, true);
+                count = ccmsService.writebackCutPayRecord2CCMS(this.successDetlList, true, this.bizType);
                 MessageUtil.addWarn("回写成功记录条数：" + count);
             } catch (Exception e) {
                 MessageUtil.addError("数据处理错误！" + e.getMessage());
@@ -312,7 +319,7 @@ public class UnionpayDepCcmsAction implements Serializable {
         } else {
             int count = 0;
             try {
-                count = ccmsService.writebackCutPayRecord2CCMS(this.failureDetlList, true);
+                count = ccmsService.writebackCutPayRecord2CCMS(this.failureDetlList, true, this.bizType);
                 //count = billManagerService.archiveBillsNoCheckRecvision(this.failureDetlList);
                 MessageUtil.addWarn("回写记录条数：" + count);
             } catch (Exception e) {
@@ -331,7 +338,7 @@ public class UnionpayDepCcmsAction implements Serializable {
             try {
                 int count = 0;
                 List<FipCutpaydetl> cutpaydetlList = Arrays.asList(this.selectedNeedQryRecords);
-                count = ccmsService.writebackCutPayRecord2CCMS(cutpaydetlList, false);
+                count = ccmsService.writebackCutPayRecord2CCMS(cutpaydetlList, false, this.bizType);
                 MessageUtil.addWarn("更新记录条数：" + count);
             } catch (Exception e) {
                 MessageUtil.addError("数据处理错误！" + e.getMessage());
@@ -349,7 +356,7 @@ public class UnionpayDepCcmsAction implements Serializable {
             try {
                 int count = 0;
                 List<FipCutpaydetl> cutpaydetlList = Arrays.asList(this.selectedConfirmAccountRecords);
-                count = ccmsService.writebackCutPayRecord2CCMS(cutpaydetlList, true);
+                count = ccmsService.writebackCutPayRecord2CCMS(cutpaydetlList, true, this.bizType);
                 MessageUtil.addWarn("更新记录条数：" + count);
             } catch (Exception e) {
                 MessageUtil.addError("数据处理错误！" + e.getMessage());
@@ -367,7 +374,7 @@ public class UnionpayDepCcmsAction implements Serializable {
             try {
                 int count = 0;
                 List<FipCutpaydetl> cutpaydetlList = Arrays.asList(this.selectedFailRecords);
-                count = ccmsService.writebackCutPayRecord2CCMS(cutpaydetlList, true);
+                count = ccmsService.writebackCutPayRecord2CCMS(cutpaydetlList, true, this.bizType);
 //                billManagerService.archiveBills(cutpaydetlList);
                 MessageUtil.addWarn("更新记录条数：" + count);
             } catch (Exception e) {
@@ -646,5 +653,13 @@ public class UnionpayDepCcmsAction implements Serializable {
 
     public void setFilteredSuccessDetlList(List<FipCutpaydetl> filteredSuccessDetlList) {
         this.filteredSuccessDetlList = filteredSuccessDetlList;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
     }
 }
