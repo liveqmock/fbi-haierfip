@@ -322,9 +322,9 @@ public class BillManagerService {
         }
         return true;
     }
-    public synchronized boolean checkNoRepeatedBizkeyRecords4Ccms(int uniqKeyLen, String iouno, String poano, String billtype, String bizType) {
+    public synchronized boolean checkNoRepeatedBizkeyRecords4Ccms(String iouno, String poano, String billtype, String bizType) {
         //int count = fipCommonMapper.countRepeatedBizkeyRecordsNumber4Ccms(iouno, poano, billtype, BillStatus.CUTPAY_FAILED.getCode());
-        int count = fipCommonMapper.countRepeatedBizkeyRecordsNumber4Ccms(uniqKeyLen, iouno, poano, billtype, BillStatus.CUTPAY_FAILED.getCode(), bizType);
+        int count = fipCommonMapper.countRepeatedBizkeyRecordsNumber4Ccms(iouno, poano, billtype, BillStatus.CUTPAY_FAILED.getCode(), bizType);
         if (count > 0) {
             return false;
         }

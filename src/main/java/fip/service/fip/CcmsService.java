@@ -39,7 +39,7 @@ import java.util.UUID;
 @Service
 public class CcmsService {
     private static final Logger logger = LoggerFactory.getLogger(CcmsService.class);
-    private  int uniqKeyLen = 20;
+    private int uniqKeyLen = 20;
 
     @Autowired
     private BillManagerService billManagerService;
@@ -94,7 +94,7 @@ public class CcmsService {
      *
      * @return
      */
-    @Transactional
+    //@Transactional
     public synchronized int doObtainCcmsBills(BizType bizType, BillType billType, List<String> returnMsgs) {
         List<T100101ResponseRecord> recvedList = getCcmsResponseRecords(bizType);
         if (recvedList.size() == 0) {
@@ -113,11 +113,13 @@ public class CcmsService {
             //TODO 判断业务主键是否重复   注意 修改IOUNO长度时需要同步修改commonmapper中的SQL
             //boolean isNotRepeated = billManagerService.checkNoRepeatedBizkeyRecords4Ccms(cutpaydetl.getIouno().substring(0, 20), cutpaydetl.getPoano(), cutpaydetl.getBilltype());
             String uniqKey = cutpaydetl.getIouno().substring(0, uniqKeyLen);
-            boolean isNotRepeated = billManagerService.checkNoRepeatedBizkeyRecords4Ccms(uniqKeyLen, uniqKey, cutpaydetl.getPoano(), cutpaydetl.getBilltype(), cutpaydetl.getOriginBizid());
+            boolean isNotRepeated = billManagerService.checkNoRepeatedBizkeyRecords4Ccms(uniqKey, cutpaydetl.getPoano(), cutpaydetl.getBilltype(), cutpaydetl.getOriginBizid());
+            //logger.info("完成重复性检查：" + uniqKey, cutpaydetl.getClientname());
             if (isNotRepeated) {
                 cutpaydetl.setDateCmsGet(new Date());
                 fipCutpaydetlMapper.insert(cutpaydetl);
                 count++;
+                //logger.info("完成数据库插入：" + uniqKey + cutpaydetl.getClientname() + "--[" + count + "]");
             } else {
                 returnMsgs.add("重复记录：" + cutpaydetl.getIouno() + cutpaydetl.getClientname());
                 logger.error("获取数据时检查出重复记录：" + cutpaydetl.getIouno() + cutpaydetl.getClientname());
@@ -129,7 +131,7 @@ public class CcmsService {
         return count;
     }
 
-    @Transactional
+    //@Transactional
     public synchronized int doMultiObtainCcmsBills(BizType bizType, BillType billType, FipCutpaydetl[] selectedCutpaydetls, List<String> returnMsgs) {
         List<T100101ResponseRecord> recvedList = getCcmsResponseRecords(bizType);
         if (recvedList.size() == 0) {
@@ -152,7 +154,7 @@ public class CcmsService {
                     //TODO 判断业务主键是否重复   注意 修改IOUNO长度时需要同步修改commonmapper中的SQL
                     //boolean isNotRepeated = billManagerService.checkNoRepeatedBizkeyRecords4Ccms(cutpaydetl.getIouno().substring(0, 20), cutpaydetl.getPoano(), cutpaydetl.getBilltype());
                     String uniqKey = cutpaydetl.getIouno().substring(0, uniqKeyLen);
-                    boolean isNotRepeated = billManagerService.checkNoRepeatedBizkeyRecords4Ccms(uniqKeyLen, uniqKey, cutpaydetl.getPoano(), cutpaydetl.getBilltype(), cutpaydetl.getOriginBizid());
+                    boolean isNotRepeated = billManagerService.checkNoRepeatedBizkeyRecords4Ccms(uniqKey, cutpaydetl.getPoano(), cutpaydetl.getBilltype(), cutpaydetl.getOriginBizid());
                     if (isNotRepeated) {
                         cutpaydetl.setDateCmsGet(new Date());
                         fipCutpaydetlMapper.insert(cutpaydetl);
@@ -265,10 +267,10 @@ public class CcmsService {
         String servId = "";
         if (bizType.equals(BizType.XFNEW)) {
             servId = "CCMS_SERVER_URL";
-        }else if (bizType.equals(BizType.XFJR)) {
+        } else if (bizType.equals(BizType.XFJR)) {
             servId = "XFJR_SERVER_URL";
         } else {
-            throw  new RuntimeException("业务类别错误.");
+            throw new RuntimeException("业务类别错误.");
         }
         return servId;
     }
@@ -344,7 +346,7 @@ public class CcmsService {
         cutpaydetl.setBilltype(billType.getCode());
 
         //还款渠道信息
-        if (bizType.equals(BizType.XFNEW)||bizType.equals(BizType.XFJR)) {
+        if (bizType.equals(BizType.XFNEW) || bizType.equals(BizType.XFJR)) {
             cutpaydetl.setBiChannel(CutpayChannel.UNIPAY.getCode()); //默认为银联
             cutpaydetl.setBiBankactno(responseBean.getStdhkzh());
             cutpaydetl.setBiBankactname(responseBean.getStdkhmc());
@@ -514,7 +516,7 @@ public class CcmsService {
         //refunddetl.setBilltype(billType.getCode());
 
         //还款渠道信息
-        if (bizType.equals(BizType.XFNEW)||bizType.equals(BizType.XFJR)) {
+        if (bizType.equals(BizType.XFNEW) || bizType.equals(BizType.XFJR)) {
             refunddetl.setBiChannel(CutpayChannel.UNIPAY.getCode()); //默认为银联
             refunddetl.setBiBankactno(responseBean.getStdhkzh());
             refunddetl.setBiBankactname(responseBean.getStdkhmc());
@@ -560,7 +562,7 @@ public class CcmsService {
         if (operatorManager == null) {
             userid = "9999";
             username = "BATCH";
-        }else{
+        } else {
             userid = operatorManager.getOperatorId();
             username = operatorManager.getOperatorName();
         }
@@ -591,7 +593,7 @@ public class CcmsService {
         if (operatorManager == null) {
             userid = "9999";
             username = "BATCH";
-        }else{
+        } else {
             userid = operatorManager.getOperatorId();
             username = operatorManager.getOperatorName();
         }
@@ -660,7 +662,7 @@ public class CcmsService {
             if (operatorManager == null) {
                 userid = "9999";
                 username = "BATCH";
-            }else{
+            } else {
                 userid = operatorManager.getOperatorId();
                 username = operatorManager.getOperatorName();
             }
@@ -744,7 +746,7 @@ public class CcmsService {
             if (operatorManager == null) {
                 userid = "9999";
                 username = "BATCH";
-            }else{
+            } else {
                 userid = operatorManager.getOperatorId();
                 username = operatorManager.getOperatorName();
             }

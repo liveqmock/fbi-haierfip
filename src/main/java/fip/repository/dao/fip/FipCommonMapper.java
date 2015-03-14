@@ -86,18 +86,18 @@ public interface FipCommonMapper {
 
     //检查代扣记录重复 新消费信贷 以及消费金融
     @Select("select count(*) from fip_cutpaydetl " +
-            "where substr(iouno,1,#{uniqKeyLen})=#{iouno} and poano=#{poano} and billtype=#{billtype}" +
+            "where substr(iouno, 1, 20)=#{iouno} and poano=#{poano} and billtype=#{billtype}" +
             " and billstatus != #{billstatus} " +
             " and origin_bizid = #{bizType} " +
             " and deletedflag='0' ")
     int countRepeatedBizkeyRecordsNumber4Ccms(
-            @Param("uniqKeyLen") int uniqKeyLen
-            ,@Param("iouno") String iouno
+            @Param("iouno") String iouno
             , @Param("poano") String poano
             , @Param("billtype") String billtype
             , @Param("billstatus") String billstatus
             , @Param("bizType") String bizType
             );
+
 
     //检查代扣记录重复 HCCB
     @Select("select count(*) from fip_cutpaydetl " +
