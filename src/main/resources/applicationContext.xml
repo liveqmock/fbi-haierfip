@@ -1,19 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <beans xmlns="http://www.springframework.org/schema/beans"
-       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xmlns:aop="http://www.springframework.org/schema/aop"
-       xmlns:tx="http://www.springframework.org/schema/tx"
-       xmlns:jdbc="http://www.springframework.org/schema/jdbc"
-       xmlns:context="http://www.springframework.org/schema/context"
-       xmlns:jms="http://www.springframework.org/schema/jms"
-
-       xsi:schemaLocation=" http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
-             http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
-             http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-3.0.xsd
-             http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
-             http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
-             http://www.springframework.org/schema/jms http://www.springframework.org/schema/jms/spring-jms-3.0.xsd">
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx" xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+               http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+               http://www.springframework.org/schema/context
+               http://www.springframework.org/schema/context/spring-context-4.0.xsd
+               http://www.springframework.org/schema/tx
+               http://www.springframework.org/schema/tx/spring-tx-4.0.xsd
+               http://www.springframework.org/schema/aop
+               http://www.springframework.org/schema/aop/spring-aop-4.0.xsd
+               ">
 
     <context:property-placeholder location="classpath:credit.properties"/>
 
@@ -134,7 +132,7 @@
         <property name="targetMethod" value="startActChk4Cron"/>
         <property name="concurrent" value="false"/>
     </bean>
-    <bean id="zongfenCronTriggerBean" class="org.springframework.scheduling.quartz.CronTriggerBean">
+    <bean id="zongfenCronTriggerBean" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
         <property name="jobDetail" ref="actchkZongFenJobDetailBean"/>
         <property name="cronExpression" value="0 50 7,8 * * ?"/>
     </bean>
@@ -147,7 +145,7 @@
         <property name="targetMethod" value="startActChk4Cron"/>
         <property name="concurrent" value="false"/>
     </bean>
-    <bean id="zongfen4SCFCronTriggerBean" class="org.springframework.scheduling.quartz.CronTriggerBean">
+    <bean id="zongfen4SCFCronTriggerBean" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
         <property name="jobDetail" ref="actchkZongFen4SCFJobDetailBean"/>
         <property name="cronExpression" value="0 40 7,8 * * ?"/>
     </bean>
@@ -160,7 +158,7 @@
         <property name="targetMethod" value="notifyResult4Cron"/>
         <property name="concurrent" value="false"/>
     </bean>
-    <bean id="zongfenNotifyCronTriggerBean" class="org.springframework.scheduling.quartz.CronTriggerBean">
+    <bean id="zongfenNotifyCronTriggerBean" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
         <property name="jobDetail" ref="zongfenNotifyJobDetailBean"/>
         <property name="cronExpression" value="0 0 9 * * ?"/>
     </bean>
@@ -172,36 +170,60 @@
         <property name="targetMethod" value="notifyResult4Cron"/>
         <property name="concurrent" value="false"/>
     </bean>
-    <bean id="zongfen4SCFNotifyCronTriggerBean" class="org.springframework.scheduling.quartz.CronTriggerBean">
+    <bean id="zongfen4SCFNotifyCronTriggerBean" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
         <property name="jobDetail" ref="zongfen4SCFNotifyJobDetailBean"/>
         <property name="cronExpression" value="5 0 9 * * ?"/>
     </bean>
 
 
     <!-- 新消费信贷代扣账单自动获取 批量处理 cronTrigger -->
+    <!--<util:constant id="bizType.XFNEW" static-field="fip.common.constant.BizType.XFNEW" />-->
+    <bean id="bizType.XFNEW" class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
+        <property name="staticField" value="fip.common.constant.BizType.XFNEW" />
+    </bean>
+    <bean id="channelBizType.XFNEW" class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
+        <property name="staticField" value="fip.common.constant.BizType.XFNEW" />
+    </bean>
+    <bean id="ccmsCutpayBatchHandler" class="fip.batch.crontask.CcmsCutpayBatchHandler">
+        <property name="bizType" ref="bizType.XFNEW"/>
+        <property name="channelBizType" ref="bizType.XFNEW"/>
+    </bean>
+
     <bean id="ccmsCutpay_1_JobDetailBean"
           class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
         <property name="targetObject" ref="ccmsCutpayBatchHandler"/>
         <property name="targetMethod" value="processAll"/>
         <property name="concurrent" value="false"/>
     </bean>
-    <bean id="ccmsCutpayCronTriggerBean_1" class="org.springframework.scheduling.quartz.CronTriggerBean">
+    <bean id="ccmsCutpayCronTriggerBean_1" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
         <property name="jobDetail" ref="ccmsCutpay_1_JobDetailBean"/>
+        <!--<property name="cronExpression" value="0 0 17 * * ?"/>-->
         <property name="cronExpression" value="0 0 17 * * ?"/>
     </bean>
-    <!-- 新消费信贷代扣账单自动结果查询并回写 cronTrigger -->
-<!--
-    <bean id="ccmsCutpay_2_JobDetailBean"
+
+    <!-- 消费金融代扣账单自动获取 批量处理 cronTrigger -->
+    <bean id="bizType.XFJR" class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
+        <property name="staticField" value="fip.common.constant.BizType.XFJR" />
+    </bean>
+    <bean id="channelBizType.XFJR" class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
+        <property name="staticField" value="fip.common.constant.BizType.XFJR" />
+    </bean>
+    <bean id="xfjrCutpayBatchHandler" class="fip.batch.crontask.CcmsCutpayBatchHandler">
+        <property name="bizType" ref="bizType.XFJR"/>
+        <property name="channelBizType" ref="bizType.XFJR"/>
+    </bean>
+
+    <bean id="ccmsCutpay_xfjr_JobDetailBean"
           class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
-        <property name="targetObject" ref="ccmsCutpayHandler"/>
-        <property name="targetMethod" value="processResultQueryAndWriteBack"/>
+        <property name="targetObject" ref="xfjrCutpayBatchHandler"/>
+        <property name="targetMethod" value="processAll"/>
         <property name="concurrent" value="false"/>
     </bean>
-    <bean id="ccmsCutpayCronTriggerBean_2" class="org.springframework.scheduling.quartz.CronTriggerBean">
-        <property name="jobDetail" ref="ccmsCutpay_2_JobDetailBean"/>
-        <property name="cronExpression" value="0 10 17 * * ?"/>
+    <bean id="ccmsCutpayCronTriggerBean_xfjr" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+        <property name="jobDetail" ref="ccmsCutpay_xfjr_JobDetailBean"/>
+        <property name="cronExpression" value="0 30 16 * * ?"/>
     </bean>
--->
+
 
     <!--SBS内部总分账户清算数据发送到EAI（JDE）-->
     <bean id="autoSendSbsZfqsRecordsJobDetailBean"
@@ -210,7 +232,7 @@
         <property name="targetMethod" value="obtainAndSendSbsZfqsRecords"/>
         <property name="concurrent" value="false"/>
     </bean>
-    <bean id="autoSendSbsZfqsRecordsCronTriggerBean" class="org.springframework.scheduling.quartz.CronTriggerBean">
+    <bean id="autoSendSbsZfqsRecordsCronTriggerBean" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
         <property name="jobDetail" ref="autoSendSbsZfqsRecordsJobDetailBean"/>
         <property name="cronExpression" value="0 0 1 * * ?"/>
     </bean>
@@ -224,8 +246,10 @@
                 <ref bean="zongfen4SCFCronTriggerBean"/>
                 <ref bean="zongfenNotifyCronTriggerBean"/>
                 <ref bean="zongfen4SCFNotifyCronTriggerBean"/>
+
                 <ref bean="ccmsCutpayCronTriggerBean_1"/>
-                <!--<ref bean="ccmsCutpayCronTriggerBean_2"/>-->
+                <ref bean="ccmsCutpayCronTriggerBean_xfjr"/>
+
                 <ref bean="autoSendSbsZfqsRecordsCronTriggerBean"/>
             </list>
         </property>

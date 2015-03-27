@@ -127,22 +127,16 @@ public class UnionpayDepCcmsAction implements Serializable {
 
     public synchronized void initList() {
         detlList = billManagerService.selectRecords4UnipayOnline(this.bizType, BillStatus.INIT);
-        logger.info("Step1");
         detlList.addAll(billManagerService.selectRecords4UnipayOnline(this.bizType, BillStatus.RESEND_PEND));
-        logger.info("Step2");
         needQueryDetlList = billManagerService.selectRecords4UnipayOnline(this.bizType, BillStatus.CUTPAY_QRY_PEND);
-        logger.info("Step3");
         failureDetlList = billManagerService.selectRecords4UnipayOnline(this.bizType, BillStatus.CUTPAY_FAILED);
-        logger.info("Step4");
         successDetlList = billManagerService.selectRecords4UnipayOnline(this.bizType, BillStatus.CUTPAY_SUCCESS);
-        logger.info("Step5");
         this.totalamt = sumTotalAmt(detlList);
         this.totalcount = detlList.size();
         this.totalSuccessAmt = sumTotalAmt(successDetlList);
         this.totalSuccessCount = successDetlList.size();
         this.totalFailureAmt = sumTotalAmt(failureDetlList);
         this.totalFailureCount = failureDetlList.size();
-        logger.info("Step end");
     }
 
     private String sumTotalAmt(List<FipCutpaydetl> qrydetlList) {
