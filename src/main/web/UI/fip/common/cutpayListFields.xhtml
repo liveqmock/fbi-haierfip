@@ -19,7 +19,11 @@
 
         <p:column headerText="流水号"
                   filterBy="#{record.batchSn}#{record.batchDetlSn}" filterMatchMode="startsWith" sortBy="#{record.batchSn}#{record.batchDetlSn}">
-            <h:outputText value="#{record.batchSn}#{record.batchDetlSn}"/>
+            <h:outputText value="#{record.batchSn}-#{record.batchDetlSn}"/>
+        </p:column>
+        <p:column headerText="批量报文号"
+                  filterBy="#{record.txpkgSn}#{record.txpkgDetlSn}" filterMatchMode="startsWith" sortBy="#{record.txpkgSn}#{record.txpkgDetlSn}">
+            <h:outputText value="#{record.txpkgSn}-#{record.txpkgDetlSn}"/>
         </p:column>
 
 <!--

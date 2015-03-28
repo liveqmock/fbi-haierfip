@@ -578,7 +578,8 @@ public class BillManagerService {
      */
     public List<FipCutpaydetl> selectRecords4UnipayBatchDetail(BizType bizType, BillStatus billstatus) {
         FipCutpaydetlExample example = new FipCutpaydetlExample();
-        example.createCriteria().andBiChannelEqualTo(CutpayChannel.UNIPAY.getCode())
+        example.createCriteria()
+                .andBiChannelEqualTo(CutpayChannel.UNIPAY.getCode())
                 .andBillstatusEqualTo(billstatus.getCode())
                 .andArchiveflagEqualTo("0").andDeletedflagEqualTo("0")
                 //.andTxpkgSnIsNotNull() //批量报文中的明细记录！！
@@ -587,6 +588,24 @@ public class BillManagerService {
         example.setOrderByClause("batch_sn,batch_detl_sn");
         return fipCutpaydetlMapper.selectByExample(example);
     }
+    public List<FipCutpaydetl> selectRecords4UnipayBatchDetail(BizType bizType, BillStatus billstatus, String txPkgSn) {
+        if (StringUtils.isEmpty(txPkgSn)) {
+            throw  new RuntimeException("通讯报文号不能为空");
+        }
+        FipCutpaydetlExample example = new FipCutpaydetlExample();
+        example.createCriteria()
+                .andTxpkgSnEqualTo(txPkgSn)
+                .andBiChannelEqualTo(CutpayChannel.UNIPAY.getCode())
+                .andBillstatusEqualTo(billstatus.getCode())
+                .andArchiveflagEqualTo("0").andDeletedflagEqualTo("0")
+                //.andTxpkgSnIsNotNull() //批量报文中的明细记录！！
+                .andSendflagEqualTo("1") //批量报文中的明细记录！！
+                .andOriginBizidEqualTo(bizType.getCode());
+        example.setOrderByClause("batch_sn,batch_detl_sn");
+        return fipCutpaydetlMapper.selectByExample(example);
+    }
+
+
     //代付 20120703 zhanrui
     public List<FipRefunddetl> selectRefundRecords4UnipayOnline(BizType bizType, BillStatus billstatus) {
         FipRefunddetlExample example = new FipRefunddetlExample();
@@ -613,6 +632,20 @@ public class BillManagerService {
                 .andArchiveflagEqualTo("0").andDeletedflagEqualTo("0")
                 .andOriginBizidEqualTo(bizType.getCode());
                 //.andBiActopeningbankNotIn(bankcodes);
+        example.setOrderByClause("batch_sn,batch_detl_sn");
+        return fipCutpaydetlMapper.selectByExample(example);
+    }
+    public synchronized  List<FipCutpaydetl> selectRecords4UnipayBatch(BizType bizType, BillStatus billstatus, String txPkgSn) {
+        if (StringUtils.isEmpty(txPkgSn)) {
+            throw  new RuntimeException("通讯报文号不能为空");
+        }
+        FipCutpaydetlExample example = new FipCutpaydetlExample();
+        example.createCriteria()
+                .andTxpkgSnEqualTo(txPkgSn)
+                .andBiChannelEqualTo(CutpayChannel.UNIPAY.getCode())
+                .andBillstatusEqualTo(billstatus.getCode())
+                .andArchiveflagEqualTo("0").andDeletedflagEqualTo("0")
+                .andOriginBizidEqualTo(bizType.getCode());
         example.setOrderByClause("batch_sn,batch_detl_sn");
         return fipCutpaydetlMapper.selectByExample(example);
     }

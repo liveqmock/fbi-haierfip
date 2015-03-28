@@ -90,7 +90,7 @@ public class CmsService {
     /**
      * 获取全部信贷系统记录  (不包括罚息帐单)
      */
-    @Transactional
+    //@Transactional
     public synchronized int doObtainCmsBills(BizType bizType, BillType billType, List<String> returnMsgs) {
         List<T100101ResponseRecord> recvedList = getCmsResponseRecords(bizType);
         if (recvedList.size() == 0) {
@@ -137,7 +137,7 @@ public class CmsService {
         return count;
     }
 
-    @Transactional
+    //@Transactional
     public synchronized int doMultiObtainCmsBills(BizType bizType, BillType billType, FipCutpaydetl[] selectedCutpaydetls, List<String> returnMsgs) {
         List<T100101ResponseRecord> recvedList = getCmsResponseRecords(bizType);
         if (recvedList.size() == 0) {

@@ -84,7 +84,7 @@ public class CmsPreCutpayService {
      *
      * @return
      */
-    @Transactional
+    //@Transactional
     public synchronized int doObtainCmsBills(BizType bizType) {
         //TODO
         //String billType = "0";
@@ -129,7 +129,7 @@ public class CmsPreCutpayService {
         return count;
     }
 
-    @Transactional
+    //@Transactional
     public synchronized int doMultiObtainCmsBills(BizType bizType, FipCutpaydetl[] selectedCutpaydetls) {
         //TODO
         //String billType = "0";
