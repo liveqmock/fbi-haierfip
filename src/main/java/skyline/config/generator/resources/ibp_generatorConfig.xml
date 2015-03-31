@@ -33,7 +33,7 @@
 
 
         <!-- -->
-        <table schema="fip" tableName="IBP_IF_UNIONPAY_TXN">
+        <table schema="fip" tableName="IBP_IF_NETBNK_TXN">
             <property name="ignoreQualifiersAtRuntime" value="true" />
             <generatedKey column="pkid" sqlStatement="select sys_guid() from dual" identity="false"/>
         </table>

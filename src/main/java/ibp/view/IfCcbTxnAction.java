@@ -2,9 +2,7 @@ package ibp.view;
 
 import fip.common.SystemService;
 import fip.common.constant.BillStatus;
-import fip.common.utils.Message;
 import fip.common.utils.MessageUtil;
-import fip.service.fip.JobLogService;
 import ibp.repository.model.IbpIfCcbTxn;
 import ibp.repository.model.IbpSbsTranstxn;
 import ibp.repository.model.IbpSbsAct;
@@ -28,7 +26,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
- * 建行到账明细-SBS入账
+ * 网银到账明细-EXCEL导入SBS入账
  */
 @ManagedBean
 @ViewScoped
@@ -75,26 +73,6 @@ public class IfCcbTxnAction implements Serializable {
             MessageUtil.addError("请先选择一笔待入账记录!");
             return;
         }
-       /* if (StringUtils.isEmpty(sbsAct)) {
-            MessageUtil.addError("必须输入转入账号!");
-            return;
-        }
-        sbsAct = sbsAct.trim();
-        if (!sbsAct.startsWith("8010")) sbsAct = "8010" + sbsAct;
-        int actLength = sbsAct.length();
-        if (actLength != 18) {
-            MessageUtil.addError("入账账号长度错误!");
-            return;
-        } else if (!sbsAct.endsWith("001")) {
-            MessageUtil.addError("账号币别错误!");
-            return;
-        } else {
-            String apcode = sbsAct.substring(actLength - 7, actLength - 3);
-            if (!(apcode.equals("2017") || apcode.equals("2301") || apcode.equals("2033"))) {
-                MessageUtil.addError("账号核算码错误!");
-                return;
-            }
-        }*/
 
         if (ibpIfCcbTxnService.isConflict(selectedRecord)) {
             MessageUtil.addError("并发冲突，刷新页面后重新操作！");
