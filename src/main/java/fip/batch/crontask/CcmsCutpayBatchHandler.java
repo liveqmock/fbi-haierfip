@@ -52,6 +52,15 @@ public class CcmsCutpayBatchHandler {
     private BizType channelBizType;
 
     public synchronized void processAll() {
+        if (!isCronTaskOpen()) {
+            if (BizType.XFNEW.equals(bizType)) {
+                SmsHelper.asyncSendSms(PropertyManager.getProperty("xfnew_batch_phones"), "消费信贷批量代扣: 定时任务未开启");
+            } else if (BizType.XFJR.equals(bizType)) {
+                SmsHelper.asyncSendSms(PropertyManager.getProperty("xfjr_batch_phones"), "消费金融批量代扣：定时任务未开启");
+            }
+            return;
+        }
+
         try {
             //短信通知
             if (BizType.XFNEW.equals(bizType)) {
