@@ -25,9 +25,9 @@ public class IbpNetbankExcelTxnService {
     @Autowired
     private IbpIfNetbnkTxnMapper ibpIfNetbnkTxnMapper;
 
-    public List<IbpIfNetbnkTxn> qryTxnsByBookFlag(BillStatus bookFlag) {
+    public List<IbpIfNetbnkTxn> qryTxnsByNotBookFlag(BillStatus bookFlag) {
         IbpIfNetbnkTxnExample example = new IbpIfNetbnkTxnExample();
-        example.createCriteria().andBookflagEqualTo(bookFlag.getCode());
+        example.createCriteria().andBookflagNotEqualTo(bookFlag.getCode());
         example.setOrderByClause(" BKSERIALNO ");
         return ibpIfNetbnkTxnMapper.selectByExample(example);
     }
@@ -35,7 +35,7 @@ public class IbpNetbankExcelTxnService {
     // 已录入转入账户但未入账明细
     public List<IbpIfNetbnkTxn> qryTxnsToBook() {
         IbpIfNetbnkTxnExample example = new IbpIfNetbnkTxnExample();
-        example.createCriteria().andSbsactnoIsNotNull().andBookflagEqualTo(BillStatus.INIT.getCode());
+        example.createCriteria().andSbsactnoIsNotNull().andBookflagEqualTo(BillStatus.ACCOUNT_PEND.getCode());
         example.setOrderByClause(" BKSERIALNO ");
         return ibpIfNetbnkTxnMapper.selectByExample(example);
     }

@@ -82,7 +82,7 @@ public class IfNetbankExcelTxnAction implements Serializable {
     }
 
     public void initList() {
-        detlList = ibpNetbankExcelTxnService.qryTxnsByBookFlag(BillStatus.INIT);
+        detlList = ibpNetbankExcelTxnService.qryTxnsByNotBookFlag(BillStatus.ACCOUNT_SUCCESS);
         cnt = detlList.size();
         BigDecimal bd = new BigDecimal(0.00);
         for (IbpIfNetbnkTxn record : detlList) {
@@ -106,7 +106,7 @@ public class IfNetbankExcelTxnAction implements Serializable {
                 Workbook rwb = Workbook.getWorkbook(is);
                 Sheet st = rwb.getSheet(0);
 //                int cCnt = st.getColumns();
-                int rCnt = st.getRows() - 1;
+                int rCnt = st.getRows();
 
                 ArrayList<IbpIfNetbnkTxn> implList = new ArrayList<IbpIfNetbnkTxn>();
                 int impCnt = 0;
@@ -115,6 +115,10 @@ public class IfNetbankExcelTxnAction implements Serializable {
                     IbpIfNetbnkTxn txn = new IbpIfNetbnkTxn();
                     txn.setPkid(UUID.randomUUID().toString());
 //                    for (int i = 0; i < cCnt; i++) {//列
+                    String bkSerialNo = st.getCell(12, k).getContents();
+                    if (StringUtils.isEmpty(bkSerialNo)) {
+                        continue;
+                    }
                     txn.setTxdate(st.getCell(0, k).getContents());
                     txn.setTxtime(st.getCell(1, k).getContents());
                     txn.setVouchertype(st.getCell(2, k).getContents());
@@ -129,7 +133,7 @@ public class IfNetbankExcelTxnAction implements Serializable {
                     txn.setInacctid(st.getCell(9, k).getContents());        // 对方账号
                     txn.setAbstractstr(st.getCell(10, k).getContents());
                     txn.setRemark(st.getCell(11, k).getContents());
-                    txn.setBkserialno(st.getCell(12, k).getContents());     // 流水号
+                    txn.setBkserialno(bkSerialNo);     // 流水号
                     txn.setEntserialno(st.getCell(13, k).getContents());
                     txn.setOutacctid(st.getCell(14, k).getContents());
                     txn.setOutacctname(st.getCell(15, k).getContents());
@@ -180,6 +184,7 @@ public class IfNetbankExcelTxnAction implements Serializable {
         try {
             selectedRecord.setSbsactno(sbsAct);
             selectedRecord.setSbsactname(actMap.get(sbsAct));
+            selectedRecord.setBookflag(BillStatus.ACCOUNT_PEND.getCode());
             ibpNetbankExcelTxnService.update(selectedRecord);
             sbsAct = "";
             sbsActName = "";

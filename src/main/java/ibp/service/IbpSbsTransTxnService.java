@@ -39,6 +39,12 @@ public class IbpSbsTransTxnService {
         return ibpSbsTranstxnMapper.selectByExample(example);
     }
 
+    public List<IbpSbsTranstxn> qryTxns(String date, String code) {
+        IbpSbsTranstxnExample example = new IbpSbsTranstxnExample();
+        example.createCriteria().andTxntimeLike(date + "%").andTxncodeEqualTo(code);
+        return ibpSbsTranstxnMapper.selectByExample(example);
+    }
+
     public String qryMaxSerialNo() {
         String strMaxSerialno = ibpSbsTranstxnMapper.qryMaxSerialNo();
         if (StringUtils.isEmpty(strMaxSerialno)) {
@@ -68,8 +74,8 @@ public class IbpSbsTransTxnService {
 
         DecimalFormat df = new DecimalFormat("#############0.00");
         List<String> txnparamList = new ArrayList<String>();
-//        String txndate = new SimpleDateFormat("yyyyMMdd").format(new Date());
-        String txndate = "20150330";
+        String txndate = new SimpleDateFormat("yyyyMMdd").format(new Date());
+//        String txndate = "20150330";
 
         //转出帐户类型
         txnparamList.add("01");

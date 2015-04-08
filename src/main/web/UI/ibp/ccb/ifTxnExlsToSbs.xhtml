@@ -16,7 +16,7 @@
     </ui:define>
     <ui:define name="content">
         <div style="margin:5px">
-            <p:tabView id="tabview" dynamic="true" cache="false" style="font-weight:normal;font-style:normal">
+            <p:tabView id="tabview" cache="false" style="font-weight:normal;font-style:normal">
                 <p:tab title="待入账明细" id="toActTab">
                     <div id="table">
                         <h:form id="form">
@@ -24,7 +24,9 @@
                             <p:messages id="msgs" showDetail="false"/>
                             <p:menubar>
                                 <p:menuitem type="push" value="全部入账" icon="ui-icon ui-icon-document"
-                                            action="#{ifNetbankBookAction.onBook}" update=":tabview"/>
+                                            action="#{ifNetbankBookAction.onBook}" update=":tabview" ajax="true"/>
+                                <p:menuitem type="push" value="多笔入账" icon="ui-icon ui-icon-disk"
+                                            action="#{ifNetbankBookAction.onMultiBook}" update=":tabview" ajax="true"/>
                             </p:menubar>
                             <p:ajaxStatus style="height:18px;text-align:center">
                                 <f:facet name="start">
@@ -38,10 +40,12 @@
                             <p:dataTable id="pdt" dynamic="true" style="width:100%;"
                                          value="#{ifNetbankBookAction.detlList}" var="record"
                                          rowKey="#{record.pkid}"
-                                         paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown} 【总笔数:#{ifNetbankExcelTxnAction.cnt}】【总金额:#{ifNetbankExcelTxnAction.totalamt}】"
+                                         selection="#{ifNetbankBookAction.selectedRecords}"
+                                         paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown} 【总笔数:#{ifNetbankBookAction.cnt}】【总金额:#{ifNetbankBookAction.totalamt}】"
                                          paginator="true" rows="15" paginatorPosition="bottom"
                                          rowsPerPageTemplate="30,15,10,8,5"
                                          emptyMessage="数据记录为空...">
+                                <p:column selectionMode="multiple" style="width:18px"/>
                                 <p:column headerText="对方账号" style="text-align: left">
                                     <h:outputText value="#{record.inacctid}"/>
                                 </p:column>
@@ -92,16 +96,42 @@
                         <br/>
                         <p:separator/>
                         <p:outputLabel value="SBS 转出账号（建行同业）：#{ifCcbTxnAction.sbsOutAct}"
-                                       />
+                                />
                     </div>
                 </p:tab>
-                <p:tab title="SBS 已入账明细（#{ifCcbTxnAction.sbsTxnList.size()}）" id="sbsActList">
+                <p:tab title="SBS 已入账明细" id="sbsActList">
                     <div id="qrytable">
                         <h:form id="qryform">
+                            <p:fieldset>
+                                <p:messages id="qrymsgs" showDetail="false"/>
+                                <h:panelGrid columns="2" cellspacing="5">
+                                    <h:panelGrid columns="4" cellspacing="5">
+                                        <h:outputLabel value="入账日期:"/>
+                                        <p:inputText id="sbsTxnDate" value="#{ifNetbankBookAction.sbsTxnDate}"
+                                                     required="true"
+                                                     onclick="WdatePicker({dateFmt:'yyyyMMdd'})"/>
+                                    </h:panelGrid>
+                                    <h:panelGrid>
+                                        <p:commandButton id="qrybtn" style="width:137px;height: 25px;" value="查询"
+                                                         action="#{ifNetbankBookAction.onQry}"
+                                                         update="qrypdt,qrymsgs">
+                                        </p:commandButton>
+                                    </h:panelGrid>
+                                </h:panelGrid>
+                            </p:fieldset>
+                            <p:ajaxStatus style="height:20px;text-align:center">
+                                <f:facet name="start">
+                                    <h:graphicImage value="/images/ajaxloadingbar.gif"/>
+                                </f:facet>
+                                <f:facet name="complete">
+                                    <h:outputText value=""/>
+                                </f:facet>
+                            </p:ajaxStatus>
+
                             <p:dataTable id="qrypdt" dynamic="true" style="width:100%;"
-                                         value="#{ifCcbTxnAction.sbsTxnList}" var="sbs"
+                                         value="#{ifNetbankBookAction.sbsTxnList}" var="sbs"
                                          rowKey="#{record.pkid}"
-                                         paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                                         paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown} 【总笔数:#{ifNetbankBookAction.sbsCnt}】【总金额:#{ifNetbankBookAction.sbsTotalAmt}】"
                                          paginator="true" rows="15" paginatorPosition="bottom"
                                          rowsPerPageTemplate="100,50,30,15,5"
                                          emptyMessage="数据记录为空...">
@@ -128,15 +158,23 @@
                                     </h:outputText>
                                 </p:column>
 
+                                <p:column headerText="返回码" style="text-align: center">
+                                    <h:outputText value="#{sbs.formcode}">
+                                    </h:outputText>
+                                </p:column>
+
                                 <p:column headerText="交易时间" style="text-align: center">
                                     <h:outputText value="#{sbs.txntime}">
                                     </h:outputText>
                                 </p:column>
 
+
                                 <p:column headerText="操作员" style="text-align: center">
                                     <h:outputText value="#{sbs.operid}">
                                     </h:outputText>
                                 </p:column>
+
+
                             </p:dataTable>
                         </h:form>
                     </div>

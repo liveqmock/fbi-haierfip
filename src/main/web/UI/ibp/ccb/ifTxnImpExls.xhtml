@@ -16,8 +16,8 @@
     </ui:define>
     <ui:define name="content">
         <div style="margin:5px">
-            <p:tabView id="tabview" dynamic="true" cache="false" style="font-weight:normal;font-style:normal">
-                <p:tab title="记账明细（#{ifNetbankExcelTxnAction.detlList.size()}）" id="toActTab">
+            <p:tabView id="tabview" cache="false" style="font-weight:normal;font-style:normal">
+                <p:tab title="收款明细（#{ifNetbankExcelTxnAction.detlList.size()}）" id="toActTab">
                     <div id="table">
                         <h:form id="form" enctype="multipart/form-data">
                             <p:focus for="sbsActName"/>
@@ -33,8 +33,6 @@
                                                      update="msgs,pdt"/>
                                 </h:panelGrid>
                             </p:panel>
-                            <br/>
-                            <p:separator/>
                             <p:ajaxStatus style="height:18px;text-align:center">
                                 <f:facet name="start">
                                     <h:graphicImage value="/images/ajaxloadingbar.gif"/>
@@ -57,9 +55,9 @@
 
                                 <p:ajax event="rowSelect" update=":tabview:form:bookpanel"/>
                                 <p:ajax event="rowUnselect" update=":tabview:form:bookpanel"/>
-                                <p:column headerText="流水号" style="text-align: left">
+                                <!--<p:column headerText="流水号" style="text-align: left">
                                     <h:outputText value="#{record.bkserialno}"/>
-                                </p:column>
+                                </p:column>-->
 
                                 <p:column headerText="对方账号" style="text-align: left">
                                     <h:outputText value="#{record.inacctid}"/>
@@ -75,10 +73,10 @@
                                         <!--<f:convertNumber type="number" pattern="#,###,###,###,##0.00"/>-->
                                     </h:outputText>
                                 </p:column>
-                                <p:column headerText="凭证种类" style="text-align: left;width: 100px;">
+                                <!--<p:column headerText="凭证种类" style="text-align: left;width: 100px;">
                                     <h:outputText value="#{record.vouchertype}">
                                     </h:outputText>
-                                </p:column>
+                                </p:column>-->
                                 <p:column headerText="转入账号" style="text-align: left">
                                     <h:outputText value="#{record.sbsactno}"/>
                                 </p:column>
@@ -87,7 +85,7 @@
                                     <h:outputText value="#{record.sbsactname}"/>
                                 </p:column>
                                 <p:column headerText="日期" sortBy="#{record.txdate}"
-                                          style="text-align: center;width: 80px;">
+                                          style="text-align: center;">
                                     <h:outputText value="#{record.txdate}">
                                     </h:outputText>
                                 </p:column>
@@ -179,6 +177,87 @@
 
                     </div>
                 </p:tab>
+                <p:tab title="SBS 已入账明细" id="sbsActList">
+                    <div id="qrytable">
+                        <h:form id="qryform">
+                            <p:fieldset>
+                                <p:messages id="qrymsgs" showDetail="false"/>
+                                <h:panelGrid columns="2" cellspacing="5">
+                                    <h:panelGrid columns="4" cellspacing="5">
+                                        <h:outputLabel value="入账日期:"/>
+                                        <p:inputText id="sbsTxnDate" value="#{ifNetbankBookAction.sbsTxnDate}"
+                                                     required="true"
+                                                     onclick="WdatePicker({dateFmt:'yyyyMMdd'})"/>
+                                    </h:panelGrid>
+                                    <h:panelGrid>
+                                        <p:commandButton id="qrybtn" style="width:137px;height: 25px;" value="查询"
+                                                         action="#{ifNetbankBookAction.onQry}"
+                                                         update="qrypdt,qrymsgs">
+                                        </p:commandButton>
+                                    </h:panelGrid>
+                                </h:panelGrid>
+                            </p:fieldset>
+                            <p:ajaxStatus style="height:20px;text-align:center">
+                                <f:facet name="start">
+                                    <h:graphicImage value="/images/ajaxloadingbar.gif"/>
+                                </f:facet>
+                                <f:facet name="complete">
+                                    <h:outputText value=""/>
+                                </f:facet>
+                            </p:ajaxStatus>
+
+                            <p:dataTable id="qrypdt" dynamic="true" style="width:100%;"
+                                         value="#{ifNetbankBookAction.sbsTxnList}" var="sbs"
+                                         rowKey="#{record.pkid}"
+                                         paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown} 【总笔数:#{ifNetbankBookAction.sbsCnt}】【总金额:#{ifNetbankBookAction.sbsTotalAmt}】"
+                                         paginator="true" rows="15" paginatorPosition="bottom"
+                                         rowsPerPageTemplate="100,50,30,15,5"
+                                         emptyMessage="数据记录为空...">
+
+                                <p:column headerText="流水号" style="text-align: center">
+                                    <h:outputText value="#{sbs.serialno}"/>
+                                </p:column>
+
+                                <p:column headerText="转出账户" style="text-align: left">
+                                    <h:outputText value="#{sbs.outAct}"/>
+                                </p:column>
+
+                                <p:column headerText="转入账号" style="text-align: center">
+                                    <h:outputText value="#{sbs.inAct}"/>
+                                </p:column>
+
+                                <p:column headerText="转入账户名" style="text-align: left">
+                                    <h:outputText value="#{sbs.inActnam}"/>
+                                </p:column>
+
+                                <p:column headerText="交易金额" sortBy="#{sbs.txnamt}">
+                                    <h:outputText value="#{sbs.txnamt}" style="float: right">
+                                        <f:convertNumber type="number" pattern="#,###,###,###,##0.00"/>
+                                    </h:outputText>
+                                </p:column>
+
+                                <p:column headerText="返回码" style="text-align: center">
+                                    <h:outputText value="#{sbs.formcode}">
+                                    </h:outputText>
+                                </p:column>
+
+                                <p:column headerText="交易时间" style="text-align: center">
+                                    <h:outputText value="#{sbs.txntime}">
+                                    </h:outputText>
+                                </p:column>
+
+
+                                <p:column headerText="操作员" style="text-align: center">
+                                    <h:outputText value="#{sbs.operid}">
+                                    </h:outputText>
+                                </p:column>
+
+
+                            </p:dataTable>
+                        </h:form>
+                    </div>
+                </p:tab>
+
             </p:tabView>
         </div>
 

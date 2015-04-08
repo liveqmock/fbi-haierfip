@@ -36,13 +36,17 @@ public class IfNetbankBookAction implements Serializable {
     private List<IbpIfNetbnkTxn> detlList = new ArrayList<IbpIfNetbnkTxn>();
     private List<IbpSbsTranstxn> sbsTxnList = new ArrayList<IbpSbsTranstxn>();
     private List<IbpIfNetbnkTxn> filteredDetlList;
+    private IbpIfNetbnkTxn[] selectedRecords;
     private List<SelectItem> sbsActList = new ArrayList<SelectItem>();
 
     private BillStatus status = BillStatus.INIT;
     private String sbsOutAct = "801000026131041001";
     private UploadedFile file;
     private String totalamt = "0.00";
+    private String sbsTotalAmt = "0.00";
+    private String sbsTxnDate = new SimpleDateFormat("yyyyMMdd").format(new Date());
     private int cnt = 0;
+    private int sbsCnt = 0;
     // 2017 2301 2033
 
     @ManagedProperty(value = "#{ibpNetbankExcelTxnService}")
@@ -58,14 +62,7 @@ public class IfNetbankBookAction implements Serializable {
     public void init() {
         try {
 
-            // 若存在未录入转入账户的明细，则等待录入完成
-            boolean hasInitTxns = ibpNetbankExcelTxnService.hasInitTxns();
-            if (hasInitTxns) {
-                MessageUtil.addWarn("有未录入转入账户的明细，暂时不能入账！");
-                return;
-            } else {
-                initList();
-            }
+            initList();
         } catch (Exception e) {
             logger.error("初始化时出现错误。", e);
             FacesContext context = FacesContext.getCurrentInstance();
@@ -84,18 +81,49 @@ public class IfNetbankBookAction implements Serializable {
         }
         totalamt = bd.toString();
         sbsTxnList = ibpSbsTransTxnService.qryTodayTrans("N102");
+        sbsCnt = sbsTxnList.size();
+        bd = new BigDecimal(0.00);
+        for (IbpSbsTranstxn sbs : sbsTxnList) {
+            bd = bd.add(sbs.getTxnamt());
+        }
+        sbsTotalAmt = bd.toString();
+    }
 
+    public void onQry() {
+        sbsCnt = 0;
+        sbsTotalAmt = "0.00";
+        sbsTxnList = ibpSbsTransTxnService.qryTxns(sbsTxnDate, "N102");
+        if (sbsTxnList == null || sbsTxnList.isEmpty()) {
+            MessageUtil.addWarn("没有查询到数据！");
+            return;
+        }
+        sbsCnt = sbsTxnList.size();
+        BigDecimal bd = new BigDecimal(0.00);
+        for (IbpSbsTranstxn sbs : sbsTxnList) {
+            bd = bd.add(sbs.getTxnamt());
+        }
+        sbsTotalAmt = bd.toString();
     }
 
 
     public void onBook() {
+        bookList(detlList);
 
+    }
 
+    public void onMultiBook() {
+        if (selectedRecords == null || selectedRecords.length < 1) {
+            MessageUtil.addError("至少选择一笔待入账记录!");
+        }
+        bookList(Arrays.asList(selectedRecords));
+    }
+
+    public void bookList(List<IbpIfNetbnkTxn> bookList) {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd HH:mm:ss");
         String txnTime = sdf.format(new Date());
         String operId = SystemService.getOperatorManager().getOperatorId();
         try {
-            for (IbpIfNetbnkTxn record : detlList) {
+            for (IbpIfNetbnkTxn record : bookList) {
                 if (ibpNetbankExcelTxnService.isConflict(record)) {
                     MessageUtil.addError("并发入账冲突，刷新页面后重新操作！");
                     break;
@@ -132,7 +160,6 @@ public class IfNetbankBookAction implements Serializable {
             MessageUtil.addError("交易出现异常!");
             return;
         }
-
     }
 
 
@@ -249,5 +276,37 @@ public class IfNetbankBookAction implements Serializable {
 
     public void setIbpSbsActService(IbpSbsActService ibpSbsActService) {
         this.ibpSbsActService = ibpSbsActService;
+    }
+
+    public IbpIfNetbnkTxn[] getSelectedRecords() {
+        return selectedRecords;
+    }
+
+    public void setSelectedRecords(IbpIfNetbnkTxn[] selectedRecords) {
+        this.selectedRecords = selectedRecords;
+    }
+
+    public String getSbsTxnDate() {
+        return sbsTxnDate;
+    }
+
+    public void setSbsTxnDate(String sbsTxnDate) {
+        this.sbsTxnDate = sbsTxnDate;
+    }
+
+    public String getSbsTotalAmt() {
+        return sbsTotalAmt;
+    }
+
+    public void setSbsTotalAmt(String sbsTotalAmt) {
+        this.sbsTotalAmt = sbsTotalAmt;
+    }
+
+    public int getSbsCnt() {
+        return sbsCnt;
+    }
+
+    public void setSbsCnt(int sbsCnt) {
+        this.sbsCnt = sbsCnt;
     }
 }
