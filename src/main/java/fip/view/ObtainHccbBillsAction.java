@@ -124,47 +124,39 @@ public class ObtainHccbBillsAction implements Serializable {
         return df.format(amt);
     }
 
-/*
+    public synchronized String onQryHccb() {
+        try {
+            qrydetlList = hccbService.doQueryHccbBills(this.bizType);
+            if (qrydetlList.size() == 0) {
+                MessageUtil.addWarn("未获取到信贷系统的代扣记录。");
+            }
+            this.totalqryamt = sumTotalAmt(qrydetlList);
+            this.totalqrycount = qrydetlList.size();
+        } catch (Exception e) {
+            logger.error("获取记录时出错", e);
+            MessageUtil.addError("获取记录时出错。" + e.getMessage());
+        }
+        return null;
+    }
+
+
     public String onObtain() {
         //TODO 检查本地记录状态
         try {
             List<String> returnMsgs = new ArrayList<String>();
-            int count = hccbService.doObtainHccbBills(this.bizType, BillType.NORMAL, returnMsgs);
+            int count = hccbService.doObtainHccbBills(this.bizType, returnMsgs);
             MessageUtil.addWarn("本次获取记录数：" + count + " 条.");
             for (String returnMsg : returnMsgs) {
                 MessageUtil.addWarn(returnMsg);
             }
+            initDetlList();
         } catch (Exception e) {
             logger.error("获取记录时出错", e);
             MessageUtil.addError("获取记录时出错。" + e.getMessage());
         }
-        initDetlList();
-        return null;
-    }
-    public String onObtainMulti() {
-        if (selectedQryRecords.length == 0) {
-            MessageUtil.addWarn("请先选择记录。");
-            return null;
-        }
-
-        //TODO 检查本地记录状态
-
-        try {
-            List<String> returnMsgs = new ArrayList<String>();
-            int count = hccbService.doMultiObtainCcmsBills(this.bizType, BillType.NORMAL, selectedQryRecords, returnMsgs);
-            MessageUtil.addWarn("本次获取记录数：" + count + " 条.");
-            for (String returnMsg : returnMsgs) {
-                MessageUtil.addWarn(returnMsg);
-            }
-        } catch (Exception e) {
-            logger.error("获取记录时出错", e);
-            MessageUtil.addError("获取记录时出错。" + e.getMessage());
-        }
-        initDetlList();
         return null;
     }
 
-*/
     public synchronized String onDeleteAll() {
         if (detlList.size() == 0) {
             MessageUtil.addWarn("记录为空。");

@@ -156,11 +156,8 @@
         <h:form id="failListform">
             <p:messages id="failmsgs" showDetail="false"/>
             <p:menubar>
-                <p:menuitem type="push" value="全部记录存档" icon="ui-icon ui-icon-disk" ajax="true"
-                            action="#{unionpayBatchDepHCCBAction.onArchiveAllFailureRecord}"
-                            update="failmsgs,failpdt"/>
-                <p:menuitem type="push" value="多笔记录存档" icon="ui-icon ui-icon-disk" ajax="true"
-                            action="#{unionpayBatchDepHCCBAction.onArchiveMultiFailureRecord}"
+                <p:menuitem type="push" value="全部记录回写" icon="ui-icon ui-icon-disk" ajax="true"
+                            action="#{unionpayBatchDepHCCBAction.onWriteBackAllFailCutpayRecords}"
                             update="failmsgs,failpdt"/>
                 <p:menuitem type="push" value="EXCEL导出" icon="ui-icon ui-icon-disk" ajax="false"
                             action="#{unionpayBatchDepHCCBAction.onExportFailureList}"
@@ -195,8 +192,8 @@
         <h:form id="succListform">
             <p:messages id="succmsgs" showDetail="false"/>
             <p:menubar>
-                <p:menuitem type="push" value="全部记录存档" icon="ui-icon ui-icon-document"
-                            action="#{unionpayBatchDepHCCBAction.onArchiveAllSuccessRecord}"
+                <p:menuitem type="push" value="全部记录回写" icon="ui-icon ui-icon-document"
+                            action="#{unionpayBatchDepHCCBAction.onWriteBackAllSuccessCutpayRecords}"
                             update="succmsgs,succpdt"/>
                 <p:menuitem type="push" value="EXCEL导出" icon="ui-icon ui-icon-disk"
                             action="#{unionpayBatchDepHCCBAction.onExportSuccessList}" ajax="false"
