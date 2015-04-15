@@ -96,17 +96,33 @@ public interface FipCommonMapper {
             , @Param("billtype") String billtype
             , @Param("billstatus") String billstatus
             , @Param("bizType") String bizType
-            );
+    );
 
 
     //检查代扣记录重复 HCCB
     @Select("select count(*) from fip_cutpaydetl " +
             "where iouno=#{iouno} and poano=#{poano} " +
             " and billstatus != #{billstatus} " +
+            " and origin_bizid = #{bizType} " +
             " and deletedflag='0' ")
     int countRepeatedBizkeyRecordsNumber4Hccb(@Param("iouno") String iouno
             , @Param("poano") String poano
-            , @Param("billstatus") String billstatus);
+            , @Param("billstatus") String billstatus
+            , @Param("bizType") String bizType
+    );
+
+
+    //检查代扣记录重复 ZMD 专卖店
+    @Select("select count(*) from fip_cutpaydetl " +
+            "where clientno=#{clientno} and paybackdate=#{paybackdate} " +
+            " and billstatus != #{billstatus} " +
+            " and origin_bizid = #{bizType} " +
+            " and deletedflag='0' ")
+    int countRepeatedBizkeyRecordsNumber4Zmd(@Param("clientno") String clientno
+            , @Param("paybackdate") String paybackdate
+            , @Param("billstatus") String billstatus
+            , @Param("bizType") String bizType
+    );
 
 
     //检查代付记录重复

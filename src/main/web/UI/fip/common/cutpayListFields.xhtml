@@ -43,34 +43,35 @@
                   filterBy="#{record.clientname}" filterMatchMode="contains">
             <h:outputText value="#{record.clientname}"/>
         </p:column>
-<!--
-        <p:column headerText="计划还款日" style="text-align: center">
-            <h:outputText value="#{record.paybackdate}">
-                <f:convertDateTime dateStyle="default"/>
-            </h:outputText>
+
+        <p:column headerText="客户号" style="text-align: center"  rendered="#{backBean.bizType.code=='ZMD'}">
+            <h:outputText value="#{record.clientno}" />
         </p:column>
--->
+        <p:column headerText="计划还款日" style="text-align: center"  rendered="#{backBean.bizType.code=='ZMD'}">
+            <h:outputText value="#{record.paybackdate}" />
+        </p:column>
+
         <p:column headerText="还款金额" sortBy="#{record.paybackamt}" >
             <h:outputText value="#{record.paybackamt}" style="float: right" >
                 <f:convertNumber type="number" pattern="#,###,###,###,##0.00"/>
             </h:outputText>
         </p:column>
-        <p:column headerText="本金">
+        <p:column headerText="本金" rendered="#{backBean.bizType.code=='FD'}">
             <h:outputText value="#{record.principalamt}" style="float: right">
                 <f:convertNumber type="number" pattern="#,###,###,###,##0.00"/>
             </h:outputText>
         </p:column>
-        <p:column headerText="利息">
+        <p:column headerText="利息" rendered="#{backBean.bizType.code=='FD'}">
             <h:outputText value="#{record.interestamt}" style="float: right">
                 <f:convertNumber type="number" pattern="#,###,###,###,##0.00"/>
             </h:outputText>
         </p:column>
-        <p:column headerText="罚息">
+        <p:column headerText="罚息" rendered="#{backBean.bizType.code=='FD'}">
             <h:outputText value="#{record.punitiveintamt}" style="float: right">
                 <f:convertNumber type="number" pattern="#,###,###,###,##0.00"/>
             </h:outputText>
         </p:column>
-        <p:column headerText="复利">
+        <p:column headerText="复利" rendered="#{backBean.bizType.code=='FD'}">
             <h:outputText value="#{record.compoundintamt}" style="float: right">
                 <f:convertNumber type="number" pattern="#,###,###,###,##0.00"/>
             </h:outputText>

@@ -330,8 +330,15 @@ public class BillManagerService {
         }
         return true;
     }
-    public synchronized boolean checkNoRepeatedBizkeyRecords4Hccb(String iouno, String poano) {
-        int count = fipCommonMapper.countRepeatedBizkeyRecordsNumber4Hccb(iouno, poano, BillStatus.CUTPAY_FAILED.getCode());
+    public synchronized boolean checkNoRepeatedBizkeyRecords4Hccb(String iouno, String poano, String bizType) {
+        int count = fipCommonMapper.countRepeatedBizkeyRecordsNumber4Hccb(iouno, poano, BillStatus.CUTPAY_FAILED.getCode(), bizType);
+        if (count > 0) {
+            return false;
+        }
+        return true;
+    }
+    public synchronized boolean checkNoRepeatedBizkeyRecords4Zmd(String clientno, String paybackdate, String bizType) {
+        int count = fipCommonMapper.countRepeatedBizkeyRecordsNumber4Zmd(clientno, paybackdate, BillStatus.CUTPAY_FAILED.getCode(), bizType);
         if (count > 0) {
             return false;
         }

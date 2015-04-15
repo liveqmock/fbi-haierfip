@@ -80,7 +80,7 @@ public class T201001CTL   implements java.io.Serializable {
             T100102RequestRecord recordT102 = new T100102RequestRecord();
             recordT102.setStdjjh(record.getStdjjh());
             recordT102.setStdqch(record.getStdqch());
-            recordT102.setStdjhkkr(record.getStdjhhkr());
+            recordT102.setStdjhhkr(record.getStdjhhkr());
             //1-³É¹¦ 2-Ê§°Ü
             recordT102.setStdkkjg("1");
 

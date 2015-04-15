@@ -299,7 +299,7 @@ public class T100107Bean implements Serializable {
             T100108RequestRecord record = new T100108RequestRecord();
             record.setStdjjh(detl.getStdjjh());
             //record.setStdqch(detl.getStdqch());
-            //record.setStdjhkkr(detl.getStdjhhkr());
+            //record.setStdjhhkr(detl.getStdjhhkr());
             //1-成功 2-失败(利息解锁)  3-利息锁定
             record.setStdkkjg(option);
             T100108RequestList list = new T100108RequestList();

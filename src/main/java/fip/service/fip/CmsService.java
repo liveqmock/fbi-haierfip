@@ -584,7 +584,7 @@ public class CmsService {
                 T100106RequestRecord recordT106 = new T100106RequestRecord();
                 recordT106.setStdjjh(detl.getIouno());
                 recordT106.setStdqch(detl.getPoano());
-                recordT106.setStdjhkkr(detl.getPaybackdate());
+                recordT106.setStdjhhkr(detl.getPaybackdate());
                 //1-成功 2-失败
                 recordT106.setStdkkjg("1");
                 T100106RequestList t100106list = new T100106RequestList();
@@ -695,7 +695,7 @@ public class CmsService {
                     //T100104RequestRecord recordT104 = new T100104RequestRecord();
                     //recordT104.setStdjjh(detl.getIouno());
                     //recordT104.setStdqch(detl.getPoano());
-                    //recordT104.setStdjhkkr(detl.getPaybackdate());
+                    //recordT104.setStdjhhkr(detl.getPaybackdate());
                     ////1-成功 2-失败
                     //recordT104.setStdkkjg("2");
                     //T100104RequestList t100104list = new T100104RequestList();
@@ -711,7 +711,7 @@ public class CmsService {
                     //T100102RequestRecord recordT102 = new T100102RequestRecord();
                     //recordT102.setStdjjh(detl.getIouno());
                     //recordT102.setStdqch(detl.getPoano());
-                    //recordT102.setStdjhkkr(detl.getPaybackdate());
+                    //recordT102.setStdjhhkr(detl.getPaybackdate());
                     ////1-成功 2-失败
                     //recordT102.setStdkkjg("2");
                     //T100102RequestList t100102list = new T100102RequestList();

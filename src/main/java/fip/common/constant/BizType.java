@@ -10,18 +10,18 @@ import java.util.Hashtable;
  * To change this template use File | Settings | File Templates.
  */
 public enum BizType implements EnumApp {
-    XF("XF", "消费信贷"),
+    XF("XF", "消费信贷"),               //CMS服务器
     XFNEW("XFNEW", "新消费信贷"),
     XFSF("XFSF", "消费信贷首付款"),
     XFDAIFU("XFDAIFU", "消费信贷代付"),
-    FD("FD", "住房按揭"),
-    FDC("FDC", "房地产分期"),
+    FD("FD", "住房按揭"),                //CMS服务器
+    FDC("FDC", "房地产分期"),            //CMS服务器
     HCSP("HCSP", "售后"),
     ZYQD("ZYQD", "自有渠道"),
-    GM("GM", "个人买方信贷"),
+    GM("GM", "个人买方信贷"),             //CMS服务器
     XFJR("XFJR", "消费金融"),
     HCCB("HCCB", "海尔小贷"),
-    ZMD("ZMD", "专卖店代扣");
+    ZMD("ZMD", "专卖店代扣");            //CMS服务器
 
     private String code = null;
     private String title = null;

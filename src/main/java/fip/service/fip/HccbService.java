@@ -57,7 +57,7 @@ public class HccbService {
             assembleCutpayRecord(bizType, batchno, iSeqno, cutpaydetl);
 
             //TODO 判断业务主键是否重复   注意 修改IOUNO长度时需要同步修改commonmapper中的SQL
-            boolean isNotRepeated = billManagerService.checkNoRepeatedBizkeyRecords4Hccb(cutpaydetl.getIouno(), cutpaydetl.getPoano());
+            boolean isNotRepeated = billManagerService.checkNoRepeatedBizkeyRecords4Hccb(cutpaydetl.getIouno(), cutpaydetl.getPoano(), cutpaydetl.getOriginBizid());
             if (isNotRepeated) {
                 fipCutpaydetlMapper.insert(cutpaydetl);
                 count++;
