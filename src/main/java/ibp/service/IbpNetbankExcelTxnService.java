@@ -70,7 +70,7 @@ public class IbpNetbankExcelTxnService {
 
     // ²¢·¢³åÍ»
     public boolean isConflict(IbpIfNetbnkTxn txn) {
-        return txn.getRecversion() != ibpIfNetbnkTxnMapper.selectByPrimaryKey(txn.getPkid()).getRecversion();
+        return txn.getRecversion().compareTo(ibpIfNetbnkTxnMapper.selectByPrimaryKey(txn.getPkid()).getRecversion()) != 0;
     }
 
     public int update(IbpIfNetbnkTxn txn) {

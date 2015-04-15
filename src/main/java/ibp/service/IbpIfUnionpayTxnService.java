@@ -96,7 +96,7 @@ public class IbpIfUnionpayTxnService {
 
     // ²¢·¢³åÍ»
     public boolean isConflict(IbpIfUnionpayTxn txn) {
-        return txn.getRecversion() != ibpIfUnionpayTxnMapper.selectByPrimaryKey(txn.getPkid()).getRecversion();
+        return txn.getRecversion().compareTo(ibpIfUnionpayTxnMapper.selectByPrimaryKey(txn.getPkid()).getRecversion()) != 0;
     }
 
     public int update(IbpIfUnionpayTxn txn) {

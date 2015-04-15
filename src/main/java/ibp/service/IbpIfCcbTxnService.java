@@ -37,7 +37,7 @@ public class IbpIfCcbTxnService {
 
     // ²¢·¢³åÍ»
     public boolean isConflict(IbpIfCcbTxn txn) {
-        return txn.getRecversion() != ibpIfCcbTxnMapper.selectByPrimaryKey(txn.getPkid()).getRecversion();
+        return txn.getRecversion().compareTo(ibpIfCcbTxnMapper.selectByPrimaryKey(txn.getPkid()).getRecversion()) != 0;
     }
 
     public int update(IbpIfCcbTxn txn) {
