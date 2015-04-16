@@ -9,6 +9,13 @@ import fip.gateway.newcms.controllers.T100109CTL;
 import fip.gateway.newcms.controllers.T100110CTL;
 import fip.gateway.newcms.domain.T100109.T100109ResponseRecord;
 import fip.gateway.newcms.domain.T100110.T100110RequestRecord;
+import fip.gateway.sbs.DepCtgManager;
+import fip.gateway.sbs.core.SBSRequest;
+import fip.gateway.sbs.core.SBSResponse4SingleRecord;
+import fip.gateway.sbs.core.SOFDataDetail;
+import fip.gateway.sbs.txn.Ta543.Ta543Handler;
+import fip.gateway.sbs.txn.Ta543.Ta543SOFDataDetail;
+import fip.gateway.sbs.txn.Taa41.Taa41SOFDataDetail;
 import fip.repository.dao.FipCutpaydetlMapper;
 import fip.repository.dao.FipJoblogMapper;
 import fip.repository.dao.FipRefunddetlMapper;
@@ -21,6 +28,8 @@ import org.springframework.stereotype.Service;
 import pub.platform.security.OperatorManager;
 
 import java.math.BigDecimal;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -101,18 +110,75 @@ public class ZmdService {
         return count;
     }
 
-    //====================
+
+    /**
+     * SBS记账
+     */
+    public synchronized int accountCutPayRecord2SBS(List<FipCutpaydetl> cutpaydetlList) {
+        int count = 0;
+
+        String userid = SystemService.getOperatorManager().getOperatorId();
+        String username = SystemService.getOperatorManager().getOperatorName();
+        FipJoblog joblog = new FipJoblog();
+
+        try {
+            for (FipCutpaydetl cutpaydetl : cutpaydetlList) {
+                String sn = cutpaydetl.getBatchSn() + cutpaydetl.getBatchDetlSn();
+                String fromActno = "801090106001041001";
+                String toActno = cutpaydetl.getClientact();//贷款账号
+                String productCode = "N103";
+                String remark = "ZMD" + cutpaydetl.getTxpkgSn() + cutpaydetl.getTxpkgDetlSn();
+                List<String> paramList = assembleTaa41Param(sn, fromActno, toActno, cutpaydetl.getPaybackamt(), productCode, remark);
+
+                //SBS
+                byte[] recvBuf = DepCtgManager.processSingleResponsePkg("aa41", paramList);
+                SBSResponse4SingleRecord response = new SBSResponse4SingleRecord();
+                Taa41SOFDataDetail sofDataDetail = new Taa41SOFDataDetail();
+                response.setSofDataDetail(sofDataDetail);
+                response.init(recvBuf);
+
+                String formcode = response.getFormcode();
+                if (!formcode.equals("T531")) {     //异常情况处理
+                    cutpaydetl.setBillstatus(BillStatus.ACCOUNT_FAILED.getCode());
+                    joblog.setJobdesc("SBS入帐失败：FORMCODE=" + formcode);
+                } else {
+                    if (sofDataDetail.getSECNUM().trim().equals(cutpaydetl.getBatchSn() + cutpaydetl.getBatchDetlSn())) {
+                        joblog.setJobdesc("SBS入帐完成：FORMCODE=" + formcode + " 帐号:" + cutpaydetl.getClientact());
+                        cutpaydetl.setBillstatus(BillStatus.ACCOUNT_SUCCESS.getCode());
+                        cutpaydetl.setDateSbsAct(new Date());
+                        count++;
+                    } else {
+                        logger.error("SBS入帐完成,但返回的流水号出错，请查询。" + cutpaydetl.getBatchSn() + cutpaydetl.getBatchDetlSn());
+                        joblog.setJobdesc("SBS入帐完成,但返回的流水号出错，请查询。");
+                        cutpaydetl.setBillstatus(BillStatus.ACCOUNT_PEND.getCode());
+                        cutpaydetl.setDateSbsAct(new Date());
+                    }
+                }
+
+                joblog.setTablename("fip_cutpaydetl");
+                joblog.setRowpkid(cutpaydetl.getPkid());
+                joblog.setJobname("SBS记帐");
+                joblog.setJobtime(new Date());
+                joblog.setJobuserid(userid);
+                joblog.setJobusername(username);
+                fipJoblogMapper.insert(joblog);
+                fipCutpaydetlMapper.updateByPrimaryKey(cutpaydetl);
+            }
+            return count;
+        } catch (Exception e) {
+            logger.error("入帐时出现错误。", e);
+            throw new RuntimeException("入帐时出现错误。", e);
+        }
+    }
+
+
+    //=================================================================================
     private List<T100109ResponseRecord> getZmdResponseRecords(BizType bizType) {
         T100109CTL ctl = new T100109CTL();
 
         // 0-未扣款 1-已扣款
         return ctl.start("0");
     }
-
-    /**
-     * 不包括 罚息帐单处理 ！！！
-     * Billtype: 帐单性质 （“0”：基本帐单， “1”逾期帐单, “2”提前还款帐单, "3"消费信贷首付帐单）
-     */
 
     private FipCutpaydetl assembleCutpayRecord(BizType bizType,
                                                String batchSn,
@@ -177,39 +243,6 @@ public class ZmdService {
 
         return cutpaydetl;
     }
-
-    //============================================
-    private void batchInsertLogByBatchno(String batchno) {
-        FipCutpaydetlExample example = new FipCutpaydetlExample();
-        example.createCriteria().andBatchSnEqualTo(batchno);
-        List<FipCutpaydetl> fipCutpaydetlList = fipCutpaydetlMapper.selectByExample(example);
-
-        Date date = new Date();
-
-        OperatorManager operatorManager = SystemService.getOperatorManager();
-        String userid;
-        String username;
-        if (operatorManager == null) {
-            userid = "9999";
-            username = "BATCH";
-        } else {
-            userid = operatorManager.getOperatorId();
-            username = operatorManager.getOperatorName();
-        }
-
-        for (FipCutpaydetl fipCutpaydetl : fipCutpaydetlList) {
-            FipJoblog log = new FipJoblog();
-            log.setTablename("fip_cutpaydetl");
-            log.setRowpkid(fipCutpaydetl.getPkid());
-            log.setJobname("新建记录");
-            log.setJobdesc("新获取代扣记录");
-            log.setJobtime(date);
-            log.setJobuserid(userid);
-            log.setJobusername(username);
-            fipJoblogMapper.insert(log);
-        }
-    }
-
 
     /**
      * 回写信息系统（正常帐单及提前还款帐单）
@@ -278,5 +311,111 @@ public class ZmdService {
             fipCutpaydetlMapper.updateByPrimaryKey(detl);
         }
         return count;
+    }
+
+
+    //author:zhangxiaobo
+    //201504 zr 注: 字段可不做pad处理
+    private static List<String> assembleTaa41Param(String sn, String fromAcct, String toAcct, BigDecimal txnAmt, String productCode, String remark) {
+        // 转出账户
+        String outAct = StringUtils.rightPad(fromAcct, 22, ' ');
+        // 转入账户
+        String inAct = StringUtils.rightPad(toAcct, 22, ' ');
+
+        DecimalFormat df = new DecimalFormat("#############0.00");
+        List<String> txnparamList = new ArrayList<String>();
+        String txndate = new SimpleDateFormat("yyyyMMdd").format(new Date());
+
+        //转出帐户类型
+        txnparamList.add("01");
+        //转出帐户
+        txnparamList.add(outAct);
+        //取款方式
+        txnparamList.add("3");
+        //转出帐户户名
+        txnparamList.add(" ");
+        //取款密码
+        txnparamList.add(StringUtils.leftPad("", 6, ' '));
+        //证件类型
+        txnparamList.add("N");
+
+        //外围系统流水号
+        txnparamList.add(StringUtils.rightPad(sn, 18, ' '));      //交易流水号
+
+        //支票种类
+        txnparamList.add(" ");
+        //支票号
+        txnparamList.add(StringUtils.leftPad("", 10, ' '));
+        //支票密码
+        txnparamList.add(StringUtils.leftPad("", 12, ' '));
+        //签发日期
+        txnparamList.add(StringUtils.leftPad("", 8, ' '));
+        //无折标识
+        txnparamList.add("3");
+        //备用字段
+        txnparamList.add(StringUtils.leftPad("", 8, ' '));
+        //备用字段
+        txnparamList.add(StringUtils.leftPad("", 4, ' '));
+
+        //交易金额
+        txnparamList.add(df.format(txnAmt));   //金额
+
+        //转入帐户类型
+        txnparamList.add("01");
+        //转入帐户 (商户帐号)
+        String account = StringUtils.rightPad(inAct, 22, ' ');
+        txnparamList.add(account);
+
+        //转入帐户户名
+        txnparamList.add(" ");
+        //无折标识
+        txnparamList.add(" ");
+        //交易日期
+        txnparamList.add(txndate);
+
+        //摘要
+        txnparamList.add(remark == null ? "" : remark);
+
+        //产品码
+        txnparamList.add(productCode);
+        //MAGFL1
+        txnparamList.add(" ");
+        //MAGFL2
+        txnparamList.add(" ");
+
+        return txnparamList;
+    }
+
+
+    //============================================
+    private void batchInsertLogByBatchno(String batchno) {
+        FipCutpaydetlExample example = new FipCutpaydetlExample();
+        example.createCriteria().andBatchSnEqualTo(batchno);
+        List<FipCutpaydetl> fipCutpaydetlList = fipCutpaydetlMapper.selectByExample(example);
+
+        Date date = new Date();
+
+        OperatorManager operatorManager = SystemService.getOperatorManager();
+        String userid;
+        String username;
+        if (operatorManager == null) {
+            userid = "9999";
+            username = "BATCH";
+        } else {
+            userid = operatorManager.getOperatorId();
+            username = operatorManager.getOperatorName();
+        }
+
+        for (FipCutpaydetl fipCutpaydetl : fipCutpaydetlList) {
+            FipJoblog log = new FipJoblog();
+            log.setTablename("fip_cutpaydetl");
+            log.setRowpkid(fipCutpaydetl.getPkid());
+            log.setJobname("新建记录");
+            log.setJobdesc("新获取代扣记录");
+            log.setJobtime(date);
+            log.setJobuserid(userid);
+            log.setJobusername(username);
+            fipJoblogMapper.insert(log);
+        }
     }
 }
