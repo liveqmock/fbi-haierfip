@@ -52,7 +52,7 @@ public class ZmdCutpayBatchHandler {
     private OperationValve operationValve;
 
     private BizType bizType = BizType.ZMD;
-    private BizType channelBizType = BizType.ZMD;
+    private BizType channelBizType = BizType.FD; //使用房贷的银联商户号
 
     public synchronized void processAll() {
         if (!isCronTaskOpen()) {
