@@ -225,7 +225,14 @@ public abstract class UnionpayBatchAction implements Serializable {
             return null;
         }
         for (FipCutpaybat pkg : selectedSendableRecords) {
-            batchPkgService.unpackOneBatchPkg(pkg);
+            String retcode = pkg.getTxRetcode();
+            if (StringUtils.isNotEmpty(retcode)) {
+                if (retcode.startsWith("1")) {
+                    batchPkgService.unpackOneBatchPkg(pkg);
+                } else {
+                    MessageUtil.addInfo("银联返回码不是以'1'开头，不可以解包！ rtnCode=" + retcode);
+                }
+            }
         }
         initDataList();
         MessageUtil.addInfo("数据解包处理结束！");
@@ -237,7 +244,14 @@ public abstract class UnionpayBatchAction implements Serializable {
             return null;
         }
         for (FipCutpaybat pkg : selectedQueryRecords) {
-            batchPkgService.unpackOneBatchPkg(pkg);
+            String retcode = pkg.getTxRetcode();
+            if (StringUtils.isNotEmpty(retcode)) {
+                if (retcode.startsWith("1")) {
+                    batchPkgService.unpackOneBatchPkg(pkg);
+                } else {
+                    MessageUtil.addInfo("银联返回码不是以'1'开头，不可以解包！ rtnCode=" + retcode);
+                }
+            }
         }
         initDataList();
         MessageUtil.addInfo("数据解包处理结束！");

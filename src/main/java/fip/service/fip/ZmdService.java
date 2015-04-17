@@ -269,7 +269,7 @@ public class ZmdService {
             } else if (BillStatus.ACCOUNT_FAILED.getCode().equals(billStatus)) {
                 record.setStdkkcg("2");   //银行处理失败
             } else {
-                logger.error("回写记录时出现错误记录。");
+                continue;
             }
 
             //单笔发送处理

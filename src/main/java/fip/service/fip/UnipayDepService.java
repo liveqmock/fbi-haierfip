@@ -518,7 +518,7 @@ public class UnipayDepService {
         return processCutpayToa1001003(batchRecord, detailRecords, toa);
     }
 
-    private String  processCutpayToa1001003(FipCutpaybat batchRecord, List<FipCutpaydetl> detailRecords, TOA1001003 toa) {
+    private String processCutpayToa1001003(FipCutpaybat batchRecord, List<FipCutpaydetl> detailRecords, TOA1001003 toa) {
         //String batchSN = toa.header.REQ_SN;
         String batchSN = batchRecord.getTxpkgSn();
         if (!toa.header.REQ_SN.endsWith(batchSN)) {
@@ -539,6 +539,10 @@ public class UnipayDepService {
             //不做处理， 应继续查询。
             setCutpaybatRecordStatus(batchSN, TxpkgStatus.QRY_PEND);
         }
+
+        //保存银联响应信息
+        setCutpaybatRecordRtnMsg(batchSN, headRetCode, headRetMsg);
+
         logger.debug(" ..........处理返回的消息结束........");
         return headRetCode;
 
@@ -549,6 +553,22 @@ public class UnipayDepService {
         FipCutpaybat fipCutpaybat = cutpaybatMapper.selectByPrimaryKey(headSn);
         fipCutpaybat.setTxpkgStatus(status.getCode());
         fipCutpaybat.setRecversion(fipCutpaybat.getRecversion() + 1);
+        cutpaybatMapper.updateByPrimaryKey(fipCutpaybat);
+    }
+
+    private void setCutpaybatRecordRtnMsg(String headSn, String rtnCode, String rtnMsg) {
+        if (StringUtils.isEmpty(rtnCode)) {
+            rtnCode = "";
+        }
+        if (StringUtils.isEmpty(rtnMsg)) {
+            rtnMsg = "";
+        }
+        if (rtnMsg.length() >= 100) {
+            rtnMsg = rtnMsg.substring(0, 100);
+        }
+        FipCutpaybat fipCutpaybat = cutpaybatMapper.selectByPrimaryKey(headSn);
+        fipCutpaybat.setTxRetcode(rtnCode);
+        fipCutpaybat.setTxRetmsg(rtnMsg);
         cutpaybatMapper.updateByPrimaryKey(fipCutpaybat);
     }
 
@@ -599,20 +619,21 @@ public class UnipayDepService {
         String reqSn = batchRecord.getOriginBizid() + "-B-" + batchRecord.getTxpkgSn();
 
         if (!reqSn.equals(toa.getHeader().REQ_SN)) {
-            jobLogService.insertNewJoblog(batchRecord.getTxpkgSn(), "fip_cutpaybat", "银联交易结果查询", "响应报文乱包，响应报文与请求报文不对应！" , "数据交换平台", "数据交换平台");
+            jobLogService.insertNewJoblog(batchRecord.getTxpkgSn(), "fip_cutpaybat", "银联交易结果查询", "响应报文乱包，响应报文与请求报文不对应！", "数据交换平台", "数据交换平台");
             throw new RuntimeException("乱包：响应报文与请求报文不对应！");
         }
 
         //检查查询SN的一致性
         String querySn = reqSn;
         if (!querySn.equals(toa.body.QUERY_SN)) {
-            jobLogService.insertNewJoblog(batchRecord.getTxpkgSn(), "fip_cutpaybat", "银联交易结果查询", "响应报文中的查询序列号错误！" , "数据交换平台", "数据交换平台");
+            jobLogService.insertNewJoblog(batchRecord.getTxpkgSn(), "fip_cutpaybat", "银联交易结果查询", "响应报文中的查询序列号错误！", "数据交换平台", "数据交换平台");
             throw new RuntimeException("响应报文中的查询序列号错误！");
         }
 
         //处理TOA头部返回码
         String headRtnCode = toa.header.RETURN_CODE;
-        jobLogService.insertNewJoblog(batchRecord.getTxpkgSn(), "fip_cutpaybat", "银联交易结果查询", "响应报文：[" +  headRtnCode + "]" + toa.header.RETURN_MSG, "数据交换平台", "数据交换平台");
+        String headRtnMsg = toa.header.RETURN_MSG;
+        jobLogService.insertNewJoblog(batchRecord.getTxpkgSn(), "fip_cutpaybat", "银联交易结果查询", "响应报文：[" + headRtnCode + "]" + toa.header.RETURN_MSG, "数据交换平台", "数据交换平台");
 
         //先处理报文体中的明细报文
         processTOA1003003Body(batchRecord, toa);
@@ -630,9 +651,11 @@ public class UnipayDepService {
         } else if (headRtnCode.startsWith("2")) { //处理中
             //
         } else {
-           //
+            //
         }
 
+        //保存银联响应信息
+        setCutpaybatRecordRtnMsg(batchRecord.getTxpkgSn(), headRtnCode, headRtnMsg);
         return headRtnCode;
     }
 
