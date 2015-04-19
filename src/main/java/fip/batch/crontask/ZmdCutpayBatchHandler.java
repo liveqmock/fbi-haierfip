@@ -114,11 +114,11 @@ public class ZmdCutpayBatchHandler {
             logger.error(getBizName() + "批量代扣错误。", e);
             //短信通知
             String sms = e.getMessage();
-            sms = sms.length() <= 100 ? sms : sms.substring(0, 100);
-            if (BizType.ZMD.equals(bizType)) {
-                SmsHelper.asyncSendSms(PropertyManager.getProperty("zmd_batch_phones"), "专卖店批量代扣异常:" + sms);
+            if (sms == null) {
+                sms = e.toString();
             }
-            //TODO 结果记录在数据库表中
+            sms = sms.length() <= 100 ? sms : sms.substring(0, 100);
+            SmsHelper.asyncSendSms(PropertyManager.getProperty("zmd_batch_phones"), "专卖店批量代扣异常:" + sms);
         }
     }
 
@@ -311,6 +311,9 @@ public class ZmdCutpayBatchHandler {
             //出现异常时，忽略异常，继续处理
             logger.info(getBizName() + "自动批量代扣【SBS记账】出现错误.", e);
             String sms = e.getMessage();
+            if (sms == null) {
+                sms = e.toString();
+            }
             sms = sms.length() <= 100 ? sms : sms.substring(0, 100);
             SmsHelper.asyncSendSms(PropertyManager.getProperty("zmd_batch_phones"), "专卖店代扣,SBS处理异常:" + sms);
         }
@@ -355,6 +358,6 @@ public class ZmdCutpayBatchHandler {
 //        handler.performCutpayTxn();
 //        handler.writebackBillsAll();
 //        handler.performResultQueryTxn();
-        logger.info("end");
+//        logger.info("end");
     }
 }

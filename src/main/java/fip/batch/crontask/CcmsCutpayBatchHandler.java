@@ -104,6 +104,10 @@ public class CcmsCutpayBatchHandler {
             logger.error(getBizName() + "批量代扣错误。", e);
             //短信通知
             String sms = e.getMessage();
+            if (sms == null) {
+                sms = e.toString();
+            }
+
             sms = sms.length() <= 100 ? sms : sms.substring(0, 100);
             if (BizType.XFNEW.equals(bizType)) {
                 SmsHelper.asyncSendSms(PropertyManager.getProperty("xfnew_batch_phones"), "消费信贷批量代扣异常:" + sms);
