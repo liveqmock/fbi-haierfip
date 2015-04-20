@@ -83,6 +83,7 @@ public class ZmdCutpayBatchHandler {
                 List<FipCutpaybat> needQueryBatList = batchPkgService.selectNeedConfirmBatchRecords(bizType, CutpayChannel.UNIPAY);
                 if (needQueryBatList.size() > 0) {
                     logger.info(getBizName() + "批量代扣: 系统中存在未完成结果确认的记录:" + needQueryBatList.size());
+                    //做银联代扣结果查询
                     performResultQueryTxn();
                     count++;
                     isExistPendQryRecord = true;
@@ -94,7 +95,10 @@ public class ZmdCutpayBatchHandler {
             //正式获取代扣记录前，再检查一次本地记录状态
             List<FipCutpaybat> needQueryBatList = batchPkgService.selectNeedConfirmBatchRecords(bizType, CutpayChannel.UNIPAY);
             if (needQueryBatList.size() == 0) {
+                //1.获取代扣记录
                 obtainBills();
+
+                //2.银联代扣
                 performCutpayTxn();
 
                 try {
@@ -103,9 +107,21 @@ public class ZmdCutpayBatchHandler {
                     //
                 }
 
+                //3.银联代扣结果查询(并发)
                 performResultQueryTxn();
+
+                //4.回写代扣失败记录(全部未归档的)并做归档处理
+                List<FipCutpaydetl> failureDetlList = billManagerService.selectRecords4UnipayBatch(this.bizType, BillStatus.CUTPAY_FAILED);
+                writebackBillsAll(failureDetlList);
+
+                //5.SBS记账
                 sbsBookAll();
 
+                //6.回写SBS记账成功记录并作归档处理
+                List<FipCutpaydetl> successDetlList = billManagerService.selectRecords4UnipayBatch(this.bizType, BillStatus.ACCOUNT_SUCCESS);
+                writebackBillsAll(successDetlList);
+
+                //7.短信通知代扣结果
                 SmsHelper.asyncSendSms(PropertyManager.getProperty("zmd_batch_phones"), "专卖店代扣完成");
             } else {
                 SmsHelper.asyncSendSms(PropertyManager.getProperty("zmd_batch_phones"), "专卖店代扣存在未完成的记录，本次代扣暂停.");
@@ -246,45 +262,21 @@ public class ZmdCutpayBatchHandler {
         }
     }
 
-    //针对每个批量包的处理
-    private void writebackBills(String txPkgSn) {
-        if (!isCronTaskOpen()) {
-            throw new RuntimeException("自动批量处理开关已关闭。");
-        }
-        List<FipCutpaydetl> successDetlList = billManagerService.selectRecords4UnipayBatch(this.bizType, BillStatus.CUTPAY_SUCCESS, txPkgSn);
-        List<FipCutpaydetl> failureDetlList = billManagerService.selectRecords4UnipayBatch(this.bizType, BillStatus.CUTPAY_FAILED, txPkgSn);
-        //List<FipCutpaydetl> needQueryDetlList = billManagerService.selectRecords4UnipayBatchDetail(this.bizType, BillStatus.CUTPAY_QRY_PEND, txPkgSn);
-
-
-        int succCnt = zmdService.writebackCutPayRecord2Zmd(successDetlList, true);
-        int failCnt = zmdService.writebackCutPayRecord2Zmd(failureDetlList, true);
-        //回写结果不明记录 不归档
-        //int qryCnt = zmdService.writebackCutPayRecord2Zmd(needQueryDetlList, false);
-
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-            //
-        }
-        logger.info(getBizName() + "自动批量代扣【代扣结果回写" + txPkgSn + "】：本次回写记录条数(代扣成功)：" + succCnt + " 条(已做归档处理).");
-        logger.info(getBizName() + "自动批量代扣【代扣结果回写" + txPkgSn + "】：本次回写记录条数(代扣失败)：" + failCnt + " 条(已做归档处理).");
-    }
-
     //全部批量包的处理
     private synchronized void writebackBillsAll() {
         if (!isCronTaskOpen()) {
             throw new RuntimeException("自动批量处理开关已关闭。");
         }
 
+        //代扣成功并且已入账成功的
         List<FipCutpaydetl> successDetlList = billManagerService.selectRecords4UnipayBatch(this.bizType, BillStatus.CUTPAY_SUCCESS);
         List<FipCutpaydetl> failureDetlList = billManagerService.selectRecords4UnipayBatch(this.bizType, BillStatus.CUTPAY_FAILED);
         //List<FipCutpaydetl> needQueryDetlList = billManagerService.selectRecords4UnipayBatchDetail(this.bizType, BillStatus.CUTPAY_QRY_PEND);
 
 
+        //回写 同时归档
         int succCnt = zmdService.writebackCutPayRecord2Zmd(successDetlList, true);
         int failCnt = zmdService.writebackCutPayRecord2Zmd(failureDetlList, true);
-        //回写结果不明记录 不归档
-        //int qryCnt = zmdService.writebackCutPayRecord2Zmd(needQueryDetlList, false);
 
         try {
             Thread.sleep(500);
@@ -295,11 +287,22 @@ public class ZmdCutpayBatchHandler {
         logger.info(getBizName() + "自动批量代扣【代扣结果回写】：本次回写记录条数(代扣失败)：" + failCnt + " 条(已做归档处理).");
     }
 
+    private synchronized void writebackBillsAll(List<FipCutpaydetl> cutpaydetlList) {
+        //回写 同时归档
+        int succCnt = zmdService.writebackCutPayRecord2Zmd(cutpaydetlList, true);
 
-    //SBS账务处理
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            //
+        }
+        logger.info(getBizName() + "自动批量代扣【代扣结果回写】：本次成功回写记录条数：" + succCnt + " 条(已做归档处理).");
+    }
+
+
+    //SBS账务处理 处理 代扣成功的、待入账的、入账失败的
     private synchronized void sbsBookAll() {
         try {
-            //处理 代扣成功的、待入账的、入账失败的
             List<FipCutpaydetl> detlListSucc = billManagerService.selectBillList(this.bizType, BillStatus.CUTPAY_SUCCESS);
             //自动做待入账处理
             billManagerService.updateCutpaydetlBillStatus(detlListSucc, BillStatus.ACCOUNT_PEND);
@@ -308,7 +311,7 @@ public class ZmdCutpayBatchHandler {
             int succ = zmdService.accountCutPayRecord2SBS(detlList);
             logger.info(getBizName() + "自动批量代扣【SBS记账】：" + succ + " 条.");
         } catch (Exception e) {
-            //出现异常时，忽略异常，继续处理
+            //出现异常时，忽略异常(只发短信报警)
             logger.info(getBizName() + "自动批量代扣【SBS记账】出现错误.", e);
             String sms = e.getMessage();
             if (sms == null) {

@@ -70,6 +70,7 @@ public class ZmdWritebackAction implements Serializable {
 
     private synchronized void initList() {
         detlList = billManagerService.selectBillList(this.bizType, BillStatus.ACCOUNT_SUCCESS, BillStatus.CMS_FAILED);
+        detlList.addAll(billManagerService.selectBillList(this.bizType, BillStatus.ACCOUNT_FAILED));
         successDetlList = billManagerService.selectBillList(this.bizType, BillStatus.CMS_SUCCESS);
 
         this.totalamt = sumTotalAmt(detlList);

@@ -117,8 +117,15 @@ public class ZmdService {
     public synchronized int accountCutPayRecord2SBS(List<FipCutpaydetl> cutpaydetlList) {
         int count = 0;
 
-        String userid = SystemService.getOperatorManager().getOperatorId();
-        String username = SystemService.getOperatorManager().getOperatorName();
+        String userid = "9999";
+        String username = "crontask";
+
+        OperatorManager operatorManager = SystemService.getOperatorManager();
+        if (operatorManager != null) {
+            userid = operatorManager.getOperatorId();
+            username = operatorManager.getOperatorName();
+        }
+
         FipJoblog joblog = new FipJoblog();
 
         try {
@@ -245,7 +252,7 @@ public class ZmdService {
     }
 
     /**
-     * 回写信息系统（正常帐单及提前还款帐单）
+     * 回写信息系统
      */
     public int writebackCutPayRecord2Zmd(List<FipCutpaydetl> cutpaydetlList, boolean isArchive) {
         int count = 0;
@@ -262,12 +269,14 @@ public class ZmdService {
             record.setStdkhh(detl.getClientno());
             record.setStdjhhkr(detl.getPaybackdate());
             record.setStdhkje(detl.getPaybackamt().toString());
+            record.setStdrtncode(detl.getTxRetcode());
+            record.setStdrtnmsg(detl.getTxRetmsg());
 
             String billStatus = detl.getBillstatus();
-            if (BillStatus.ACCOUNT_SUCCESS.getCode().equals(billStatus)) {
-                record.setStdkkcg("1");   //银行处理成功
-            } else if (BillStatus.ACCOUNT_FAILED.getCode().equals(billStatus)) {
-                record.setStdkkcg("2");   //银行处理失败
+            if (BillStatus.ACCOUNT_SUCCESS.getCode().equals(billStatus)) {//注意状态是记账失败
+                record.setStdkkcg("1");
+            } else if (BillStatus.CUTPAY_FAILED.getCode().equals(billStatus)) {//注意状态是 银联代扣失败
+                record.setStdkkcg("2");
             } else {
                 continue;
             }
