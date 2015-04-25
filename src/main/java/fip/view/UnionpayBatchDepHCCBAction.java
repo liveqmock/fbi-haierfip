@@ -43,7 +43,7 @@ public class UnionpayBatchDepHCCBAction extends UnionpayBatchAction implements S
         } else {
             int count = 0;
             try {
-                count = hccbService.writebackCutPayRecord2Hccb(this.successDetlList, true, this.bizType);
+                count = hccbService.writebackCutPayRecord2Hccb(this.successDetlList, true);
                 MessageUtil.addWarn("回写成功记录条数：" + count);
             } catch (Exception e) {
                 MessageUtil.addError("数据处理错误！" + e.getMessage());
@@ -60,7 +60,7 @@ public class UnionpayBatchDepHCCBAction extends UnionpayBatchAction implements S
         } else {
             int count = 0;
             try {
-                count = hccbService.writebackCutPayRecord2Hccb(this.failureDetlList, true, this.bizType);
+                count = hccbService.writebackCutPayRecord2Hccb(this.failureDetlList, true);
                 MessageUtil.addWarn("回写记录条数：" + count);
             } catch (Exception e) {
                 MessageUtil.addError("数据处理错误！" + e.getMessage());

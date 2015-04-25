@@ -103,7 +103,7 @@ public class HccbService {
     }
 
     //批量回写
-    public synchronized int writebackCutPayRecord2Hccb(List<FipCutpaydetl> cutpaydetlList, boolean isArchive, BizType bizType) {
+    public synchronized int writebackCutPayRecord2Hccb(List<FipCutpaydetl> cutpaydetlList, boolean isArchive) {
         T1003Request request = new T1003Request();
         request.setHead(new TxnHead().txncode("1003"));
 
@@ -157,6 +157,8 @@ public class HccbService {
                 cutpaydetl.setRecversion(cutpaydetl.getRecversion() + 1);
                 fipCutpaydetlMapper.updateByPrimaryKey(cutpaydetl);
             }
+        } else {
+            logger.error("小贷系统回写失败" + rtnCode + rtnMsg);
         }
 
         //日志
