@@ -115,11 +115,11 @@ public class ZmdCutpayBatchHandler {
                 writebackBillsAll(failureDetlList);
 
                 //5.SBS记账
-                sbsBookAll();
+                //sbsBookAll();
 
                 //6.回写SBS记账成功记录并作归档处理
-                List<FipCutpaydetl> successDetlList = billManagerService.selectRecords4UnipayBatch(this.bizType, BillStatus.ACCOUNT_SUCCESS);
-                writebackBillsAll(successDetlList);
+                //List<FipCutpaydetl> successDetlList = billManagerService.selectRecords4UnipayBatch(this.bizType, BillStatus.ACCOUNT_SUCCESS);
+                //writebackBillsAll(successDetlList);
 
                 //7.短信通知代扣结果
                 SmsHelper.asyncSendSms(PropertyManager.getProperty("zmd_batch_phones"), "专卖店代扣完成");
