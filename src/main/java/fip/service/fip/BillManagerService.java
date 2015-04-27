@@ -89,8 +89,6 @@ public class BillManagerService {
 
     /**
      * ¸ü¸ÄÕÊµ¥×´Ì¬
-     * @param cutpaydetls
-     * @param status
      */
     @Transactional
     public synchronized void updateCutpaydetlBillStatus(List<FipCutpaydetl> cutpaydetls, BillStatus status){
@@ -101,8 +99,15 @@ public class BillManagerService {
     @Transactional
     public synchronized void updateCutpaydetlBillStatus(FipCutpaydetl cutpaydetl, BillStatus status){
         Date date = new Date();
-        String userid = SystemService.getOperatorManager().getOperatorId();
-        String username = SystemService.getOperatorManager().getOperatorName();
+        String userid = "9999";
+        String username = "crontask";
+
+        OperatorManager operatorManager = SystemService.getOperatorManager();
+        if (operatorManager != null) {
+            userid = operatorManager.getOperatorId();
+            username = operatorManager.getOperatorName();
+        }
+
         FipJoblog log = new FipJoblog();
 
         FipCutpaydetl  dbrecord = fipCutpaydetlMapper.selectByPrimaryKey(cutpaydetl.getPkid());

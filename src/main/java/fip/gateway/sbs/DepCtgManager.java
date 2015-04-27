@@ -10,25 +10,40 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * 通过DEP收发SBS报文
+ * 通过DEP收发SBS报文 走core接口
  * User: zhanrui
  * Date: 20120831
  * Time: 20:58:47
- * To change this template use File | Settings | File Templates.
  */
 public class DepCtgManager {
-
     private static Logger logger = LoggerFactory.getLogger(DepCtgManager.class);
-
-    private static boolean bDataConv = true;
-    private static String strDataConv = "ASCII";
     private static int iCommareaSize = 32000;
 
-    /**
-     * 处理单包查询的情况
-     *
-     */
     public static byte[] processSingleResponsePkg(String txnCode, List paramList) {
+        //默认
+        String termCode = "MT01";
+        String tlrCode = "MT01";
+        return processSingleResponsePkg(txnCode, paramList, termCode, tlrCode);
+    }
+
+    public static byte[] processSingleResponsePkg(String txnCode, List paramList, String termCode) {
+        //柜员号与终端号相同
+        return processSingleResponsePkg(txnCode, paramList, termCode, termCode);
+    }
+
+    public static byte[] processSingleResponsePkg(String txnCode, List paramList, String termCode, String tlrCode) {
+        if (termCode == null || "".equals(termCode)) {
+            throw new IllegalArgumentException("终端号为空");
+        }
+        if (termCode.length() != 4) {
+            throw new IllegalArgumentException("终端号长度错");
+        }
+        if (tlrCode == null || "".equals(tlrCode)) {
+            throw new IllegalArgumentException("柜员号为空");
+        }
+        if (tlrCode.length() != 4) {
+            throw new IllegalArgumentException("柜员号长度错");
+        }
 
         try {
             //通讯耗时
@@ -36,7 +51,8 @@ public class DepCtgManager {
             byte[] abytCommarea = new byte[iCommareaSize];
 
             //包头内容，xxxx交易，010网点，MPC1终端，MPC1柜员，包头定长51个字符
-            requestBuffer = "TPEI" + txnCode + "  010       MT01MT01";
+            requestBuffer = "TPEI" + txnCode + "  010       " + termCode + tlrCode;
+
             //打包包头
             System.arraycopy(getBytes(requestBuffer), 0, abytCommarea, 0, requestBuffer.length());
 
@@ -44,31 +60,29 @@ public class DepCtgManager {
             setBufferValues(paramList, abytCommarea);
 
             String sendTime = new SimpleDateFormat("HH:mm:ss:SSS").format(new Date());
+
             logger.info("交易" + txnCode + " 发送报文: " + sendTime + format16(truncBuffer(abytCommarea)));
 
             long starttime = System.currentTimeMillis();
 
+            //通过MQ与DEP通讯 走CORE接口
             byte[] toabuf = JmsManager.getInstance().sendAndRecvForDepCoreInterface(abytCommarea);
 
             long endtime = System.currentTimeMillis();
+            logger.info("===本包通讯DEP-MQ耗时:" + (endtime - starttime) + "ms.");
 
-            logger.info("===本包通讯耗时:" + (endtime - starttime) + "ms.");
             return toabuf;
         } catch (Exception e) {
-            logger.error("与SBS通讯出现问题：", e);
+            logger.error("与SBS通讯出现问题(DEP-MQ)：", e);
             throw new RuntimeException(e.getMessage());
-        } finally {
-            ;
         }
     }
 
+
     //===================================================================================================
-    private static byte[]  getBytes(String source) throws java.io.UnsupportedEncodingException {
-        if (bDataConv) {
-            return source.getBytes(strDataConv);
-        } else {
-            return source.getBytes();
-        }
+    private static byte[] getBytes(String source) throws java.io.UnsupportedEncodingException {
+        String strDataConv = "ASCII";
+        return source.getBytes(strDataConv);
     }
 
     private static void setBufferValues(List list, byte[] bb) throws UnsupportedEncodingException {
@@ -94,9 +108,6 @@ public class DepCtgManager {
 
     /**
      * 16进制格式化输出
-     *
-     * @param buffer
-     * @return
      */
     private static String format16(byte[] buffer) {
         StringBuilder result = new StringBuilder();
@@ -115,13 +126,10 @@ public class DepCtgManager {
                 result.append(new String(lineBuffer));
                 result.append("\n");
             }
-
-            //TODO
             if (n >= 1024) {
                 result.append("报文过大，已截断...");
                 break;
             }
-
         }
         for (int k = 0; k < (16 - n % 16); k++) {
             result.append("   ");
@@ -131,10 +139,6 @@ public class DepCtgManager {
         return result.toString();
     }
 
-    /**
-     * @param buffer
-     * @return
-     */
     private static byte[] truncBuffer(byte[] buffer) {
         int count = 0;
         for (int i = 0; i < iCommareaSize; i++) {
@@ -148,5 +152,4 @@ public class DepCtgManager {
         System.arraycopy(buffer, 0, outBuffer, 0, outBuffer.length);
         return outBuffer;
     }
-
 }

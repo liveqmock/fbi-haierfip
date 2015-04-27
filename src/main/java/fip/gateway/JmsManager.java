@@ -111,7 +111,7 @@ public final class JmsManager {
         try {
             session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         } catch (JMSException e) {
-            logger.info("MQ连接错误，重新连接中...", e);
+            //logger.info("MQ连接错误，重新连接中...", e);
             if (connection != null) {
                 connection.close();
             }
@@ -157,6 +157,7 @@ public final class JmsManager {
         } finally {
             session.close();
             connection.close(); //TODO  若不关闭需进行内存泄露检查
+            logger.info("" + connection);
         }
     }
 

@@ -223,6 +223,32 @@
         <property name="cronExpression" value="0 30 16 * * ?"/>
     </bean>
 
+    <!-- 专卖店代扣账单自动获取 批量处理 cronTrigger -->
+    <bean id="zmdCutpayBatchHandler" class="fip.batch.crontask.ZmdCutpayBatchHandler" />
+    <bean id="zmdCutpayJobDetailBean"
+          class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <property name="targetObject" ref="zmdCutpayBatchHandler"/>
+        <property name="targetMethod" value="processAll"/>
+        <property name="concurrent" value="false"/>
+    </bean>
+    <bean id="zmdCutpayCronTriggerBean" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+        <property name="jobDetail" ref="zmdCutpayJobDetailBean"/>
+        <property name="cronExpression" value="0 10 17 * * ?"/>
+    </bean>
+
+    <!-- 小贷代扣账单自动获取 批量处理 cronTrigger -->
+    <bean id="hccbCutpayBatchHandler" class="fip.batch.crontask.HccbCutpayBatchHandler" />
+    <bean id="hccbCutpayJobDetailBean"
+          class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <property name="targetObject" ref="hccbCutpayBatchHandler"/>
+        <property name="targetMethod" value="processAll"/>
+        <property name="concurrent" value="false"/>
+    </bean>
+    <bean id="hccbCutpayCronTriggerBean" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+        <property name="jobDetail" ref="hccbCutpayJobDetailBean"/>
+        <property name="cronExpression" value="0 0 21 * * ?"/>
+    </bean>
+
 
     <!--SBS内部总分账户清算数据发送到EAI（JDE）-->
     <bean id="autoSendSbsZfqsRecordsJobDetailBean"
@@ -249,6 +275,9 @@
 
                 <ref bean="ccmsCutpayCronTriggerBean_1"/>
                 <ref bean="ccmsCutpayCronTriggerBean_xfjr"/>
+
+                <ref bean="zmdCutpayCronTriggerBean"/>
+                <ref bean="hccbCutpayCronTriggerBean"/>
 
                 <ref bean="autoSendSbsZfqsRecordsCronTriggerBean"/>
             </list>

@@ -108,13 +108,13 @@ public class SbsSevice {
                     joblog.setJobdesc("SBS入帐失败：FORMCODE=" + formcode);
                 } else {
                     if (sofDataDetail.getSECNUM().trim().equals(cutpaydetl.getBatchSn() + cutpaydetl.getBatchDetlSn())) {
-                        joblog.setJobdesc("SBS入帐成功：FORMCODE=" + formcode + " 同业帐号:" + cutpaydetl.getSbsInterbankActno());
+                        joblog.setJobdesc("SBS入帐完成：FORMCODE=" + formcode + " 同业帐号:" + cutpaydetl.getSbsInterbankActno());
                         cutpaydetl.setBillstatus(BillStatus.ACCOUNT_SUCCESS.getCode());
                         cutpaydetl.setDateSbsAct(new Date());
                     } else {
-                        logger.error("SBS入帐成功,但返回的流水号出错，请查询。" + cutpaydetl.getBatchSn() + cutpaydetl.getBatchDetlSn());
-                        joblog.setJobdesc("SBS入帐成功,但返回的流水号出错，请查询。" + sofDataDetail.getSECNUM());
-                        cutpaydetl.setBillstatus(BillStatus.ACCOUNT_SUCCESS.getCode());
+                        logger.error("SBS入帐完成,但返回的流水号出错，请查询。" + cutpaydetl.getBatchSn() + cutpaydetl.getBatchDetlSn());
+                        joblog.setJobdesc("SBS入帐完成,但返回的流水号出错，请查询。" + sofDataDetail.getSECNUM());
+                        cutpaydetl.setBillstatus(BillStatus.ACCOUNT_PEND.getCode());
                         cutpaydetl.setDateSbsAct(new Date());
                     }
                 }
@@ -307,7 +307,7 @@ public class SbsSevice {
                 } else {
                     logger.error("SBS入帐成功,但返回的流水号出错，请查询。" + cutpaydetl.getBatchSn() + cutpaydetl.getBatchDetlSn());
                     joblog.setJobdesc("SBS入帐成功,但返回的流水号出错，请查询。" + sofDataDetail.getSECNUM());
-                    cutpaydetl.setBillstatus(BillStatus.ACCOUNT_SUCCESS.getCode());
+                    cutpaydetl.setBillstatus(BillStatus.ACCOUNT_PEND.getCode());
                     cutpaydetl.setDateSbsAct(new Date());
                 }
             }

@@ -13,28 +13,25 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
-import org.springframework.stereotype.Component;
 import pub.platform.advance.utils.PropertyManager;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 /**
- * 新消费信贷后台自动代扣处理.  批量代扣
+ * 小贷系统后台自动代扣处理.  批量代扣
  * User: zhanrui
- * Date: 2014-11-24
+ * Date: 2015-04-25
  */
 
-//@Component
-public class CcmsCutpayBatchHandler {
-    private static final Logger logger = LoggerFactory.getLogger(CcmsCutpayBatchHandler.class);
+public class HccbCutpayBatchHandler {
+    private static final Logger logger = LoggerFactory.getLogger(HccbCutpayBatchHandler.class);
 
     @Autowired
-    private CcmsService ccmsService;
+    private HccbService hccbService;
     @Autowired
     private BillManagerService billManagerService;
     @Autowired
@@ -48,32 +45,39 @@ public class CcmsCutpayBatchHandler {
     @Qualifier("propertyFileOperationValve")
     private OperationValve operationValve;
 
-    private BizType bizType;
-    private BizType channelBizType;
+    private BizType bizType = BizType.HCCB;
+    private BizType channelBizType = BizType.HCCB;
 
     public synchronized void processAll() {
         if (!isCronTaskOpen()) {
-            processSms("批量代扣: 定时任务未开启.");
+            if (BizType.HCCB.equals(bizType)) {
+                SmsHelper.asyncSendSms(PropertyManager.getProperty("hccb_batch_phones"), "小贷批量代扣: 定时任务未开启");
+            }
             return;
         }
 
         try {
             //短信通知
-            processSms("批量代扣开始");
+            if (BizType.HCCB.equals(bizType)) {
+                SmsHelper.asyncSendSms(PropertyManager.getProperty("hccb_batch_phones"), "小贷批量代扣开始");
+            } else {
+                throw new RuntimeException("业务代码错误，非hccb");
+            }
+
             try {
                 Thread.sleep(10 * 1000);
             } catch (InterruptedException e) {
                 //
             }
 
-            //前处理：检查当前系统是否存在未完成银联结果查询的记录，若存在，先完成结果查询，并回写
+            //前处理：检查当前系统是否存在未完成银联结果查询的记录，若存在，先完成结果查询
             int count = 0;
             boolean isExistPendQryRecord = true;
             while (count < 2 && isExistPendQryRecord) {
                 List<FipCutpaybat> needQueryBatList = batchPkgService.selectNeedConfirmBatchRecords(bizType, CutpayChannel.UNIPAY);
                 if (needQueryBatList.size() > 0) {
                     logger.info(getBizName() + "批量代扣: 系统中存在未完成结果确认的记录:" + needQueryBatList.size());
-                    //performCutpayTxn();
+                    //做银联代扣结果查询
                     performResultQueryTxn();
                     count++;
                     isExistPendQryRecord = true;
@@ -85,7 +89,10 @@ public class CcmsCutpayBatchHandler {
             //正式获取代扣记录前，再检查一次本地记录状态
             List<FipCutpaybat> needQueryBatList = batchPkgService.selectNeedConfirmBatchRecords(bizType, CutpayChannel.UNIPAY);
             if (needQueryBatList.size() == 0) {
+                //1.获取代扣记录
                 obtainBills();
+
+                //2.银联代扣
                 performCutpayTxn();
 
                 try {
@@ -93,12 +100,22 @@ public class CcmsCutpayBatchHandler {
                 } catch (InterruptedException e) {
                     //
                 }
+
+                //3.银联代扣结果查询(并发)
                 performResultQueryTxn();
 
-                //短信通知
-                processSms("批量代扣完成.");
+                //4.回写代扣失败记录(全部未归档的)并做归档处理
+                List<FipCutpaydetl> failureDetlList = billManagerService.selectRecords4UnipayBatch(this.bizType, BillStatus.CUTPAY_FAILED);
+                writebackBillsAll(failureDetlList);
+
+                //5.回写代扣成功记录(全部未归档的)并做归档处理
+                List<FipCutpaydetl> successDetlList = billManagerService.selectRecords4UnipayBatch(this.bizType, BillStatus.CUTPAY_SUCCESS);
+                writebackBillsAll(successDetlList);
+
+                //7.短信通知代扣结果
+                SmsHelper.asyncSendSms(PropertyManager.getProperty("hccb_batch_phones"), "小贷代扣完成");
             } else {
-                processSms("代扣存在未完成的记录，本次代扣暂停.");
+                SmsHelper.asyncSendSms(PropertyManager.getProperty("hccb_batch_phones"), "小贷代扣存在未完成的记录，本次代扣暂停.");
             }
         } catch (Exception e) {
             logger.error(getBizName() + "批量代扣错误。", e);
@@ -107,14 +124,8 @@ public class CcmsCutpayBatchHandler {
             if (sms == null) {
                 sms = e.toString();
             }
-
             sms = sms.length() <= 100 ? sms : sms.substring(0, 100);
-            if (BizType.XFNEW.equals(bizType)) {
-                SmsHelper.asyncSendSms(PropertyManager.getProperty("xfnew_batch_phones"), "消费信贷批量代扣异常:" + sms);
-            } else if (BizType.XFJR.equals(bizType)) {
-                SmsHelper.asyncSendSms(PropertyManager.getProperty("xfjr_batch_phones"), "消费金融批量代扣异常:" + sms);
-            }
-            //TODO 结果记录在数据库表中
+            SmsHelper.asyncSendSms(PropertyManager.getProperty("hccb_batch_phones"), "小贷批量代扣异常:" + sms);
         }
     }
 
@@ -123,7 +134,7 @@ public class CcmsCutpayBatchHandler {
             throw new RuntimeException("自动批量处理开关已关闭。");
         }
         List<String> returnMsgs = new ArrayList<String>();
-        int count = ccmsService.doObtainCcmsBills(bizType, BillType.NORMAL, returnMsgs);
+        int count = hccbService.doObtainHccbBills(bizType, returnMsgs);
         logger.info(getBizName() + "自动批量代扣【代扣记录获取】本次获取记录数：" + count + " 条.");
     }
 
@@ -204,7 +215,6 @@ public class CcmsCutpayBatchHandler {
                 int mm = 10 + stepMinutes * count;//初始代扣后10分钟后才开始进行结果查询
                 logger.info(getBizName() + " 定时代扣线程[" + Thread.currentThread().getName() + "]运行中... 时间[" + mm + "]分钟.");
             }
-            writebackBillsAll();
         } catch (InterruptedException e) {
             logger.info(getBizName() + "线程中断", e);
         }
@@ -230,10 +240,6 @@ public class CcmsCutpayBatchHandler {
                     logger.error("自动批量处理代扣交易结果查询：银联响应信息为空, 不再重发查询交易" + bat.getTxpkgSn());
                     break;
                 }
-                //查询10次以后 每次都回写
-                if (count >= 10) {
-                    writebackBills(bat.getTxpkgSn());
-                }
             } catch (Exception e) {
                 logger.error("自动批量处理结果查询交易处理失败", e);
                 count++;
@@ -245,59 +251,20 @@ public class CcmsCutpayBatchHandler {
                 }
             }
         }
-
-        writebackBills(bat.getTxpkgSn());
     }
 
-    //针对每个批量包的处理
-    private void writebackBills(String txPkgSn) {
-        if (!isCronTaskOpen()) {
-            throw new RuntimeException("自动批量处理开关已关闭。");
-        }
-        List<FipCutpaydetl> successDetlList = billManagerService.selectRecords4UnipayBatch(this.bizType, BillStatus.CUTPAY_SUCCESS, txPkgSn);
-        List<FipCutpaydetl> failureDetlList = billManagerService.selectRecords4UnipayBatch(this.bizType, BillStatus.CUTPAY_FAILED, txPkgSn);
-        List<FipCutpaydetl> needQueryDetlList = billManagerService.selectRecords4UnipayBatchDetail(this.bizType, BillStatus.CUTPAY_QRY_PEND, txPkgSn);
 
+    private synchronized void writebackBillsAll(List<FipCutpaydetl> cutpaydetlList) {
+        //回写 同时归档
+        int succCnt =  hccbService.writebackCutPayRecord2Hccb(cutpaydetlList, true);
 
-        int succCnt = ccmsService.writebackCutPayRecord2CCMS(successDetlList, true, bizType);
-        int failCnt = ccmsService.writebackCutPayRecord2CCMS(failureDetlList, true, bizType);
-        //回写结果不明记录 不归档
-        int qryCnt = ccmsService.writebackCutPayRecord2CCMS(needQueryDetlList, false, bizType);
 
         try {
             Thread.sleep(500);
         } catch (InterruptedException e) {
             //
         }
-        logger.info(getBizName() + "自动批量代扣【代扣结果回写" + txPkgSn + "】：本次回写记录条数(代扣成功)：" + succCnt + " 条(已做归档处理).");
-        logger.info(getBizName() + "自动批量代扣【代扣结果回写" + txPkgSn + "】：本次回写记录条数(代扣失败)：" + failCnt + " 条(已做归档处理).");
-        logger.info(getBizName() + "自动批量代扣【代扣结果回写" + txPkgSn + "】：本次回写记录条数(代扣结果不明)：" + qryCnt + " 条(未作归档处理).");
-    }
-
-    //全部批量包的处理
-    private synchronized void writebackBillsAll() {
-        if (!isCronTaskOpen()) {
-            throw new RuntimeException("自动批量处理开关已关闭。");
-        }
-
-        List<FipCutpaydetl> successDetlList = billManagerService.selectRecords4UnipayBatch(this.bizType, BillStatus.CUTPAY_SUCCESS);
-        List<FipCutpaydetl> failureDetlList = billManagerService.selectRecords4UnipayBatch(this.bizType, BillStatus.CUTPAY_FAILED);
-        List<FipCutpaydetl> needQueryDetlList = billManagerService.selectRecords4UnipayBatchDetail(this.bizType, BillStatus.CUTPAY_QRY_PEND);
-
-
-        int succCnt = ccmsService.writebackCutPayRecord2CCMS(successDetlList, true, bizType);
-        int failCnt = ccmsService.writebackCutPayRecord2CCMS(failureDetlList, true, bizType);
-        //回写结果不明记录 不归档
-        int qryCnt = ccmsService.writebackCutPayRecord2CCMS(needQueryDetlList, false, bizType);
-
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-            //
-        }
-        logger.info(getBizName() + "自动批量代扣【代扣结果回写】：本次回写记录条数(代扣成功)：" + succCnt + " 条(已做归档处理).");
-        logger.info(getBizName() + "自动批量代扣【代扣结果回写】：本次回写记录条数(代扣失败)：" + failCnt + " 条(已做归档处理).");
-        logger.info(getBizName() + "自动批量代扣【代扣结果回写】：本次回写记录条数(代扣结果不明)：" + qryCnt + " 条(未作归档处理).");
+        logger.info(getBizName() + "自动批量代扣【代扣结果回写】：本次成功回写记录条数：" + succCnt + " 条(已做归档处理).");
     }
 
 
@@ -312,21 +279,10 @@ public class CcmsCutpayBatchHandler {
     }
 
     private String getBizName() {
-        if (BizType.XFNEW.equals(bizType)) {
-            return "消费信贷";
-        } else if (BizType.XFJR.equals(bizType)) {
-            return "消费金融";
-        } else {
+        if (BizType.HCCB.equals(bizType)) {
+            return "小贷";
+        }  else {
             return "业务类型错误";
-        }
-    }
-
-    private  void processSms(String msg){
-        msg = getBizName() + msg;
-        if (BizType.XFNEW.equals(bizType)) {
-            SmsHelper.asyncSendSms(PropertyManager.getProperty("xfnew_batch_phones"), msg);
-        } else if (BizType.XFJR.equals(bizType)) {
-            SmsHelper.asyncSendSms(PropertyManager.getProperty("xfjr_batch_phones"), msg);
         }
     }
     //=====
@@ -343,13 +299,13 @@ public class CcmsCutpayBatchHandler {
     //===========================================================
     public static void main(String... argv) {
         ApplicationContext context = new ClassPathXmlApplicationContext("applicationContext.xml");
-        CcmsCutpayBatchHandler handler = (CcmsCutpayBatchHandler) context.getBean("ccmsCutpayBatchHandler");
-//        handler.obtainBills();
-        handler.performCutpayTxn();
-        handler.writebackBillsAll();
-//        handler.performResultQueryTxn();
-        logger.info("end");
-        //System.exit(0);
-    }
+        HccbCutpayBatchHandler handler = (HccbCutpayBatchHandler) context.getBean("hccbCutpayBatchHandler");
+        handler.processAll();
 
+//        handler.obtainBills();
+//        handler.performCutpayTxn();
+//        handler.writebackBillsAll();
+//        handler.performResultQueryTxn();
+//        logger.info("end");
+    }
 }

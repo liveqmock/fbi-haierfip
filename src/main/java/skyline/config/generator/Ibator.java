@@ -22,8 +22,8 @@ public class Ibator {
     public static void main(String[] argv) {
         Ibator ibator = new Ibator();
 
-//        ibator.run("resources/generatorConfig.xml");
-        ibator.run("resources/ibp_generatorConfig.xml");
+        ibator.run("resources/generatorConfig.xml");
+//        ibator.run("resources/ibp_generatorConfig.xml");
 
     }
 

@@ -5,7 +5,7 @@ import fip.common.constant.BizType;
 import fip.common.utils.MessageUtil;
 import fip.repository.model.FipCutpaydetl;
 import fip.service.fip.BillManagerService;
-import fip.service.fip.CmsService;
+import fip.service.fip.SbsSevice;
 import fip.service.fip.ZmdService;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -20,19 +20,20 @@ import javax.faces.context.FacesContext;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
- * 专卖店回写处理
+ * 专卖店代扣 SBS 入账
  * User: zhanrui
- * Date: 2015-04-14
+ * Date: 2015-04-15
  */
 @ManagedBean
 @ViewScoped
-public class ZmdWritebackAction implements Serializable {
-    private static final Logger logger = LoggerFactory.getLogger(ZmdWritebackAction.class);
+public class ZmdSbsAccountAction implements Serializable {
+    private static final Logger logger = LoggerFactory.getLogger(ZmdSbsAccountAction.class);
 
     private List<FipCutpaydetl> detlList;
     private List<FipCutpaydetl> successDetlList;
@@ -45,39 +46,74 @@ public class ZmdWritebackAction implements Serializable {
     private String totalamt;
     private String totalSuccessAmt;
 
+    private Map<String, String> statusMap = new HashMap<String, String>();
+
     private BillStatus status = BillStatus.CUTPAY_FAILED;
 
     @ManagedProperty(value = "#{billManagerService}")
     private BillManagerService billManagerService;
     @ManagedProperty(value = "#{zmdService}")
-    private ZmdService zmdSevice;
+    private ZmdService zmdService;
 
     private String bizid;
-    private String pkid;
     private BizType bizType;
+
 
     @PostConstruct
     public void init() {
-        this.bizid = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap().get("bizid");
+        FacesContext context = FacesContext.getCurrentInstance();
+        this.bizid = context.getExternalContext().getRequestParameterMap().get("bizid");
         if (!StringUtils.isEmpty(this.bizid)) {
-            this.bizType = BizType.valueOf(bizid);
+            if ("ZMD".equals(this.bizid)) {
+                this.bizType = BizType.valueOf(bizid);
+                initList();
+            } else {
+                throw new RuntimeException("业务号错误");
+            }
         }
-        if (!"ZMD".equals(this.bizid)) {
-            throw new RuntimeException("业务类别错误.");
-        }
-        initList();
     }
 
     private synchronized void initList() {
-        detlList = billManagerService.selectBillList(this.bizType, BillStatus.ACCOUNT_SUCCESS, BillStatus.CMS_FAILED);
-        detlList.addAll(billManagerService.selectBillList(this.bizType, BillStatus.ACCOUNT_FAILED));
-        successDetlList = billManagerService.selectBillList(this.bizType, BillStatus.CMS_SUCCESS);
-
+        detlList = billManagerService.selectBillList(this.bizType, BillStatus.ACCOUNT_PEND, BillStatus.ACCOUNT_FAILED);
+        successDetlList = billManagerService.selectBillList(this.bizType, BillStatus.ACCOUNT_SUCCESS);
         this.totalamt = sumTotalAmt(detlList);
         this.totalSuccessAmt = sumTotalAmt(successDetlList);
         this.totalcount = detlList.size();
         this.totalSuccessCount = successDetlList.size();
     }
+
+    public synchronized String onAccountAll() {
+        if (this.detlList.isEmpty()) {
+            MessageUtil.addWarn("没有需要处理的记录...");
+            return null;
+        }
+        try {
+            int succ = zmdService.accountCutPayRecord2SBS(this.detlList);
+            MessageUtil.addWarn("入帐结束，成功笔数:[" + succ +"]" );
+        } catch (Exception e) {
+            logger.error("SBS入帐时出现错误，请查询。", e);
+            MessageUtil.addError("SBS入帐时出现错误，请查询。" + e.getMessage());
+        }
+        initList();
+        return null;
+    }
+
+    public synchronized String onAccountMulti() {
+        if (selectedRecords == null || selectedRecords.length <= 0) {
+            MessageUtil.addWarn("未选择处理记录...");
+            return null;
+        }
+        try {
+            int succ =  zmdService.accountCutPayRecord2SBS(Arrays.asList(this.selectedRecords));
+            MessageUtil.addWarn("入帐结束，成功笔数:[" + succ +"]" );
+        } catch (Exception e) {
+            logger.error("SBS入帐时出现错误，请查询。", e);
+            MessageUtil.addError("SBS入帐时出现错误，请查询。" + e.getMessage());
+        }
+        initList();
+        return null;
+    }
+
 
     private String sumTotalAmt(List<FipCutpaydetl> qrydetlList) {
         BigDecimal amt = new BigDecimal(0);
@@ -88,61 +124,11 @@ public class ZmdWritebackAction implements Serializable {
         return df.format(amt);
     }
 
-    public synchronized String onWritebackAll() {
-        //List<String> returnMsgs = new ArrayList<String>();
-        int cnt = 0;
-        try {
-            cnt = zmdSevice.writebackCutPayRecord2Zmd(this.detlList, true);
-            MessageUtil.addWarn("信贷系统(专卖店代扣)回写处理结束。");
-        } catch (Exception e) {
-            logger.error("信贷系统(专卖店代扣)回写时出现错误，请查询。", e);
-            MessageUtil.addError("信贷系统(专卖店代扣)回写时出现错误，请查询。");
-        }
-        initList();
-/*
-        for (String returnMsg : returnMsgs) {
-            MessageUtil.addWarn(returnMsg);
-        }
-*/
-        MessageUtil.addWarn("回写处理记录条数：[" + cnt + "]");
-        return null;
-    }
-
-    public synchronized String onWritebackMulti() {
-        //List<String> returnMsgs = new ArrayList<String>();
-        int cnt = 0;
-        try {
-            cnt = zmdSevice.writebackCutPayRecord2Zmd(Arrays.asList(this.selectedRecords), true);
-            MessageUtil.addWarn("信贷系统(专卖店代扣)回写处理结束，请查看处理结果明细。");
-        } catch (Exception e) {
-            logger.error("信贷系统(专卖店代扣)回写时出现错误，请查询。", e);
-            MessageUtil.addError("信贷系统(专卖店代扣)回写时出现错误，请查询。");
-        }
-        initList();
-/*
-        for (String returnMsg : returnMsgs) {
-            MessageUtil.addWarn(returnMsg);
-        }
-*/
-        MessageUtil.addWarn("回写处理记录条数：[" + cnt + "]");
-
-        return null;
-    }
-
-
-    public String reset() {
-        this.detlRecord = new FipCutpaydetl();
-        return null;
-    }
-
 
     //====================================================================================
-
-
     public int getTotalcount() {
         return totalcount;
     }
-
 
     public FipCutpaydetl getDetlRecord() {
         return detlRecord;
@@ -202,12 +188,12 @@ public class ZmdWritebackAction implements Serializable {
         this.successDetlList = successDetlList;
     }
 
-    public int getTotalSuccessCount() {
-        return totalSuccessCount;
+    public ZmdService getZmdService() {
+        return zmdService;
     }
 
-    public void setTotalSuccessCount(int totalSuccessCount) {
-        this.totalSuccessCount = totalSuccessCount;
+    public void setZmdService(ZmdService zmdService) {
+        this.zmdService = zmdService;
     }
 
     public String getTotalamt() {
@@ -216,6 +202,22 @@ public class ZmdWritebackAction implements Serializable {
 
     public void setTotalamt(String totalamt) {
         this.totalamt = totalamt;
+    }
+
+    public Map<String, String> getStatusMap() {
+        return statusMap;
+    }
+
+    public void setStatusMap(Map<String, String> statusMap) {
+        this.statusMap = statusMap;
+    }
+
+    public int getTotalSuccessCount() {
+        return totalSuccessCount;
+    }
+
+    public void setTotalSuccessCount(int totalSuccessCount) {
+        this.totalSuccessCount = totalSuccessCount;
     }
 
     public String getTotalSuccessAmt() {
@@ -232,13 +234,5 @@ public class ZmdWritebackAction implements Serializable {
 
     public void setBizType(BizType bizType) {
         this.bizType = bizType;
-    }
-
-    public ZmdService getZmdSevice() {
-        return zmdSevice;
-    }
-
-    public void setZmdSevice(ZmdService zmdSevice) {
-        this.zmdSevice = zmdSevice;
     }
 }

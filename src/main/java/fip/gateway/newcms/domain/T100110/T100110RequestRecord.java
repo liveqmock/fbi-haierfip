@@ -13,6 +13,8 @@ public class T100110RequestRecord {
     private String stdjhhkr;
     private String stdhkje;
     private String stdkkcg;
+    private String stdrtncode;
+    private String stdrtnmsg;
 
     public String getStdkhmc() {
         return stdkhmc;
@@ -52,5 +54,21 @@ public class T100110RequestRecord {
 
     public void setStdhkje(String stdhkje) {
         this.stdhkje = stdhkje;
+    }
+
+    public String getStdrtncode() {
+        return stdrtncode;
+    }
+
+    public void setStdrtncode(String stdrtncode) {
+        this.stdrtncode = stdrtncode;
+    }
+
+    public String getStdrtnmsg() {
+        return stdrtnmsg;
+    }
+
+    public void setStdrtnmsg(String stdrtnmsg) {
+        this.stdrtnmsg = stdrtnmsg;
     }
 }
