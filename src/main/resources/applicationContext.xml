@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <beans xmlns="http://www.springframework.org/schema/beans"
-       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
        xmlns:tx="http://www.springframework.org/schema/tx" xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:jms="http://www.springframework.org/schema/jms"
        xsi:schemaLocation="http://www.springframework.org/schema/beans
                http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
                http://www.springframework.org/schema/context
@@ -10,8 +12,7 @@
                http://www.springframework.org/schema/tx
                http://www.springframework.org/schema/tx/spring-tx-4.0.xsd
                http://www.springframework.org/schema/aop
-               http://www.springframework.org/schema/aop/spring-aop-4.0.xsd
-               ">
+               http://www.springframework.org/schema/aop/spring-aop-4.0.xsd http://www.springframework.org/schema/jms http://www.springframework.org/schema/jms/spring-jms.xsd">
 
     <context:property-placeholder location="classpath:credit.properties"/>
 
@@ -115,12 +116,10 @@
         <property name="defaultDestinationName" value="${queue.dep.core.fip.out}"/>
         <property name="timeToLive" value="${jms.timeToLive}"/>
     </bean>
-    <!--
-        <jms:listener-container connection-factory="jmsConnectionFactory" concurrency="5">
-            <jms:listener destination="${queue.dep.core.fip.in}" ref="depPayoutMessageListener"
-                          selector="JMSX_BIZID='1002001' or JMSX_BIZID='1003001'"/>
-        </jms:listener-container>
-    -->
+
+    <jms:listener-container connection-factory="jmsConnectionFactory" concurrency="5">
+        <jms:listener destination="${queue.dep.core.fip.in}" ref="depMessageListener"/>
+    </jms:listener-container>
 
 
     <!--定时任务定义 -->
@@ -179,10 +178,10 @@
     <!-- 新消费信贷代扣账单自动获取 批量处理 cronTrigger -->
     <!--<util:constant id="bizType.XFNEW" static-field="fip.common.constant.BizType.XFNEW" />-->
     <bean id="bizType.XFNEW" class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
-        <property name="staticField" value="fip.common.constant.BizType.XFNEW" />
+        <property name="staticField" value="fip.common.constant.BizType.XFNEW"/>
     </bean>
     <bean id="channelBizType.XFNEW" class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
-        <property name="staticField" value="fip.common.constant.BizType.XFNEW" />
+        <property name="staticField" value="fip.common.constant.BizType.XFNEW"/>
     </bean>
     <bean id="ccmsCutpayBatchHandler" class="fip.batch.crontask.CcmsCutpayBatchHandler">
         <property name="bizType" ref="bizType.XFNEW"/>
@@ -203,10 +202,10 @@
 
     <!-- 消费金融代扣账单自动获取 批量处理 cronTrigger -->
     <bean id="bizType.XFJR" class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
-        <property name="staticField" value="fip.common.constant.BizType.XFJR" />
+        <property name="staticField" value="fip.common.constant.BizType.XFJR"/>
     </bean>
     <bean id="channelBizType.XFJR" class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
-        <property name="staticField" value="fip.common.constant.BizType.XFJR" />
+        <property name="staticField" value="fip.common.constant.BizType.XFJR"/>
     </bean>
     <bean id="xfjrCutpayBatchHandler" class="fip.batch.crontask.CcmsCutpayBatchHandler">
         <property name="bizType" ref="bizType.XFJR"/>
@@ -232,7 +231,8 @@
         <property name="targetMethod" value="obtainAndSendSbsZfqsRecords"/>
         <property name="concurrent" value="false"/>
     </bean>
-    <bean id="autoSendSbsZfqsRecordsCronTriggerBean" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+    <bean id="autoSendSbsZfqsRecordsCronTriggerBean"
+          class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
         <property name="jobDetail" ref="autoSendSbsZfqsRecordsJobDetailBean"/>
         <property name="cronExpression" value="0 0 1 * * ?"/>
     </bean>
