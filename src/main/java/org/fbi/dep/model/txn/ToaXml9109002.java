@@ -48,6 +48,7 @@ public class ToaXml9109002 extends ToaXml {
 
 
     }
+
     @Override
     public String toString() {
         this.INFO.TXN_CODE = "9109002";
