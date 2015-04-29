@@ -39,7 +39,6 @@ public class TiaXml9109001 extends TiaXml {
         public String REMARK = "";
         public String RESERVE = "";
 
-
     }
 
     @Override

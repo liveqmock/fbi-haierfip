@@ -44,10 +44,10 @@ public class DepTxn9109001Processor extends DepAbstractTxnProcessor {
             toa.INFO.REQ_SN = tiaXml9109001.INFO.REQ_SN;
 
             // 检查保存
-            String serialNo = jshOrderActService.checkOrderSerialNo(tiaXml9109001.BODY.DETAILS);
-            if (serialNo != null) {
+            String msg = jshOrderActService.checkOrderSerialNo(tiaXml9109001);
+            if (msg != null) {
                 toa.INFO.RET_CODE = "1000";
-                toa.INFO.RET_MSG = "订单序号：" + serialNo + " 已入账，不可重复发送。";
+                toa.INFO.RET_MSG = msg + " 明细已入账，不可重复发送。";
                 return toa;
             } else {
                 int cnt = jshOrderActService.saveRecords(tiaXml9109001);

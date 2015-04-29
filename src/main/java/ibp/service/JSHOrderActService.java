@@ -44,7 +44,7 @@ public class JSHOrderActService {
         for (TiaXml9109001.BodyDetail record : tia.BODY.DETAILS) {
 
             example.clear();
-            example.createCriteria().andSerialnoEqualTo(record.SERIALNO).andFormcodeEqualTo(INIT_STS);
+            example.createCriteria().andReqSnEqualTo(tia.INFO.REQ_SN).andSerialnoEqualTo(record.SERIALNO).andFormcodeEqualTo(INIT_STS);
             orders = ibpJshOrderMapper.selectByExample(example);
 
             // 已存在未入账同序列号订单，更新
@@ -82,15 +82,15 @@ public class JSHOrderActService {
     }
 
     // 检查明细记录，返回错误信息
-    public String checkOrderSerialNo(List<TiaXml9109001.BodyDetail> detailList) {
+    public String checkOrderSerialNo(TiaXml9109001 tia) {
         IbpJshOrderExample example = new IbpJshOrderExample();
 
-        for (TiaXml9109001.BodyDetail record : detailList) {
+        for (TiaXml9109001.BodyDetail record : tia.BODY.DETAILS) {
             example.clear();
-            example.createCriteria().andSerialnoEqualTo(record.SERIALNO).andFormcodeNotEqualTo(INIT_STS);
+            example.createCriteria().andReqSnEqualTo(tia.INFO.REQ_SN).andSerialnoEqualTo(record.SERIALNO).andFormcodeNotEqualTo(INIT_STS);
             List<IbpJshOrder> orders = ibpJshOrderMapper.selectByExample(example);
             if (orders != null && !orders.isEmpty()) {
-                return record.SERIALNO;
+                return "流水码：" + tia.INFO.REQ_SN + "  序号:" + record.SERIALNO;
             }
         }
         return null;
