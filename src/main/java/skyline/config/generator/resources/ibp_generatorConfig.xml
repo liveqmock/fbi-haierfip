@@ -9,7 +9,7 @@
     <!--信息-->
     <context id="AllInfo" targetRuntime="MyBatis3">
         <jdbcConnection driverClass="oracle.jdbc.driver.OracleDriver"
-                        connectionURL="jdbc:oracle:thin:@10.143.20.15:1521:orcl"
+                        connectionURL="jdbc:oracle:thin:@localhost:1521:orcl"
                         userId="fip"
                         password="fip">
         </jdbcConnection>
@@ -33,7 +33,7 @@
 
 
         <!-- -->
-        <table schema="fip" tableName="IBP_IF_NETBNK_TXN">
+        <table schema="fip" tableName="IBP_JSH_ORDER">
             <property name="ignoreQualifiersAtRuntime" value="true" />
             <generatedKey column="pkid" sqlStatement="select sys_guid() from dual" identity="false"/>
         </table>
