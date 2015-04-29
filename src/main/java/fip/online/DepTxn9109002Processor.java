@@ -2,6 +2,7 @@ package fip.online;
 
 import ibp.repository.model.IbpJshOrder;
 import ibp.service.JSHOrderActService;
+import org.apache.commons.lang.StringUtils;
 import org.fbi.dep.model.base.TiaXml;
 import org.fbi.dep.model.base.ToaXml;
 import org.fbi.dep.model.txn.TiaXml9109001;
@@ -47,11 +48,11 @@ public class DepTxn9109002Processor extends DepAbstractTxnProcessor {
                     bean.ACTNO = record.getActno();
                     bean.ACTNAME = record.getActname();
                     bean.TXN_AMT = record.getTxnAmt().toString();
-                    bean.ACTDATE = record.getSbsTxndate();
-                    bean.FORMCODE = record.getFormcode();
-                    bean.FORMMSG = record.getFormmsg();
-                    bean.REMARK = record.getRemark();
-                    bean.RESERVE = record.getReserve();
+                    bean.ACTDATE = nullToEmpty(record.getSbsTxndate());
+                    bean.FORMCODE = nullToEmpty(record.getFormcode());
+                    bean.FORMMSG = nullToEmpty(record.getFormmsg());
+                    bean.REMARK = nullToEmpty(record.getRemark());
+                    bean.RESERVE = nullToEmpty(record.getReserve());
                     toa.BODY.DETAILS.add(bean);
                 }
             }
@@ -68,5 +69,9 @@ public class DepTxn9109002Processor extends DepAbstractTxnProcessor {
         }
         logger.info("fipœÏ”¶dep±®Œƒ£∫" + toa.toString());
         return toa;
+    }
+
+    private String nullToEmpty(String src) {
+        return StringUtils.isEmpty(src) ? "" : src.trim();
     }
 }

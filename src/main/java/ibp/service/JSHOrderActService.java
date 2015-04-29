@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -26,6 +28,7 @@ public class JSHOrderActService {
     private JobLogService jobLogService;
     @Autowired
     private IbpJshOrderMapper ibpJshOrderMapper;
+    private static final String INIT_STS = "0000";
 
     // 保存巨商汇订单分款明细
     @Transactional
@@ -33,8 +36,26 @@ public class JSHOrderActService {
 
         int cnt = 0;
 
+        String time = new SimpleDateFormat("yyyyMMdd HH:mm:ss").format(new Date());
+        IbpJshOrderExample example = new IbpJshOrderExample();
+        List<IbpJshOrder> orders = null;
+        IbpJshOrder order = null;
+
         for (TiaXml9109001.BodyDetail record : tia.BODY.DETAILS) {
-            IbpJshOrder order = new IbpJshOrder();
+
+            example.clear();
+            example.createCriteria().andSerialnoEqualTo(record.SERIALNO).andFormcodeEqualTo(INIT_STS);
+            orders = ibpJshOrderMapper.selectByExample(example);
+
+            // 已存在未入账同序列号订单，更新
+            if (orders != null && !orders.isEmpty()) {
+                order = orders.get(0);
+                order.setRecversion(order.getRecversion() + 1);
+
+            } else {
+                order = new IbpJshOrder();
+                order.setRecversion(0L);
+            }
             order.setTxnCode(tia.INFO.TXN_CODE);
             order.setReqSn(tia.INFO.REQ_SN);
             order.setOrderid(record.ORDERID);
@@ -46,22 +67,35 @@ public class JSHOrderActService {
             order.setTxnAmt(new BigDecimal(record.TXN_AMT));
             order.setRemark(record.REMARK);
             order.setReserve(record.RESERVE);
-            if (ibpJshOrderMapper.insert(order) > 0) {
-                cnt++;
+            order.setFormcode(INIT_STS);
+            order.setCreateTime(time);
+
+            if (orders != null && !orders.isEmpty()) {
+                ibpJshOrderMapper.updateByExample(order, example);
+            } else {
+                if (ibpJshOrderMapper.insert(order) > 0) {
+                    cnt++;
+                }
             }
         }
         return cnt;
     }
 
     // 检查明细记录，返回错误信息
-    public String checkOrderNo(List<TiaXml9109001.BodyDetail> detailList) {
-        /*IbpJshOrderExample example = new IbpJshOrderExample();
-        for(TiaXml9109001.BodyDetail record : tia.BODY.DETAILS) {
+    public String checkOrderSerialNo(List<TiaXml9109001.BodyDetail> detailList) {
+        IbpJshOrderExample example = new IbpJshOrderExample();
+
+        for (TiaXml9109001.BodyDetail record : detailList) {
             example.clear();
-            example.createCriteria().and
-        }*/
+            example.createCriteria().andSerialnoEqualTo(record.SERIALNO).andFormcodeNotEqualTo(INIT_STS);
+            List<IbpJshOrder> orders = ibpJshOrderMapper.selectByExample(example);
+            if (orders != null && !orders.isEmpty()) {
+                return record.SERIALNO;
+            }
+        }
         return null;
     }
+
 
     public List<IbpJshOrder> qryOrdersByDate(String txnDate) {
         IbpJshOrderExample example = new IbpJshOrderExample();
