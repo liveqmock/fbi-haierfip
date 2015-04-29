@@ -18,6 +18,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.constraints.NotNull;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -30,6 +31,7 @@ import java.util.List;
 
 /**
  * Created by zhanrui on 2014/11/13.
+ * 建行交易明细通知
  */
 @WebServlet(name = "CcbVip4879", urlPatterns = "/CcbVip4879")
 public class CcbVip4879Processor extends HttpServlet {
@@ -51,18 +53,20 @@ public class CcbVip4879Processor extends HttpServlet {
         String reqXml = null;
         try {
             reqXml = getRequestXmlMsg(request);
-            logger.info(">>>>XML:" + reqXml);
+            logger.debug(">>>>XML:" + reqXml);
 
             XStream xs = new XStream(new DomDriver());
             xs.processAnnotations(T4879Bean.class);
             T4879Bean tia = (T4879Bean) xs.fromXML(reqXml);
-            logger.info(">>>>TIA:" + tia);
+            logger.debug(">>>>TIA:" + tia);
 
             //check
+            /*
             if (!"37101985510051003497".equals(tia.Body.AcctId.trim())) {
                 out.println("[1001]acctno != 37101985510051003497");
                 return;
             }
+            */
 
             if (isDuplicateMsg(tia)) {
                 logger.info(">>>>duplicate msg:" + tia);
@@ -81,7 +85,7 @@ public class CcbVip4879Processor extends HttpServlet {
         }
     }
 
-    private String getRequestXmlMsg(HttpServletRequest request) throws IOException {
+    @NotNull private String getRequestXmlMsg(HttpServletRequest request) throws IOException {
         BufferedReader br = new BufferedReader(new InputStreamReader(request.getInputStream(), "GBK"));
         StringBuilder sb = new StringBuilder();
         String tmp = "";
@@ -100,11 +104,7 @@ public class CcbVip4879Processor extends HttpServlet {
         IbpIfCcbTxnExample example = new IbpIfCcbTxnExample();
         example.createCriteria().andMsgtxdateEqualTo(tia.Head.TxDate.trim()).andTxseqidEqualTo(tia.Head.TxSeqId.trim());
         List<IbpIfCcbTxn> txnList = txnMapper.selectByExample(example);
-        if (txnList.size() == 0) {
-            return false;
-        } else {
-            return true;
-        }
+        return txnList.size() != 0;
 
     }
 
