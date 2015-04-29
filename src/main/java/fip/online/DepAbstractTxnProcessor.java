@@ -4,7 +4,7 @@ import org.fbi.dep.model.base.TiaXml;
 import org.fbi.dep.model.base.ToaXml;
 import org.springframework.transaction.annotation.Transactional;
 
-@Deprecated
+
 public abstract class DepAbstractTxnProcessor {
 
     public abstract ToaXml process(TiaXml tia) throws Exception;
