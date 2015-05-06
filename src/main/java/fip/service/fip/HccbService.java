@@ -11,6 +11,9 @@ import fip.gateway.hccb.HccbT1003Handler;
 import fip.gateway.hccb.model.T1001Response;
 import fip.gateway.hccb.model.T1003Request;
 import fip.gateway.hccb.model.TxnHead;
+import fip.gateway.sbs.DepCtgManager;
+import fip.gateway.sbs.core.SBSResponse4SingleRecord;
+import fip.gateway.sbs.txn.Taa41.Taa41SOFDataDetail;
 import fip.repository.dao.FipCutpaydetlMapper;
 import fip.repository.dao.FipJoblogMapper;
 import fip.repository.dao.FipRefunddetlMapper;
@@ -26,6 +29,8 @@ import org.springframework.transaction.annotation.Transactional;
 import pub.platform.security.OperatorManager;
 
 import java.math.BigDecimal;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -258,6 +263,89 @@ public class HccbService {
         cutpaydetl.setClientact("123456"); //不能为空
         return cutpaydetl;
     }
+
+
+
+    /**
+     * SBS记账  20150505  zhanrui
+     */
+    public synchronized int accountCutPayRecord2SBS(List<FipCutpaydetl> cutpaydetlList, String totalSuccessAmt) {
+        int count = 0;
+
+        String userid = SystemService.getOperatorManager().getOperatorId();
+        String username = SystemService.getOperatorManager().getOperatorName();
+
+        OperatorManager operatorManager = SystemService.getOperatorManager();
+        if (operatorManager != null) {
+            userid = operatorManager.getOperatorId();
+            username = operatorManager.getOperatorName();
+        }
+
+        FipJoblog joblog = new FipJoblog();
+
+        try {
+            //金额再次核对
+            BigDecimal amt = new BigDecimal(0);
+            for (FipCutpaydetl cutpaydetl : cutpaydetlList) {
+                amt = amt.add(cutpaydetl.getPaybackamt());
+            }
+            DecimalFormat df = new DecimalFormat("#,##0.00");
+            if (!totalSuccessAmt.equals(df.format(amt))) {
+                throw  new RuntimeException("总金额不一致，请核对。");
+            }
+
+            String sn = "HCCB" + new SimpleDateFormat("yyyyMMddHHmmss");
+            String fromActno = "801000026131041001"; //对应建行37101985510051003497
+            String toActno = "801000977202019014";
+            String productCode = "N105";
+            String remark = "HCCB小贷代扣";
+            List<String> paramList = SbsTxnHelper.assembleTaa41Param(sn, fromActno, toActno, amt, productCode, remark);
+
+            //SBS
+            byte[] recvBuf = DepCtgManager.processSingleResponsePkg("aa41", paramList);
+            SBSResponse4SingleRecord response = new SBSResponse4SingleRecord();
+            Taa41SOFDataDetail sofDataDetail = new Taa41SOFDataDetail();
+            response.setSofDataDetail(sofDataDetail);
+            response.init(recvBuf);
+
+            String formcode = response.getFormcode();
+
+
+            BillStatus billStatus = BillStatus.ACCOUNT_FAILED;
+            String logMsg = "";
+            if (!formcode.equals("T531")) {     //异常情况处理
+                billStatus = BillStatus.ACCOUNT_FAILED;
+                logMsg = "SBS入帐失败：FORMCODE=" + formcode;
+            } else {
+                if (sofDataDetail.getSECNUM().trim().equals(sn)) {
+                    billStatus = BillStatus.ACCOUNT_SUCCESS;
+                    logMsg = "SBS入帐完成：FORMCODE=" + formcode;
+                } else {
+                    billStatus = BillStatus.ACCOUNT_PEND;
+                    logMsg = "SBS入帐完成,但返回的流水号出错，请查询。FORMCODE=" + formcode;
+                }
+            }
+
+            for (FipCutpaydetl cutpaydetl : cutpaydetlList) {
+                cutpaydetl.setBillstatus(billStatus.getCode());
+                joblog.setJobdesc(logMsg);
+                joblog.setTablename("fip_cutpaydetl");
+                joblog.setRowpkid(cutpaydetl.getPkid());
+                joblog.setJobname("SBS记帐");
+                joblog.setJobtime(new Date());
+                joblog.setJobuserid(userid);
+                joblog.setJobusername(username);
+                fipJoblogMapper.insert(joblog);
+                fipCutpaydetlMapper.updateByPrimaryKey(cutpaydetl);
+            }
+
+            return count;
+        } catch (Exception e) {
+            logger.error("入帐时出现错误。", e);
+            throw new RuntimeException("入帐时出现错误。", e);
+        }
+    }
+
 
     //============================================
 
