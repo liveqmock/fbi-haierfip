@@ -1,0 +1,181 @@
+<!--巨商汇记账明细，需要做SBS入帐处理 -->
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui" xmlns:P="http://java.sun.com/jsf/html"
+                template="/templates/ui.xhtml">
+    <ui:define name="head">
+        <script type="text/javascript">
+            function doPopupWindow(obj) {
+                var pkid = obj.parentNode.parentNode.parentNode.getAttribute("data-rk");
+                var popupwindow = window.open("common/cutpayDetlFields.xhtml?pkid=" + pkid, "", "height=600,width=800,left=200,top=100,toolbar=no,menubar=no,scrollbars=yes,location=no");
+                popupwindow.focus;
+            }
+        </script>
+    </ui:define>
+    <ui:define name="content">
+        <div style="margin:5px">
+            <p:tabView id="tabview" cache="false" style="font-weight:normal;font-style:normal">
+                <p:tab title="待入账明细" id="toActTab">
+                    <div id="table">
+                        <h:form id="form">
+
+                            <p:messages id="msgs" showDetail="false"/>
+                            <p:menubar>
+                                <p:menuitem type="push" value="全部入账" icon="ui-icon ui-icon-document"
+                                            action="#{ifJshOrderBookAction.onBook}" update=":tabview" ajax="true"/>
+                                <p:menuitem type="push" value="多笔入账" icon="ui-icon ui-icon-disk"
+                                            action="#{ifJshOrderBookAction.onMultiBook}" update=":tabview" ajax="true"/>
+                            </p:menubar>
+                            <p:ajaxStatus style="height:18px;text-align:center">
+                                <f:facet name="start">
+                                    <h:graphicImage value="/images/ajaxloadingbar.gif"/>
+                                </f:facet>
+                                <f:facet name="complete">
+                                    <h:outputText value=""/>
+                                </f:facet>
+                            </p:ajaxStatus>
+
+                            <p:dataTable id="pdt" dynamic="true" style="width:100%;"
+                                         value="#{ifJshOrderBookAction.detlList}" var="record"
+                                         rowKey="#{record.pkid}"
+                                         selection="#{ifJshOrderBookAction.selectedRecords}"
+                                         paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown} 【总笔数:#{ifJshOrderBookAction.cnt}】【总金额:#{ifJshOrderBookAction.totalamt}】"
+                                         paginator="true" rows="15" paginatorPosition="bottom"
+                                         rowsPerPageTemplate="30,15,10,8,5"
+                                         emptyMessage="数据记录为空...">
+
+                                <p:column selectionMode="multiple" style="width:18px"/>
+
+                                <p:column headerText="日期" sortBy="#{record.txndate}"
+                                          style="text-align: center;">
+                                    <h:outputText value="#{record.txndate}">
+                                    </h:outputText>
+                                </p:column>
+                                <p:column headerText="订单号" sortBy="#{record.orderid}"
+                                          style="text-align: center;">
+                                    <h:outputText value="#{record.orderid}">
+                                    </h:outputText>
+                                </p:column>
+
+
+                                <p:column headerText="转入账号" style="text-align: left">
+                                    <h:outputText value="#{record.actno}"/>
+                                </p:column>
+
+                                <p:column headerText="账户名" style="text-align: left">
+                                    <h:outputText value="#{record.actname}"/>
+                                </p:column>
+
+
+                                <p:column headerText="交易金额" sortBy="#{record.txnAmt}">
+                                    <h:outputText value="#{record.txnAmt}" style="float: right">
+                                        <f:convertNumber type="number" pattern="#,###,###,###,##0.00"/>
+                                    </h:outputText>
+                                </p:column>
+
+                                <p:column headerText="备注" style="text-align: left">
+                                    <h:outputText value="#{record.remark}">
+                                    </h:outputText>
+                                </p:column>
+
+                                <p:column headerText="状态" style="text-align: center;width: 70px;">
+                                    <h:outputText
+                                            value="#{ifJshOrderBookAction.status.valueOfAlias(record.formcode).title}"/>
+                                </p:column>
+
+                            </p:dataTable>
+
+
+                        </h:form>
+                    </div>
+                    <div>
+                        <br/>
+                        <p:separator/>
+                        <p:outputLabel value="SBS 分款账号（青岛巨商汇网络科技有限公司）：#{ifJshOrderBookAction.sbsOutAct}"
+                                />
+                    </div>
+                </p:tab>
+                <p:tab title="SBS 已入账明细" id="sbsActList">
+                    <div id="qrytable">
+                        <h:form id="qryform">
+                            <p:fieldset>
+                                <p:messages id="qrymsgs" showDetail="false"/>
+                                <h:panelGrid columns="2" cellspacing="5">
+                                    <h:panelGrid columns="4" cellspacing="5">
+                                        <h:outputLabel value="入账日期:"/>
+                                        <p:inputText id="sbsTxnDate" value="#{ifJshOrderBookAction.sbsTxnDate}"
+                                                     required="true"
+                                                     onclick="WdatePicker({dateFmt:'yyyyMMdd'})"/>
+                                    </h:panelGrid>
+                                    <h:panelGrid>
+                                        <p:commandButton id="qrybtn" style="width:137px;height: 25px;" value="查询"
+                                                         action="#{ifJshOrderBookAction.onQry}"
+                                                         update="qrypdt,qrymsgs">
+                                        </p:commandButton>
+                                    </h:panelGrid>
+                                </h:panelGrid>
+                            </p:fieldset>
+                            <p:ajaxStatus style="height:20px;text-align:center">
+                                <f:facet name="start">
+                                    <h:graphicImage value="/images/ajaxloadingbar.gif"/>
+                                </f:facet>
+                                <f:facet name="complete">
+                                    <h:outputText value=""/>
+                                </f:facet>
+                            </p:ajaxStatus>
+
+                            <p:dataTable id="qrypdt" dynamic="true" style="width:100%;"
+                                         value="#{ifJshOrderBookAction.sbsTxnList}" var="sbs"
+                                         rowKey="#{record.pkid}"
+                                         paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown} 【总笔数:#{ifJshOrderBookAction.sbsCnt}】【总金额:#{ifJshOrderBookAction.sbsTotalAmt}】"
+                                         paginator="true" rows="15" paginatorPosition="bottom"
+                                         rowsPerPageTemplate="100,50,30,15,5"
+                                         emptyMessage="数据记录为空...">
+
+                                <p:column headerText="SBS流水号" style="text-align: center">
+                                    <h:outputText value="#{sbs.sbsSerialno}"/>
+                                </p:column>
+
+                                <p:column headerText="转入账号" style="text-align: center">
+                                    <h:outputText value="#{sbs.actno}"/>
+                                </p:column>
+
+                                <p:column headerText="转入账户名" style="text-align: left">
+                                    <h:outputText value="#{sbs.actname}"/>
+                                </p:column>
+
+                                <p:column headerText="交易金额" sortBy="#{sbs.txnAmt}">
+                                    <h:outputText value="#{sbs.txnAmt}" style="float: right">
+                                        <f:convertNumber type="number" pattern="#,###,###,###,##0.00"/>
+                                    </h:outputText>
+                                </p:column>
+
+                                <p:column headerText="返回码" style="text-align: center">
+                                    <h:outputText value="#{sbs.formcode}">
+                                    </h:outputText>
+                                </p:column>
+
+                                <p:column headerText="交易日期" style="text-align: center">
+                                    <h:outputText value="#{sbs.sbsTxndate}">
+                                    </h:outputText>
+                                </p:column>
+
+
+                                <p:column headerText="操作员" style="text-align: center">
+                                    <h:outputText value="#{sbs.operid}">
+                                    </h:outputText>
+                                </p:column>
+
+
+                            </p:dataTable>
+                        </h:form>
+                    </div>
+                </p:tab>
+            </p:tabView>
+        </div>
+
+    </ui:define>
+
+</ui:composition>

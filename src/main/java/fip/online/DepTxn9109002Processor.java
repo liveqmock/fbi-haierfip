@@ -1,13 +1,11 @@
 package fip.online;
 
 import ibp.repository.model.IbpJshOrder;
-import ibp.service.JSHOrderActService;
+import ibp.service.IbpJshOrderActService;
 import org.apache.commons.lang.StringUtils;
 import org.fbi.dep.model.base.TiaXml;
 import org.fbi.dep.model.base.ToaXml;
-import org.fbi.dep.model.txn.TiaXml9109001;
 import org.fbi.dep.model.txn.TiaXml9109002;
-import org.fbi.dep.model.txn.ToaXml9109001;
 import org.fbi.dep.model.txn.ToaXml9109002;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +25,7 @@ public class DepTxn9109002Processor extends DepAbstractTxnProcessor {
 
 
     @Autowired
-    private JSHOrderActService jshOrderActService;
+    private IbpJshOrderActService ibpJshOrderActService;
 
     @Override
     public ToaXml process(TiaXml tia) throws Exception {
@@ -36,7 +34,7 @@ public class DepTxn9109002Processor extends DepAbstractTxnProcessor {
             TiaXml9109002 tiaXml9109002 = (TiaXml9109002) tia;
             toa.INFO.REQ_SN = tiaXml9109002.INFO.REQ_SN;
 
-            List<IbpJshOrder> orderList = jshOrderActService.qryOrdersByDate(tiaXml9109002.BODY.TXNDATE);
+            List<IbpJshOrder> orderList = ibpJshOrderActService.qryOrdersByDate(tiaXml9109002.BODY.TXNDATE);
             toa.BODY.DETAILNUM = String.valueOf(orderList.size());
             if (!orderList.isEmpty()) {
                 toa.BODY.DETAILS = new ArrayList<ToaXml9109002.BodyDetail>();

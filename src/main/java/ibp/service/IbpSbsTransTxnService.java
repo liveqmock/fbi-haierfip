@@ -75,7 +75,7 @@ public class IbpSbsTransTxnService {
         DecimalFormat df = new DecimalFormat("#############0.00");
         List<String> txnparamList = new ArrayList<String>();
         String txndate = new SimpleDateFormat("yyyyMMdd").format(new Date());
-//        String txndate = "20150330";
+//        String txndate = "20150501";
 
         //转出帐户类型
         txnparamList.add("01");

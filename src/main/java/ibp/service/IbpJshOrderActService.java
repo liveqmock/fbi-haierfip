@@ -1,10 +1,11 @@
 package ibp.service;
 
+import fip.common.constant.BillStatus;
 import fip.service.fip.JobLogService;
 import ibp.repository.dao.IbpJshOrderMapper;
+import ibp.repository.model.IbpIfNetbnkTxn;
 import ibp.repository.model.IbpJshOrder;
 import ibp.repository.model.IbpJshOrderExample;
-import org.fbi.dep.model.base.TiaXml;
 import org.fbi.dep.model.txn.TiaXml9109001;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,14 +22,14 @@ import java.util.List;
  * Created by lenovo on 2015-04-23.
  */
 @Service
-public class JSHOrderActService {
-    private static final Logger logger = LoggerFactory.getLogger(JSHOrderActService.class);
+public class IbpJshOrderActService {
+    private static final Logger logger = LoggerFactory.getLogger(IbpJshOrderActService.class);
 
     @Autowired
     private JobLogService jobLogService;
     @Autowired
     private IbpJshOrderMapper ibpJshOrderMapper;
-    private static final String INIT_STS = "0000";
+    private static final String INIT_STS = BillStatus.INIT.getCode();
 
     // 保存巨商汇订单分款明细
     @Transactional
@@ -97,10 +98,35 @@ public class JSHOrderActService {
     }
 
 
+    // 按单据日期查询
     public List<IbpJshOrder> qryOrdersByDate(String txnDate) {
         IbpJshOrderExample example = new IbpJshOrderExample();
         example.createCriteria().andTxndateEqualTo(txnDate);
         return ibpJshOrderMapper.selectByExample(example);
     }
 
+    // 按单据日期查询已入账记录
+    public List<IbpJshOrder> qryActOrdersByDate(String txnDate) {
+        IbpJshOrderExample example = new IbpJshOrderExample();
+        example.createCriteria().andSbsTxndateEqualTo(txnDate).andFormcodeNotEqualTo(INIT_STS);
+        return ibpJshOrderMapper.selectByExample(example);
+    }
+
+    // 查询未入账记录
+    public List<IbpJshOrder> qryInitOrders() {
+        IbpJshOrderExample example = new IbpJshOrderExample();
+//        example.createCriteria().andTxndateEqualTo(txnDate).andFormcodeEqualTo(INIT_STS);
+        example.createCriteria().andFormcodeEqualTo(INIT_STS);
+        return ibpJshOrderMapper.selectByExample(example);
+    }
+
+    // 并发冲突
+    public boolean isConflict(IbpJshOrder txn) {
+        return txn.getRecversion().compareTo(ibpJshOrderMapper.selectByPrimaryKey(txn.getPkid()).getRecversion()) != 0;
+    }
+
+    public int update(IbpJshOrder txn) {
+        txn.setRecversion(txn.getRecversion() + 1);
+        return ibpJshOrderMapper.updateByPrimaryKey(txn);
+    }
 }
