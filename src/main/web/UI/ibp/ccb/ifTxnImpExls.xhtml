@@ -169,6 +169,11 @@
                                 <br/>
                                 <p:outputLabel value="SBS 转出账号（建行同业）：#{ifNetbankExcelTxnAction.sbsOutAct}"
                                                style="margin-left: 36px;"/>
+                                <p:commandButton id="actbtn" style="width:137px;height: 25px;margin-left: 20px;"
+                                                 value="同步SBS账户"
+                                                 action="#{ifNetbankExcelTxnAction.onActSync}"
+                                                 update="msgs">
+                                </p:commandButton>
                             </div>
 
                         </h:form>

@@ -263,6 +263,18 @@
         <property name="cronExpression" value="0 0 1 * * ?"/>
     </bean>
 
+    <!--FIP自动同步SBS账户-->
+    <bean id="autoSyncSbsActRecordsJobDetailBean"
+          class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <property name="targetObject" ref="autoSyncSbsActRecordsHandler"/>
+        <property name="targetMethod" value="getSbsActRecords"/>
+        <property name="concurrent" value="false"/>
+    </bean>
+    <bean id="autoSyncSbsActRecordsCronTriggerBean"
+          class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+        <property name="jobDetail" ref="autoSyncSbsActRecordsJobDetailBean"/>
+        <property name="cronExpression" value="0 0 2 * * ?"/>
+    </bean>
 
     <!-- 设置调度 -->
     <bean id="myScheduler" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
@@ -278,7 +290,7 @@
 
                 <ref bean="zmdCutpayCronTriggerBean"/>
                 <ref bean="hccbCutpayCronTriggerBean"/>
-
+                <ref bean="autoSyncSbsActRecordsCronTriggerBean"/>
                 <ref bean="autoSendSbsZfqsRecordsCronTriggerBean"/>
             </list>
         </property>

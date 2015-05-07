@@ -41,7 +41,8 @@ public class IfJshOrderBookAction implements Serializable {
     private List<SelectItem> sbsActList = new ArrayList<SelectItem>();
 
     private BillStatus status = BillStatus.INIT;
-    private String sbsOutAct = "801002115702013001";
+    //    private String sbsOutAct = "801002115702013001";
+    private String sbsOutAct = "801000026123021001";
     private String totalamt = "0.00";
     private String sbsTotalAmt = "0.00";
     private String sbsTxnDate = new SimpleDateFormat("yyyyMMdd").format(new Date());
@@ -107,6 +108,8 @@ public class IfJshOrderBookAction implements Serializable {
         }
         sbsTotalAmt = bd.toString();
     }
+
+
 
 
     public void onBook() {
@@ -307,4 +310,6 @@ public class IfJshOrderBookAction implements Serializable {
     public void setIbpJshOrderActService(IbpJshOrderActService ibpJshOrderActService) {
         this.ibpJshOrderActService = ibpJshOrderActService;
     }
+
+
 }

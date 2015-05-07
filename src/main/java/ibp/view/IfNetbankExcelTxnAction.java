@@ -165,6 +165,16 @@ public class IfNetbankExcelTxnAction implements Serializable {
 
     }
 
+    public void onActSync() {
+        try {
+            // 自动获取SBS账户信息
+            ibpSbsActService.syncSbsActRecords();
+            MessageUtil.addInfo("同步SBS账户信息成功！");
+        } catch (Exception e) {
+            logger.error("同步SBS账户信息异常！");
+        }
+    }
+
     public void onBook() {
 
     }
