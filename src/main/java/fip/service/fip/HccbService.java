@@ -17,9 +17,8 @@ import fip.gateway.sbs.txn.Taa41.Taa41SOFDataDetail;
 import fip.repository.dao.FipCutpaydetlMapper;
 import fip.repository.dao.FipJoblogMapper;
 import fip.repository.dao.FipRefunddetlMapper;
-import fip.repository.model.FipCutpaydetl;
-import fip.repository.model.FipCutpaydetlExample;
-import fip.repository.model.FipJoblog;
+import fip.repository.dao.PtenudetailMapper;
+import fip.repository.model.*;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,6 +50,8 @@ public class HccbService {
     private FipRefunddetlMapper fipRefunddetlMapper;
     @Autowired
     private FipJoblogMapper fipJoblogMapper;
+    @Autowired
+    private SbsTxnHelper sbsTxnHelper;
 
     @Transactional
     public synchronized int importDataFromXls(BizType bizType, List<FipCutpaydetl> cutpaydetls, List<String> returnMsgs) {
@@ -265,7 +266,6 @@ public class HccbService {
     }
 
 
-
     /**
      * SBS记账  20150505  zhanrui
      */
@@ -291,15 +291,17 @@ public class HccbService {
             }
             DecimalFormat df = new DecimalFormat("#,##0.00");
             if (!totalSuccessAmt.equals(df.format(amt))) {
-                throw  new RuntimeException("总金额不一致，请核对。");
+                throw new RuntimeException("总金额不一致，请核对。");
             }
 
-            String sn = "HCCB" + new SimpleDateFormat("yyyyMMddHHmmss");
-            String fromActno = "801000026131041001"; //对应建行37101985510051003497
-            String toActno = "801000977202019014";
+            String sn = "HCCB" + new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
+            //String fromActno = "801000026131041001"; //对应建行37101985510051003497
+            //String toActno = "801000977202019014";
+            String fromActno = sbsTxnHelper.selectSbsActnoFromPtEnuDetail("HCCB_FROM_ACTNO"); //对应建行37101985510051003497
+            String toActno = sbsTxnHelper.selectSbsActnoFromPtEnuDetail("HCCB_TO_ACTNO");
             String productCode = "N105";
             String remark = "HCCB小贷代扣";
-            List<String> paramList = SbsTxnHelper.assembleTaa41Param(sn, fromActno, toActno, amt, productCode, remark);
+            List<String> paramList = sbsTxnHelper.assembleTaa41Param(sn, fromActno, toActno, amt, productCode, remark);
 
             //SBS
             byte[] recvBuf = DepCtgManager.processSingleResponsePkg("aa41", paramList);
@@ -345,7 +347,6 @@ public class HccbService {
             throw new RuntimeException("入帐时出现错误。", e);
         }
     }
-
 
     //============================================
 

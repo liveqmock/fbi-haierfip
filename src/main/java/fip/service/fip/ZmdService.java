@@ -55,6 +55,8 @@ public class ZmdService {
     private FipRefunddetlMapper fipRefunddetlMapper;
     @Autowired
     private FipJoblogMapper fipJoblogMapper;
+    @Autowired
+    private SbsTxnHelper sbsTxnHelper;
 
     /**
      * 查询信贷系统专卖店的代扣记录（可供选择性获取）    (不包括罚息帐单)
@@ -131,11 +133,12 @@ public class ZmdService {
         try {
             for (FipCutpaydetl cutpaydetl : cutpaydetlList) {
                 String sn = cutpaydetl.getBatchSn() + cutpaydetl.getBatchDetlSn();
-                String fromActno = "801090106001041001";
+                //String fromActno = "801090106001041001";
+                String fromActno = sbsTxnHelper.selectSbsActnoFromPtEnuDetail("ZMD_FROM_ACTNO"); //对应建行37101985510051003497
                 String toActno = cutpaydetl.getClientact();//贷款账号
                 String productCode = "N103";
                 String remark = "ZMD" + cutpaydetl.getTxpkgSn() + cutpaydetl.getTxpkgDetlSn();
-                List<String> paramList = SbsTxnHelper.assembleTaa41Param(sn, fromActno, toActno, cutpaydetl.getPaybackamt(), productCode, remark);
+                List<String> paramList = sbsTxnHelper.assembleTaa41Param(sn, fromActno, toActno, cutpaydetl.getPaybackamt(), productCode, remark);
 
                 //SBS
                 byte[] recvBuf = DepCtgManager.processSingleResponsePkg("aa41", paramList);

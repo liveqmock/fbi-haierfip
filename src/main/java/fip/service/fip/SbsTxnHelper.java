@@ -1,6 +1,11 @@
 package fip.service.fip;
 
+import fip.repository.dao.PtenudetailMapper;
+import fip.repository.model.Ptenudetail;
+import fip.repository.model.PtenudetailExample;
 import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
@@ -12,10 +17,15 @@ import java.util.List;
 /**
  * Created by zhanrui on 2015/5/6.
  */
+
+@Service
 public class SbsTxnHelper {
-    //author:zhangxiaobo
+    @Autowired
+    private PtenudetailMapper ptenudetailMapper;
+
+    //转自 author:zhangxiaobo
     //201504 zr 注: 字段可不做pad处理
-    public static List<String> assembleTaa41Param(String sn, String fromAcct, String toAcct, BigDecimal txnAmt, String productCode, String remark) {
+    public  List<String> assembleTaa41Param(String sn, String fromAcct, String toAcct, BigDecimal txnAmt, String productCode, String remark) {
         // 转出账户
         String outAct = StringUtils.rightPad(fromAcct, 22, ' ');
         // 转入账户
@@ -83,6 +93,18 @@ public class SbsTxnHelper {
         txnparamList.add(" ");
 
         return txnparamList;
+    }
+
+    public String selectSbsActnoFromPtEnuDetail(String type) {
+        PtenudetailExample example = new PtenudetailExample();
+        example.createCriteria()
+                .andEnutypeEqualTo("ActnoForSBS").andEnuitemvalueEqualTo(type);
+        example.setOrderByClause(" dispno ");
+        List<Ptenudetail> ptenudetails = ptenudetailMapper.selectByExample(example);
+        if (ptenudetails.size() != 1) {
+            throw new RuntimeException("枚举字典配置错误");
+        }
+        return ptenudetails.get(0).getEnuitemexpand();
     }
 
 }

@@ -73,7 +73,9 @@ public class HccbSbsAccountAction implements Serializable {
     }
 
     private synchronized void initList() {
-        detlList = billManagerService.selectBillList(this.bizType, BillStatus.ACCOUNT_PEND, BillStatus.ACCOUNT_FAILED);
+        //detlList = billManagerService.selectBillList(this.bizType, BillStatus.ACCOUNT_PEND, BillStatus.ACCOUNT_FAILED);
+        detlList = billManagerService.selectBillList(this.bizType, BillStatus.CUTPAY_SUCCESS, BillStatus.ACCOUNT_FAILED);
+
         successDetlList = billManagerService.selectBillList(this.bizType, BillStatus.ACCOUNT_SUCCESS);
         this.totalamt = sumTotalAmt(detlList);
         this.totalSuccessAmt = sumTotalAmt(successDetlList);
@@ -87,7 +89,7 @@ public class HccbSbsAccountAction implements Serializable {
             return null;
         }
         try {
-            int succ = hccbService.accountCutPayRecord2SBS(this.detlList, this.totalSuccessAmt);
+            int succ = hccbService.accountCutPayRecord2SBS(this.detlList, this.totalamt);
             MessageUtil.addWarn("入帐结束." );
         } catch (Exception e) {
             logger.error("SBS入帐时出现错误，请查询。", e);
@@ -209,5 +211,13 @@ public class HccbSbsAccountAction implements Serializable {
 
     public void setBizType(BizType bizType) {
         this.bizType = bizType;
+    }
+
+    public HccbService getHccbService() {
+        return hccbService;
+    }
+
+    public void setHccbService(HccbService hccbService) {
+        this.hccbService = hccbService;
     }
 }
