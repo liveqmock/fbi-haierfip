@@ -17,16 +17,44 @@
 
     <ui:define name="content">
         <div style="margin:5px">
-
-            <p:tabView dynamic="true" cache="false" style="font-weight:normal;font-style:normal">
+            <p:tabView id="tabview"  dynamic="true" cache="false" style="font-weight:normal;font-style:normal">
                 <p:tab title="小贷代扣SBS入帐处理">
                     <div id="table">
                         <h:form id="form">
                             <p:messages id="msgs" showDetail="false"/>
+                            <p:panel style="margin-top:10px">
+                                <h:panelGrid columns="2" cellspacing="5" columnClasses="col-95,col-5">
+                                    <h:panelGrid columns="4" cellspacing="5">
+                                        <h:outputLabel value="起始日期:" for="startdate"/>
+                                        <p:inputText id="startdate"
+                                                     value="#{hccbSbsAccountAction.startDate}"
+                                                     onclick="WdatePicker()"/>
+                                        <h:outputLabel value="结束日期:" for="enddate"/>
+                                        <p:inputText id="enddate"
+                                                     value="#{hccbSbsAccountAction.endDate}"
+                                                     onclick="WdatePicker()"/>
+                                    </h:panelGrid>
+                                    <h:panelGrid>
+                                        <p:commandButton id="qrybtn" style="width:90px;" value="查询"
+                                                         action="#{hccbSbsAccountAction.onQuery}"
+                                                         update=":tabview">
+                                        </p:commandButton>
+                                    </h:panelGrid>
+                                </h:panelGrid>
+                            </p:panel>
+
+                            <br/>
+
                             <p:menubar>
                                 <p:menuitem type="push" value="全部入帐" icon="ui-icon ui-icon-document"
-                                            action="#{hccbSbsAccountAction.onAccountAll}" update="msgs, pdt"/>
+                                            action="#{hccbSbsAccountAction.onAccountAll}" update=":tabview"/>
+                                <p:menuitem type="push" value="多笔入账" icon="ui-icon ui-icon-disk"
+                                            action="#{hccbSbsAccountAction.onAccountMulti}" update=":tabview"/>
                             </p:menubar>
+                            <h:panelGrid columns="4" cellspacing="1" style="margin-top: 15px">
+                                <p:outputLabel value="转出账号：#{hccbSbsAccountAction.sbsOutActno}"/>
+                                <p:outputLabel value="转入账号：#{hccbSbsAccountAction.sbsInActno}" style="margin-left: 20px;"/>
+                            </h:panelGrid>
                             <p:ajaxStatus style="height:18px;text-align:center">
                                 <f:facet name="start">
                                     <h:graphicImage value="/images/ajaxloadingbar.gif"/>

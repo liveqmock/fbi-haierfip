@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import pub.platform.security.OperatorManager;
 import skyline.service.common.ToolsService;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -65,8 +66,8 @@ public class BillManagerService {
     }
 
 /**
-     * ===============================================
-     */
+ * ===============================================
+ */
     /**
      * 判断记录是否可打包，防止并发
      *
@@ -91,13 +92,14 @@ public class BillManagerService {
      * 更改帐单状态
      */
     @Transactional
-    public synchronized void updateCutpaydetlBillStatus(List<FipCutpaydetl> cutpaydetls, BillStatus status){
+    public synchronized void updateCutpaydetlBillStatus(List<FipCutpaydetl> cutpaydetls, BillStatus status) {
         for (FipCutpaydetl cutpaydetl : cutpaydetls) {
-             updateCutpaydetlBillStatus(cutpaydetl, status);
+            updateCutpaydetlBillStatus(cutpaydetl, status);
         }
     }
+
     @Transactional
-    public synchronized void updateCutpaydetlBillStatus(FipCutpaydetl cutpaydetl, BillStatus status){
+    public synchronized void updateCutpaydetlBillStatus(FipCutpaydetl cutpaydetl, BillStatus status) {
         Date date = new Date();
         String userid = "9999";
         String username = "crontask";
@@ -110,7 +112,7 @@ public class BillManagerService {
 
         FipJoblog log = new FipJoblog();
 
-        FipCutpaydetl  dbrecord = fipCutpaydetlMapper.selectByPrimaryKey(cutpaydetl.getPkid());
+        FipCutpaydetl dbrecord = fipCutpaydetlMapper.selectByPrimaryKey(cutpaydetl.getPkid());
         Long recversion = cutpaydetl.getRecversion();
 
         if (dbrecord.getRecversion().compareTo(recversion) == 0) {
@@ -125,10 +127,11 @@ public class BillManagerService {
             log.setJobtime(date);
             log.setJobuserid(userid);
             log.setJobusername(username);
-            log.setJobdesc("更改状态 " + BillStatus.valueOfAlias(oldstatus).getTitle() +"为：" + BillStatus.valueOfAlias(cutpaydetl.getBillstatus()).getTitle());
+            log.setJobdesc("更改状态 " + BillStatus.valueOfAlias(oldstatus).getTitle() + "为：" + BillStatus.valueOfAlias(cutpaydetl.getBillstatus()).getTitle());
             fipJoblogMapper.insert(log);
         }
     }
+
     // 批量内各记录发送状态修改
     @Transactional
     public synchronized void updateCutpaydetlListToSendflag(List<FipCutpaydetl> records, String sendflag) {
@@ -194,6 +197,24 @@ public class BillManagerService {
         return fipCutpaydetlMapper.selectByExample(example);
     }
 
+    //根据
+    public List<FipCutpaydetl> selectBillListByObtainDate(BizType bizType, BillStatus status, String startDate, String endDate) {
+        Date startDt, endDt;
+        try {
+            startDt = new SimpleDateFormat("yyyy-MM-dd").parse(startDate);
+            endDt = new SimpleDateFormat("yyyy-MM-dd").parse(endDate);
+        } catch (ParseException e) {
+            throw new RuntimeException("日期字段输入错误");
+        }
+        FipCutpaydetlExample example = new FipCutpaydetlExample();
+        example.createCriteria().andOriginBizidEqualTo(bizType.getCode())
+                .andArchiveflagEqualTo("0").andDeletedflagEqualTo("0")
+                .andDateCmsGetBetween(startDt, endDt)
+                .andBillstatusEqualTo(status.getCode());
+        example.setOrderByClause(" batch_sn desc, batch_detl_sn ");
+        return fipCutpaydetlMapper.selectByExample(example);
+    }
+
     public List<FipCutpaydetl> selectBillList(BizType bizType, BillType billType, BillStatus status) {
         FipCutpaydetlExample example = new FipCutpaydetlExample();
         example.createCriteria()
@@ -217,6 +238,7 @@ public class BillManagerService {
 
     /**
      * 区分 消费信贷的 新旧系统
+     *
      * @param bizType
      * @param billType
      * @param status
@@ -250,6 +272,7 @@ public class BillManagerService {
         fipCutpaydetlList1.addAll(fipCutpaydetlList2);
         return fipCutpaydetlList1;
     }
+
     public List<FipCutpaydetl> selectBillList(BizType bizType, BillStatus status1, BillStatus status2, BillType billType) {
         FipCutpaydetlExample example = new FipCutpaydetlExample();
         example.createCriteria().andOriginBizidEqualTo(bizType.getCode())
@@ -310,6 +333,7 @@ public class BillManagerService {
     public FipCutpaydetl selectBillByKey(String pkid) {
         return fipCutpaydetlMapper.selectByPrimaryKey(pkid);
     }
+
     public FipRefunddetl selectRefundBillByKey(String pkid) {
         return fipRefunddetlMapper.selectByPrimaryKey(pkid);
     }
@@ -317,6 +341,7 @@ public class BillManagerService {
     /**
      * 根据业务主键判断是否有未存档（未回写）的重复记录
      * 查询借据号、期次号、帐单类型相同、未删除的，帐单类型不为扣款失败的记录数
+     *
      * @return
      */
     public synchronized boolean checkNoRepeatedBizkeyRecords(String iouno, String poano, String billtype) {
@@ -327,6 +352,7 @@ public class BillManagerService {
         }
         return true;
     }
+
     public synchronized boolean checkNoRepeatedBizkeyRecords4Ccms(String iouno, String poano, String billtype, String bizType) {
         //int count = fipCommonMapper.countRepeatedBizkeyRecordsNumber4Ccms(iouno, poano, billtype, BillStatus.CUTPAY_FAILED.getCode());
         int count = fipCommonMapper.countRepeatedBizkeyRecordsNumber4Ccms(iouno, poano, billtype, BillStatus.CUTPAY_FAILED.getCode(), bizType);
@@ -335,6 +361,7 @@ public class BillManagerService {
         }
         return true;
     }
+
     public synchronized boolean checkNoRepeatedBizkeyRecords4Hccb(String iouno, String poano, String bizType) {
         int count = fipCommonMapper.countRepeatedBizkeyRecordsNumber4Hccb(iouno, poano, BillStatus.CUTPAY_FAILED.getCode(), bizType);
         if (count > 0) {
@@ -342,6 +369,7 @@ public class BillManagerService {
         }
         return true;
     }
+
     public synchronized boolean checkNoRepeatedBizkeyRecords4Zmd(String clientno, String paybackdate, String bizType) {
         int count = fipCommonMapper.countRepeatedBizkeyRecordsNumber4Zmd(clientno, paybackdate, BillStatus.CUTPAY_FAILED.getCode(), bizType);
         if (count > 0) {
@@ -362,11 +390,12 @@ public class BillManagerService {
 
     /**
      * 提前还款重复判断 (主键是贷款审批号，放在还款日字段中)
+     *
      * @param paybackdate
      * @param billtype
      * @return
      */
-    public synchronized boolean checkNoRepeatedBizkeyRecords4PreCutpay(String paybackdate,  String billtype) {
+    public synchronized boolean checkNoRepeatedBizkeyRecords4PreCutpay(String paybackdate, String billtype) {
         int count = fipCommonMapper.countRepeatedBizkeyRecordsNumber4PreCutpay(paybackdate, billtype,
                 BillStatus.CUTPAY_FAILED.getCode());
         if (count > 0) {
@@ -392,24 +421,26 @@ public class BillManagerService {
 
     /**
      * 批量设置存档状态
+     *
      * @param fipCutpaydetlList
      * @return
      */
     @Transactional
-    public synchronized int  archiveBills(List<FipCutpaydetl> fipCutpaydetlList){
+    public synchronized int archiveBills(List<FipCutpaydetl> fipCutpaydetlList) {
         int count = 0;
         for (FipCutpaydetl cutpaydetl : fipCutpaydetlList) {
             FipCutpaydetl record = fipCutpaydetlMapper.selectByPrimaryKey(cutpaydetl.getPkid());
             if (record.getRecversion().compareTo(cutpaydetl.getRecversion()) == 0) {
-                cutpaydetl.setRecversion(cutpaydetl.getRecversion()+1);
+                cutpaydetl.setRecversion(cutpaydetl.getRecversion() + 1);
                 cutpaydetl.setArchiveflag("1");
                 count += fipCutpaydetlMapper.updateByPrimaryKey(cutpaydetl);
             }
         }
         return count;
     }
+
     @Transactional
-    public synchronized int  archiveBillsNoCheckRecvision(List<FipCutpaydetl> fipCutpaydetlList){
+    public synchronized int archiveBillsNoCheckRecvision(List<FipCutpaydetl> fipCutpaydetlList) {
         int count = 0;
         for (FipCutpaydetl cutpaydetl : fipCutpaydetlList) {
             cutpaydetl.setArchiveflag("1");
@@ -417,12 +448,13 @@ public class BillManagerService {
         }
         return count;
     }
-    public synchronized int  archiveRefundBills(List<FipRefunddetl> detlList){
+
+    public synchronized int archiveRefundBills(List<FipRefunddetl> detlList) {
         int count = 0;
         for (FipRefunddetl detl : detlList) {
             FipCutpaydetl record = fipCutpaydetlMapper.selectByPrimaryKey(detl.getPkid());
             if (record.getRecversion().compareTo(detl.getRecversion()) == 0) {
-                detl.setRecversion(detl.getRecversion()+1);
+                detl.setRecversion(detl.getRecversion() + 1);
                 detl.setArchiveflag("1");
                 fipRefunddetlMapper.updateByPrimaryKey(detl);
                 count++;
@@ -550,7 +582,8 @@ public class BillManagerService {
     }
 
     /**
-     *  重要  (无代扣渠道包括SBS:根据状态选择批量交易的银行的代扣记录 )
+     * 重要  (无代扣渠道包括SBS:根据状态选择批量交易的银行的代扣记录 )
+     *
      * @param bizType
      * @param billstatus
      * @param bankCode
@@ -580,7 +613,7 @@ public class BillManagerService {
                 //.andTxpkgSnIsNull() //非批量报文中的明细记录！！
                 .andSendflagEqualTo("0") //非批量报文中的明细记录！！
                 .andOriginBizidEqualTo(bizType.getCode());
-                //.andBiActopeningbankIn(bankcodes);
+        //.andBiActopeningbankIn(bankcodes);
         example.setOrderByClause("batch_sn,batch_detl_sn");
         return fipCutpaydetlMapper.selectByExample(example);
     }
@@ -600,9 +633,10 @@ public class BillManagerService {
         example.setOrderByClause("batch_sn,batch_detl_sn");
         return fipCutpaydetlMapper.selectByExample(example);
     }
+
     public List<FipCutpaydetl> selectRecords4UnipayBatchDetail(BizType bizType, BillStatus billstatus, String txPkgSn) {
         if (StringUtils.isEmpty(txPkgSn)) {
-            throw  new RuntimeException("通讯报文号不能为空");
+            throw new RuntimeException("通讯报文号不能为空");
         }
         FipCutpaydetlExample example = new FipCutpaydetlExample();
         example.createCriteria()
@@ -631,11 +665,12 @@ public class BillManagerService {
 
     /**
      * 重要  (银联渠道：根据状态选择非实时交易的银行的代扣记录)
+     *
      * @param bizType
      * @param billstatus
      * @return
      */
-    public synchronized  List<FipCutpaydetl> selectRecords4UnipayBatch(BizType bizType, BillStatus billstatus) {
+    public synchronized List<FipCutpaydetl> selectRecords4UnipayBatch(BizType bizType, BillStatus billstatus) {
         //List<String> bankcodes = toolsService.selectEnuItemValue("UnipayRealTxnBank");
 
         FipCutpaydetlExample example = new FipCutpaydetlExample();
@@ -643,13 +678,14 @@ public class BillManagerService {
                 .andBillstatusEqualTo(billstatus.getCode())
                 .andArchiveflagEqualTo("0").andDeletedflagEqualTo("0")
                 .andOriginBizidEqualTo(bizType.getCode());
-                //.andBiActopeningbankNotIn(bankcodes);
+        //.andBiActopeningbankNotIn(bankcodes);
         example.setOrderByClause("batch_sn,batch_detl_sn");
         return fipCutpaydetlMapper.selectByExample(example);
     }
-    public synchronized  List<FipCutpaydetl> selectRecords4UnipayBatch(BizType bizType, BillStatus billstatus, String txPkgSn) {
+
+    public synchronized List<FipCutpaydetl> selectRecords4UnipayBatch(BizType bizType, BillStatus billstatus, String txPkgSn) {
         if (StringUtils.isEmpty(txPkgSn)) {
-            throw  new RuntimeException("通讯报文号不能为空");
+            throw new RuntimeException("通讯报文号不能为空");
         }
         FipCutpaydetlExample example = new FipCutpaydetlExample();
         example.createCriteria()
@@ -700,6 +736,7 @@ public class BillManagerService {
 
     /**
      * 发送批量报文前，检查明细记录的版本号，更新版本号， 组成新LIST 返回
+     *
      * @param txPkgSn
      * @return
      */
@@ -715,7 +752,6 @@ public class BillManagerService {
         }
         return sendRecords;
     }
-
 
 
     /**
@@ -764,6 +800,7 @@ public class BillManagerService {
             return record;
         }
     }
+
     @Transactional
     public synchronized FipRefunddetl checkAndUpdateRefunddetlRecordVersion(FipRefunddetl record) {
         FipRefunddetl originRecord = fipRefunddetlMapper.selectByPrimaryKey(record.getPkid());
@@ -776,7 +813,7 @@ public class BillManagerService {
         }
     }
 
-        /**
+    /**
      * 根据当前日期生成批次号 每日批次最多1000次
      *
      * @return
@@ -794,6 +831,7 @@ public class BillManagerService {
         sSeqno = StringUtils.leftPad(sSeqno, 3, "0");
         return strdate8 + sSeqno;
     }
+
     private String getMaxBatchno(String strdate8) {
         return fipCommonMapper.selectMaxBatchSnByDate(strdate8);
     }
@@ -802,12 +840,12 @@ public class BillManagerService {
         return fipCommonMapper.selectMaxBatchDetlSnByBatchSn(batchno);
     }
 
-        /**
+    /**
      * 根据当前日期生成批次号 每日批次最多1000次    for 代付
      *
      * @return
      */
-    public synchronized  String generateBatchno4Refund() {
+    public synchronized String generateBatchno4Refund() {
         String strdate8 = new SimpleDateFormat("yyyyMMdd").format(new Date());
         String batchno = getMaxBatchno4Refund(strdate8);
 
@@ -820,6 +858,7 @@ public class BillManagerService {
         sSeqno = StringUtils.leftPad(sSeqno, 3, "0");
         return strdate8 + sSeqno;
     }
+
     private String getMaxBatchno4Refund(String strdate8) {
         return fipCommonMapper.selectMaxBatchSnByDate4Refund(strdate8);
     }
@@ -851,7 +890,7 @@ public class BillManagerService {
                 log.setJobuserid(userid);
                 log.setJobusername(username);
                 fipJoblogMapper.insert(log);
-            }else{
+            } else {
                 String jobdesc = "修改代扣渠道为：" + channel.getTitle() + " 失败。";
                 appendNewJoblog(detl.getPkid(), "fip_cutpaydetl", "修改代扣渠道", jobdesc);
                 throw new RuntimeException(jobdesc + " 记录状态错误或并发冲突。");

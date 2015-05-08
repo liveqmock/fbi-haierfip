@@ -269,7 +269,9 @@ public class HccbService {
     /**
      * SBS记账  20150505  zhanrui
      */
-    public synchronized int accountCutPayRecord2SBS(List<FipCutpaydetl> cutpaydetlList, String totalSuccessAmt) {
+    public synchronized int accountCutPayRecord2SBS(List<FipCutpaydetl> cutpaydetlList,
+                                                    String totalSuccessAmt,
+                                                    String fromActno, String toActno) {
         int count = 0;
 
         String userid = SystemService.getOperatorManager().getOperatorId();
@@ -297,8 +299,8 @@ public class HccbService {
             String sn = "HCCB" + new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
             //String fromActno = "801000026131041001"; //对应建行37101985510051003497
             //String toActno = "801000977202019014";
-            String fromActno = sbsTxnHelper.selectSbsActnoFromPtEnuDetail("HCCB_FROM_ACTNO"); //对应建行37101985510051003497
-            String toActno = sbsTxnHelper.selectSbsActnoFromPtEnuDetail("HCCB_TO_ACTNO");
+            //String fromActno = sbsTxnHelper.selectSbsActnoFromPtEnuDetail("HCCB_FROM_ACTNO"); //对应建行37101985510051003497
+            //String toActno = sbsTxnHelper.selectSbsActnoFromPtEnuDetail("HCCB_TO_ACTNO");
             String productCode = "N105";
             String remark = "HCCB小贷代扣";
             List<String> paramList = sbsTxnHelper.assembleTaa41Param(sn, fromActno, toActno, amt, productCode, remark);
