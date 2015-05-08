@@ -202,7 +202,7 @@ public class BillManagerService {
         Date startDt, endDt;
         try {
             startDt = new SimpleDateFormat("yyyy-MM-dd").parse(startDate);
-            endDt = new SimpleDateFormat("yyyy-MM-dd").parse(endDate);
+            endDt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(endDate + " 23:59:59");
         } catch (ParseException e) {
             throw new RuntimeException("ÈÕÆÚ×Ö¶ÎÊäÈë´íÎó");
         }
