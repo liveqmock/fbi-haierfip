@@ -27,7 +27,6 @@ import java.util.concurrent.TimeUnit;
  * 2. 银联代扣
  * 3. SBS记账
  * 4。回写信贷系统
- * <p/>
  * User: zhanrui
  * Date: 2015-04-17
  */
@@ -112,14 +111,14 @@ public class ZmdCutpayBatchHandler {
 
                 //4.回写代扣失败记录(全部未归档的)并做归档处理
                 List<FipCutpaydetl> failureDetlList = billManagerService.selectRecords4UnipayBatch(this.bizType, BillStatus.CUTPAY_FAILED);
-                writebackBillsAll(failureDetlList);
+                writebackBills(failureDetlList, true);
 
-                //5.SBS记账
+                //5.回写SBS记账成功记录 不作 归档处理
+                List<FipCutpaydetl> successDetlList = billManagerService.selectRecords4UnipayBatch(this.bizType, BillStatus.CUTPAY_SUCCESS);
+                writebackBills(successDetlList, false);
+
+                //6.SBS记账
                 //sbsBookAll();
-
-                //6.回写SBS记账成功记录并作归档处理
-                //List<FipCutpaydetl> successDetlList = billManagerService.selectRecords4UnipayBatch(this.bizType, BillStatus.ACCOUNT_SUCCESS);
-                //writebackBillsAll(successDetlList);
 
                 //7.短信通知代扣结果
                 SmsHelper.asyncSendSms(PropertyManager.getProperty("zmd_batch_phones"), "专卖店代扣完成");
@@ -262,6 +261,7 @@ public class ZmdCutpayBatchHandler {
         }
     }
 
+/*
     //全部批量包的处理
     private synchronized void writebackBillsAll() {
         if (!isCronTaskOpen()) {
@@ -287,16 +287,17 @@ public class ZmdCutpayBatchHandler {
         logger.info(getBizName() + "自动批量代扣【代扣结果回写】：本次回写记录条数(代扣失败)：" + failCnt + " 条(已做归档处理).");
     }
 
-    private synchronized void writebackBillsAll(List<FipCutpaydetl> cutpaydetlList) {
-        //回写 同时归档
-        int succCnt = zmdService.writebackCutPayRecord2Zmd(cutpaydetlList, true);
+*/
+    private synchronized void writebackBills(List<FipCutpaydetl> cutpaydetlList, boolean isDoArchive) {
+        //回写
+        int succCnt = zmdService.writebackCutPayRecord2Zmd(cutpaydetlList, isDoArchive);
 
         try {
             Thread.sleep(500);
         } catch (InterruptedException e) {
             //
         }
-        logger.info(getBizName() + "自动批量代扣【代扣结果回写】：本次成功回写记录条数：" + succCnt + " 条(已做归档处理).");
+        logger.info(getBizName() + "自动批量代扣【代扣结果回写】：本次成功回写记录条数：" + succCnt + " 条.");
     }
 
 

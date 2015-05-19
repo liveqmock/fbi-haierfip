@@ -2,6 +2,9 @@ package fip.view;
 
 import fip.common.constant.BillStatus;
 import fip.common.utils.MessageUtil;
+import fip.repository.model.FipCutpaybat;
+import fip.repository.model.FipCutpaydetl;
+import fip.repository.model.FipCutpaydetlExample;
 import fip.service.fip.ZmdService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +15,7 @@ import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * 专卖店代扣
@@ -65,6 +69,15 @@ public class UnipayBatchDepZMDAction extends UnionpayBatchAction implements Seri
             MessageUtil.addError("数据确认出现错误！" + e.getMessage());
         }
         return null;
+    }
+
+    protected void processOneQueryRecord(FipCutpaybat record) {
+        super.processOneQueryRecord(record);
+
+        //回写代扣失败记录(全部未归档的)并做归档处理
+        zmdService.writebackCutPayRecord2Zmd(zmdService.selectDetlsByBatRecord(record, BillStatus.CUTPAY_FAILED), true);
+        //回写SBS记账成功记录 不作 归档处理
+        zmdService.writebackCutPayRecord2Zmd(zmdService.selectDetlsByBatRecord(record, BillStatus.CUTPAY_SUCCESS), false);
     }
 
 

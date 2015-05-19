@@ -306,7 +306,7 @@ public abstract class UnionpayBatchAction implements Serializable {
         return null;
     }
 
-    private void processOneQueryRecord(FipCutpaybat record) {
+    protected void processOneQueryRecord(FipCutpaybat record) {
         String txPkgSn = record.getTxpkgSn();
         try {
             //unipayService.sendAndRecvBatchDatagramQueryMessage(record);

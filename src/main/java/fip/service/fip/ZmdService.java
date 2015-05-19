@@ -276,7 +276,7 @@ public class ZmdService {
             record.setStdrtnmsg(detl.getTxRetmsg());
 
             String billStatus = detl.getBillstatus();
-            if (BillStatus.ACCOUNT_SUCCESS.getCode().equals(billStatus)) {//注意状态是记账失败
+            if (BillStatus.CUTPAY_SUCCESS.getCode().equals(billStatus)) {//注意状态是代扣成功
                 record.setStdkkcg("1");
             } else if (BillStatus.CUTPAY_FAILED.getCode().equals(billStatus)) {//注意状态是 银联代扣失败
                 record.setStdkkcg("2");
@@ -326,6 +326,22 @@ public class ZmdService {
     }
 
 
+    //按照给定的状态查找未回写的记录
+    public List<FipCutpaydetl> selectDetlsByBatRecord(FipCutpaybat cutpaybat, BillStatus status) {
+        FipCutpaydetlExample example = new FipCutpaydetlExample();
+        example.createCriteria().andTxpkgSnEqualTo(cutpaybat.getTxpkgSn())
+                .andBillstatusEqualTo(status.getCode())
+                .andWritebackflagEqualTo("0");
+        return fipCutpaydetlMapper.selectByExample(example);
+    }
+
+    //仅作存档处理，不考虑recversion
+    public void processArchive(List<FipCutpaydetl> cutpaydetlList){
+        for (FipCutpaydetl cutpaydetl : cutpaydetlList) {
+            cutpaydetl.setArchiveflag("1");
+            fipCutpaydetlMapper.updateByPrimaryKeySelective(cutpaydetl);
+        }
+    }
 
     //============================================
     private void batchInsertLogByBatchno(String batchno) {

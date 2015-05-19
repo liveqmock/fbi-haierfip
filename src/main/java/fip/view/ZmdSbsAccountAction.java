@@ -89,6 +89,7 @@ public class ZmdSbsAccountAction implements Serializable {
         }
         try {
             int succ = zmdService.accountCutPayRecord2SBS(this.detlList);
+            zmdService.processArchive(this.detlList);
             MessageUtil.addWarn("入帐结束，成功笔数:[" + succ +"]" );
         } catch (Exception e) {
             logger.error("SBS入帐时出现错误，请查询。", e);
@@ -105,6 +106,7 @@ public class ZmdSbsAccountAction implements Serializable {
         }
         try {
             int succ =  zmdService.accountCutPayRecord2SBS(Arrays.asList(this.selectedRecords));
+            zmdService.processArchive(Arrays.asList(this.selectedRecords));
             MessageUtil.addWarn("入帐结束，成功笔数:[" + succ +"]" );
         } catch (Exception e) {
             logger.error("SBS入帐时出现错误，请查询。", e);
